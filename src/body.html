@@ -1,0 +1,345 @@
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z" fill="currentColor"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="6.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></g></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4.5L7.5 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4.5" fill="none" stroke="currentColor" stroke-width="2.6"/><g fill="currentColor"><circle cx="8" cy="8" r="1.8"/><circle cx="16" cy="16" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="16" cy="8" r="1.8"/><circle cx="8" cy="16" r="1.8"/></g></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20l1.2-4.8L15.5 4.9a2 2 0 0 1 2.8 0l.8.8a2 2 0 0 1 0 2.8L8.8 18.8z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M13.5 7l3.5 3.5" stroke="currentColor" stroke-width="2.6"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3.5 9h17M3.5 15h17"/></g></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><path d="M6 21V4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21M3.5 21h17" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="14.5" cy="12.5" r="1.6" fill="currentColor"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><rect x="8" y="8" width="12" height="13" rx="2.5"/><path d="M5 16V5.5A2.5 2.5 0 0 1 7.5 3H15"/></g></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 5L4 10l5 5M4 10h10a5.5 5.5 0 0 1 0 11h-4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+  <symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-skull" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M12 2.5a8.5 8.5 0 0 0-8.5 8.5c0 3.1 1.7 5.4 4 6.5V21h9v-3.5c2.3-1.1 4-3.4 4-6.5A8.5 8.5 0 0 0 12 2.5zM6.6 11.2a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0-4.4 0zM13 11.2a2.2 2.2 0 1 0 4.4 0a2.2 2.2 0 1 0-4.4 0zM11 15.5h2l-1-2z"/></symbol>
+  <symbol id="i-orange" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8" fill="#FF8A1F" stroke="#1B1033" stroke-width="2"/><circle cx="9.3" cy="11" r="2" fill="#FFC07A"/><path d="M12 5.5c1-2.4 3.4-3.6 6-3.2-.6 2.6-2.9 4-6 3.2z" fill="#3DBE6C" stroke="#1B1033" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="5.5" y="4" width="4.6" height="16" rx="1.6" fill="currentColor"/><rect x="13.9" y="4" width="4.6" height="16" rx="1.6" fill="currentColor"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 11L12 3.5l8.5 7.5M6 9v11h4.5v-6h3v6H18V9" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 3.5v4.5H15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 3.5h10v5a5 5 0 0 1-10 0zM7 5.5H4a3 3 0 0 0 3 4M17 5.5h3a3 3 0 0 1-3 4M12 13.5V17M8 20.5h8M9.5 17h5v3.5h-5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M7 3.5h10v5a5 5 0 0 1-10 0z" fill="currentColor"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 2.5c1 3.5 5.5 5.5 5.5 11a5.5 5.5 0 0 1-11 0c0-2.5 1.2-4 2.3-5 .2 1.8 1 3 2.2 3.4C10.5 8.5 11 5 12 2.5z" fill="currentColor"/></symbol>
+  <symbol id="i-magnet" viewBox="0 0 24 24"><path d="M5 4h4v8a3 3 0 0 0 6 0V4h4v8a7 7 0 0 1-14 0z" fill="currentColor"/><path d="M5 7.5h4M15 7.5h4" stroke="#fff" stroke-width="2"/></symbol>
+  <symbol id="i-peace" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M12 12l-6 6M12 12l6 6"/></g></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5S3 15 3 8.8A4.6 4.6 0 0 1 12 6.5a4.6 4.6 0 0 1 9 2.3C21 15 12 20.5 12 20.5z" fill="currentColor"/></symbol>
+  <symbol id="i-nope" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/></g></symbol>
+  <symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 13h15a3 3 0 1 1-3 3M3 18h7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></g><circle cx="12" cy="12" r="2" fill="currentColor"/></symbol>
+  <symbol id="i-sword" viewBox="0 0 24 24"><path d="M14.5 3.5H20.5V9.5L10 20l-6-6z" fill="currentColor"/><path d="M5 13l6 6M3 21l3-3" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-medkit" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M9 3.5h6v3H9zM4.5 6.5h15a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2V8.5a2 2 0 0 1 2-2zM10.5 9v3H7.5v2.5h3v3H13v-3h3V12h-3V9z"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V3.5" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="M5 4c4-2 7 2 13 0v9c-6 2-9-2-13 0z" fill="currentColor"/></symbol>
+  <symbol id="i-flags" viewBox="0 0 24 24"><path d="M4 21V5M20 21V5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M4 5.5c2.5-1.2 4.5 1.2 7 0v6c-2.5 1.2-4.5-1.2-7 0zM20 5.5c-2.5-1.2-4.5 1.2-7 0v6c2.5 1.2 4.5-1.2 7 0z" fill="currentColor"/></symbol>
+  <symbol id="i-pond" viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="9.5" ry="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M6.5 13c1.5-1.4 3-1.4 4.5 0s3 1.4 4.5 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M12 3l1.5 3h-3z" fill="currentColor"/></symbol>
+  <symbol id="i-teams" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="7.5" cy="8" r="3.3"/><circle cx="16.5" cy="8" r="3.3"/><path d="M1.5 19.5a6 6 0 0 1 12 0zM10.5 19.5a6 6 0 0 1 12 0z"/></g></symbol>
+  <symbol id="i-slap" viewBox="0 0 24 24"><path d="M6 12V6.5a1.5 1.5 0 0 1 3 0V11V4.5a1.5 1.5 0 0 1 3 0V11V5.5a1.5 1.5 0 0 1 3 0V12V8a1.5 1.5 0 0 1 3 0v6.5a7 7 0 0 1-7 7h-.5A6 6 0 0 1 5 17.5l-2-3.2a1.5 1.5 0 0 1 2.5-1.7z" fill="currentColor"/></symbol>
+  <symbol id="i-cycle" viewBox="0 0 24 24"><path d="M4.5 11a7.5 7.5 0 0 1 13-4.5M19.5 13a7.5 7.5 0 0 1-13 4.5M17.5 2.5v4h-4M6.5 21.5v-4h4" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-gun" viewBox="0 0 24 24"><path d="M2.5 7.5h16v-2h3v6h-8.5l-1.5 2h-2l-1.5 7h-4l1.5-7.5L3.5 11.5z" fill="currentColor"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M9.5 2.5h5M18.5 6.5l1.5-1.5"/></g></symbol>
+  <symbol id="i-bot" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M11 2.5h2v3h3.5A3.5 3.5 0 0 1 20 9v7a3.5 3.5 0 0 1-3.5 3.5h-9A3.5 3.5 0 0 1 4 16V9a3.5 3.5 0 0 1 3.5-3.5H11zM7.5 11a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0zM12.9 11a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0zM9 15h6v1.6H9z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="3" y="7.5" width="18" height="10" rx="2.5"/><path d="M7 3.5a9 9 0 0 1 10 0M15.5 2l1.5 1.5-2 1"/></g></symbol>
+  <symbol id="i-capy" viewBox="0 0 24 24"><path d="M3 18.5c-.6-5 .8-11 7-12.5 4-1 7.5.4 9.5 3 1.6.4 2.4 1.8 2 3.2-.4 1.3-1.8 1.6-3 1.4.2 2.5-.4 4.5-1.5 5.5z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><circle cx="8.5" cy="5.5" r="1.9" fill="currentColor"/><circle cx="15" cy="10" r="1.3" fill="#1B1033"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></symbol>
+  <symbol id="i-face" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><g fill="currentColor"><circle cx="9" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/></g><path d="M8 14.5c2.3 2.5 5.7 2.5 8 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-hat" viewBox="0 0 24 24"><path d="M7 15V5.5A1.5 1.5 0 0 1 8.5 4h7A1.5 1.5 0 0 1 17 5.5V15z" fill="currentColor"/><rect x="2.5" y="15" width="19" height="3.5" rx="1.75" fill="currentColor"/></symbol>
+  <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M8.5 3.5L3 6.5l2 4.5 2.5-1.2V20.5h9V9.8L19 11l2-4.5-5.5-3a3.5 3.5 0 0 1-7 0z" fill="currentColor"/></symbol>
+  <symbol id="i-glasses" viewBox="0 0 24 24"><g fill="currentColor"><rect x="2.5" y="9" width="8" height="6" rx="2.5"/><rect x="13.5" y="9" width="8" height="6" rx="2.5"/></g><path d="M10.5 11h3" stroke="currentColor" stroke-width="2.4"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 2c.8 5 2.5 7.2 8 8-5.5.8-7.2 3-8 8-.8-5-2.5-7.2-8-8 5.5-.8 7.2-3 8-8z" fill="currentColor"/><path d="M19 16c.3 2 1 2.7 3 3-2 .3-2.7 1-3 3-.3-2-1-2.7-3-3 2-.3 2.7-1 3-3z" fill="currentColor"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2.5l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10v-6z" fill="currentColor"/></symbol>
+  <symbol id="i-snow" viewBox="0 0 24 24"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bomb" viewBox="0 0 24 24"><circle cx="10.5" cy="14" r="7" fill="currentColor"/><path d="M14.5 8.5l2-2M17 5l1.5-1.5M19 6.5h2M17.5 3V1.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-brick" viewBox="0 0 24 24"><path d="M2.5 5h19v14h-19zM2.5 9.7h19M2.5 14.3h19M9 5v4.7M15 9.7v4.6M9 14.3V19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-2.5 6 2.5 6-2.5v14.5L15 20.5 9 18l-6 2.5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M9 4v14M15 6v14.5" stroke="currentColor" stroke-width="2.2"/></symbol>
+  <symbol id="i-thumb" viewBox="0 0 24 24"><path d="M3 10.5h4v10H3zM8.5 20.5V10L12.5 3c1.8 0 2.8 1.4 2.4 3.2l-.8 3.3H19a2 2 0 0 1 2 2.4l-1.5 7A2 2 0 0 1 17.5 20.5z" fill="currentColor"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H6a2 2 0 0 0-2 2zM4 20a2 2 0 0 0 2 2h14v-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M8 7h8M8 10.5h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.5 2L4.5 13.5h6L9.5 22l9-11.5h-6z" fill="currentColor"/></symbol>
+  <symbol id="i-feather" viewBox="0 0 24 24"><path d="M20 3c-7 0-13 4-14.5 13L4 21l2-1.5C15 18 21 11 20 3z" fill="currentColor"/><path d="M15 8L6 17" stroke="#1B1033" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-fang" viewBox="0 0 24 24"><path d="M3 5h18c0 3-2 5-4 5l-2 9-2.5-7h-1L9 19l-2-9c-2 0-4-2-4-5z" fill="currentColor"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M6 8v4M10 8v3M14 8v4M18 8v3" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><path d="M3.5 9h17v4h-17zM5 13h14v8H5zM12 9v12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M12 9C9 9 6.5 7.5 7.5 5.5S11 6 12 9zM12 9c3 0 5.5-1.5 4.5-3.5S13 6 12 9z" fill="currentColor"/></symbol>
+  <symbol id="i-bubble" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M8 8.5a5 5 0 0 1 4-2" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="19" cy="4.5" r="2" fill="currentColor"/></symbol>
+  <symbol id="i-thorn" viewBox="0 0 24 24"><path d="M12 2l2 6 6-3-3 6 6 1-6 3 3 6-6-3-2 6-2-6-6 3 3-6-6-3 6-1-3-6 6 3z" fill="currentColor"/></symbol>
+  <symbol id="i-anvil" viewBox="0 0 24 24"><path d="M2 6h14c3 0 5 1.5 6 3h-6l-2 4v2h3v4H7v-4h3v-2L8 10H5C3 10 2 8 2 6z" fill="currentColor"/></symbol>
+  <symbol id="i-clover" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="8.5" cy="8.5" r="4"/><circle cx="15.5" cy="8.5" r="4"/><circle cx="8.5" cy="15.5" r="4"/><circle cx="15.5" cy="15.5" r="4"/></g><path d="M12 12l5 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-bounce" viewBox="0 0 24 24"><path d="M3 4l7 15 7-12 4 8" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 21h20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="3" fill="currentColor"/><path d="M12 7.5l1.3 2.7 3 .4-2.2 2 .6 3-2.7-1.5-2.7 1.5.6-3-2.2-2 3-.4z" fill="#1B1033"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+ </defs>
+</svg>
+<canvas id="game"></canvas>
+
+<!-- HOME -->
+<section id="home" class="screen">
+  <div class="topbar">
+    <div class="counter" title="Laranjinhas coletadas no total"><svg class="i lg"><use href="#i-orange"/></svg><span id="totalGems">0</span></div>
+    <button class="sphere" id="sphereBtn" aria-label="Personalizar capivara"><canvas width="148" height="148"></canvas><span class="pen"><svg class="i"><use href="#i-pencil"/></svg><b>EDITAR</b></span></button>
+  </div>
+  <div class="stage">
+    <div class="logo" aria-label="Capy Boom"><span class="l1">CAPY</span><span class="l2">BOOM!</span></div>
+    <div class="subtitle">ARENA DAS CAPIVARAS</div>
+    <div class="tagline" id="tagline">A capivara mais calma do mundo. Até agora.</div>
+  </div>
+  <div class="home-actions">
+    <button class="btn gold big" id="btnPlay"><svg class="i ic"><use href="#i-play"/></svg>JOGAR</button>
+    <div class="row2">
+      <button class="btn ice" id="btnArsenal"><svg class="i ic"><use href="#i-gun"/></svg>ARSENAL</button>
+      <button class="btn" id="btnSettings"><svg class="i ic"><use href="#i-gear"/></svg>CONFIGURAÇÕES</button>
+      <button class="btn danger" id="btnQuit"><svg class="i ic"><use href="#i-x"/></svg>SAIR</button>
+    </div>
+  </div>
+  <button class="btn fsbtn" id="btnFs" title="Tela cheia" aria-label="Tela cheia"><svg class="i"><use href="#i-expand"/></svg></button>
+  <div class="version">v3.2 • CapiBoom</div>
+</section>
+
+<!-- PERSONALIZAÇÃO -->
+<section id="custom" class="screen hidden">
+  <div class="topbar">
+    <button class="btn round" data-back aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button>
+    <h2>SUA CAPIVARA</h2>
+    <button class="btn ice small" id="btnRandom"><svg class="i ic"><use href="#i-dice"/></svg><span class="lbl">ALEATÓRIO</span></button>
+  </div>
+  <div class="stage">
+    <div class="tabs sticker" id="ctabs"></div>
+    <div class="pedestal">
+      <canvas id="pedCanvas" width="720" height="760"></canvas>
+      <div class="peditools"><button class="btn small" id="btnPose"><svg class="i ic"><use href="#i-play"/></svg>TESTAR</button></div>
+      <div class="hint">arraste para virar • toque duplo para posar</div>
+    </div>
+    <div class="opts sticker" id="copts"></div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="btnUndo"><svg class="i ic"><use href="#i-undo"/></svg>DESFAZER</button>
+    <button class="btn gold" id="btnSaveLook"><svg class="i ic"><use href="#i-star"/></svg>SALVAR VISUAL</button>
+  </div>
+</section>
+
+<!-- JOGAR -->
+<section id="play" class="screen hidden">
+  <div class="topbar">
+    <button class="btn round" data-back aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button>
+    <h2>ESCOLHA O CAOS</h2>
+    <button class="sphere sm" data-sphere aria-label="Personalizar"><canvas width="100" height="100"></canvas></button>
+  </div>
+  <div class="stage">
+    <div class="cards">
+      <div class="card sticker" id="cardBots" role="button" tabindex="0">
+        <canvas id="artBots" width="640" height="400"></canvas>
+        <h3>CONTRA BOTS</h3>
+        <p>8 modos • 6 mapas • até 9 bots</p>
+        <button class="btn gold" id="btnGoSetup" style="margin-top:10px"><svg class="i ic"><use href="#i-bot"/></svg>MONTAR PARTIDA</button>
+      </div>
+      <div class="card sticker online" id="cardOnline" role="button" tabindex="0">
+        <span class="ribbon">ATÉ 10</span>
+        <canvas id="artOnline" width="640" height="400"></canvas>
+        <h3>ONLINE</h3>
+        <p>salas com amigos • código de 6 letras</p>
+        <button class="btn ice" id="btnGoOnline" style="margin-top:10px"><svg class="i ic"><use href="#i-globe"/></svg>ENTRAR</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MONTAR PARTIDA (bots) -->
+<section id="setup" class="screen hidden">
+  <div class="topbar">
+    <button class="btn round" data-back aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button>
+    <h2>MONTAR PARTIDA</h2>
+    <span class="spacer"></span>
+  </div>
+  <div class="stage scroll"><div class="setupwrap" id="setupPanel"></div></div>
+  <div class="actions"><button class="btn gold big" id="btnStartBots"><svg class="i ic"><use href="#i-play"/></svg>COMEÇAR</button></div>
+</section>
+
+<!-- ONLINE -->
+<section id="online" class="screen hidden">
+  <div class="topbar">
+    <button class="btn round" data-back aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button>
+    <h2>ONLINE</h2>
+    <button class="sphere sm" data-sphere aria-label="Personalizar"><canvas width="100" height="100"></canvas></button>
+  </div>
+  <div class="stage"><div class="onl">
+    <div class="namebar">
+      <b>SEU NOME:</b>
+      <input class="field" id="nick" maxlength="15" placeholder="Seu apelido" autocomplete="off">
+      <button class="btn round ice" id="btnDiceName" aria-label="Nome aleatório"><svg class="i"><use href="#i-dice"/></svg></button>
+    </div>
+    <div class="cards">
+      <div class="card sticker">
+        <svg class="i door"><use href="#i-door"/></svg>
+        <h3>CRIAR SALA</h3>
+        <p>você vira o anfitrião</p>
+        <button class="btn gold" id="btnHost" style="margin-top:12px"><svg class="i ic"><use href="#i-plus"/></svg>CRIAR</button>
+      </div>
+      <div class="card sticker online">
+        <h3>ENTRAR</h3>
+        <p>digite o código da sala</p>
+        <div class="pins" id="pins"></div>
+        <button class="btn ice" id="btnJoin"><svg class="i ic"><use href="#i-arrow"/></svg>ENTRAR</button>
+      </div>
+    </div>
+    <div class="statusline" id="netStatus"><span class="dot"></span><span class="txt">Pronto para o caos.</span></div>
+  </div></div>
+</section>
+
+<!-- LOBBY -->
+<section id="lobby" class="screen hidden">
+  <div class="topbar">
+    <button class="btn danger small" id="btnLeaveLobby"><svg class="i ic"><use href="#i-back"/></svg>SAIR</button>
+    <div class="codebox"><span>SALA</span><b id="roomCode">------</b><button class="btn small ice" id="btnCopy"><svg class="i ic"><use href="#i-copy"/></svg>COPIAR</button></div>
+    <span class="spacer"></span>
+  </div>
+  <div class="stage scroll" style="flex-direction:column;justify-content:flex-start">
+    <div class="roster" id="roster"></div>
+    <div class="lobbycfg sticker" id="lobbyCfg"></div>
+  </div>
+  <div class="actions">
+    <button class="btn gold big" id="btnStart"><svg class="i ic"><use href="#i-play"/></svg>INICIAR PARTIDA</button>
+    <div id="lobbyWait" class="sticker hidden" style="padding:12px 22px;font-weight:800">Aguardando o anfitrião<span class="dots"></span></div>
+  </div>
+</section>
+
+<!-- ARSENAL -->
+<section id="arsenal" class="screen hidden">
+  <div class="topbar">
+    <button class="btn round" data-back aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button>
+    <h2>ARSENAL • <span id="arsCount">67</span> ARMAS</h2>
+    <span class="spacer"></span>
+  </div>
+  <div class="filters" id="arsFilters"></div>
+  <div class="stage scroll"><div class="arsgrid" id="arsGrid"></div></div>
+</section>
+
+<!-- TCHAU -->
+<section id="bye" class="screen hidden">
+  <div class="logo small"><span class="l1">CAPY</span><span class="l2">BOOM!</span></div>
+  <h2 class="display" style="font-size:34px;margin:0">Até a próxima!</h2>
+  <p>Pode fechar esta aba. As capivaras vão ficar esperando.</p>
+  <button class="btn gold" id="btnBack67">VOLTAR PRO CAOS</button>
+</section>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div id="hurtVignette"></div>
+  <div class="hp sticker">
+    <canvas class="portrait" id="portrait" width="108" height="108"></canvas>
+    <div><div class="hpname" id="hudName">Jogador</div><div class="bar" id="hpBar"><b id="hpGhost"></b><i id="hpFill"></i></div></div>
+    <div class="hpnum" id="hpNum">100</div>
+  </div>
+  <div class="lvl sticker">
+    <div class="lvbadge"><small>NÍVEL</small><span id="lvNum">1</span></div>
+    <div class="lvcol">
+      <div class="modehud" id="modeHud"></div>
+      <div class="bar67" id="bar67"><i id="fill67"></i><span id="txt67">0/67</span></div>
+    </div>
+    <div class="timer" id="timer">3:00</div>
+  </div>
+  <div class="stats">
+    <div class="stat sticker" id="statKills" title="Eliminações"><svg class="i si"><use href="#i-skull"/></svg><span id="kNum">0</span></div>
+    <div class="stat sticker" id="statGems" title="Laranjinhas"><svg class="i si"><use href="#i-orange"/></svg><span id="gNum">0</span></div>
+    <button class="btn round pausebtn" id="btnPause" aria-label="Pausar"><svg class="i"><use href="#i-pause"/></svg></button>
+  </div>
+  <div class="perkrow" id="perkRow"></div>
+  <div id="feed"></div>
+  <canvas id="minimap" width="340" height="226"></canvas>
+  <div class="rings">
+    <div class="ring" id="ringDash"><svg class="i"><use href="#i-wind"/></svg><b>DASH</b></div>
+    <div class="ring" id="ringFire"><svg class="i"><use href="#i-target"/></svg><b>TIRO</b></div>
+  </div>
+  <div id="weaponCard" class="sticker">
+    <canvas id="weaponIcon" width="220" height="144"></canvas>
+    <div class="wtxt"><div class="wc" id="wCat">PISTOLA</div><div class="wn" id="wName">—</div><div class="cdbar"><i id="wCd"></i></div></div>
+    <button class="w2" id="weapon2" aria-label="Trocar arma"><img id="w2img" alt=""><span><svg class="i"><use href="#i-swap"/></svg><b class="key">Q</b></span></button>
+  </div>
+  <div id="center67"></div>
+  <div id="banner"></div>
+</div>
+<div id="flashOv"></div>
+<div id="perkOv" class="hidden">
+  <div class="pkhead"><b>ESCOLHA UM PODER</b><span>Você sumiu da arena enquanto escolhe. Ninguém te acerta aqui.</span><div class="pktime"><i id="pkTime"></i></div></div>
+  <div class="pkcards" id="pkCards"></div>
+</div>
+<div id="touch">
+  <div id="joyZone"><div id="joy" class="idle"><div id="knob"><canvas id="knobFace" width="80" height="80"></canvas></div></div></div>
+  <button id="swapBtn" aria-label="Trocar arma"><svg class="i"><use href="#i-swap"/></svg></button>
+  <button id="dashBtn" aria-label="Dash"><svg class="i di"><use href="#i-wind"/></svg>DASH</button>
+  <div id="reticle"></div>
+</div>
+
+<!-- PAUSE -->
+<div id="pause" class="overlay hidden">
+  <div class="panel sticker">
+    <h2>PAUSADO</h2>
+    <p id="pauseNote" class="tip" style="margin:0 0 6px"></p>
+    <div class="menu-col">
+      <button class="btn gold" id="btnResume"><svg class="i ic"><use href="#i-play"/></svg>CONTINUAR</button>
+      <button class="btn" id="btnPauseSettings"><svg class="i ic"><use href="#i-gear"/></svg>CONFIGURAÇÕES</button>
+      <button class="btn" id="btnRestart"><svg class="i ic"><use href="#i-refresh"/></svg>REINICIAR</button>
+      <button class="btn danger" id="btnQuitMatch"><svg class="i ic"><use href="#i-x"/></svg>SAIR DA PARTIDA</button>
+    </div>
+    <p class="tip" id="pauseTip"></p>
+  </div>
+</div>
+
+<!-- MORTE -->
+<div id="death" class="hidden">
+  <div class="big" id="deathTitle">CAPIVAROU!</div>
+  <div class="killer sticker"><canvas id="killerFace" width="144" height="144"></canvas><div><div style="font-size:12px;font-weight:800;opacity:.8">ELIMINADO POR</div><div class="display" style="font-size:24px" id="killerName">?</div><div class="kgun"><img id="killerGunImg" alt=""><span id="killerGun">?</span></div></div></div>
+  <div class="quip" id="deathQuip"></div>
+  <div style="font-weight:800;opacity:.85">renascendo em</div>
+  <div class="count" id="deathCount">3</div>
+  <button class="btn gold" id="btnRespawn" disabled><svg class="i ic"><use href="#i-refresh"/></svg>RENASCER AGORA</button>
+</div>
+<div id="respawnCard" class="sticker hidden">
+  <div class="rc" id="rcCat">NOVA ARMA</div>
+  <canvas id="rcIcon" width="440" height="280"></canvas>
+  <div class="rn" id="rcName">—</div>
+  <div class="rd" id="rcDesc"></div>
+  <div class="r2" id="rc2"></div>
+</div>
+
+<!-- PLACAR -->
+<div id="scoreOv" class="overlay hidden"><div class="panel sticker"><h2>PLACAR</h2><div class="body"><table class="scoreboard" id="scoreTable"></table></div><div class="foot"><button class="btn small" id="btnCloseScore">FECHAR</button></div></div></div>
+
+<!-- RESULTADO -->
+<section id="result" class="screen hidden">
+  <div class="wrap">
+    <h2 id="resTitle">FIM DE PARTIDA</h2>
+    <div class="resL">
+    <div class="teamwin hidden" id="teamWin"></div>
+    <div class="podium" id="podium"></div>
+    <div class="nums" id="nums"></div>
+    <div class="medals" id="medals"></div>
+    </div>
+    <div class="resR">
+    <div class="nextbox sticker">
+      <h3><svg class="i"><use href="#i-thumb"/></svg> VOTE NO PRÓXIMO MODO</h3>
+      <div class="modegrid" id="voteGrid"></div>
+      <div class="maprow" id="resMaps"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnResMenu"><svg class="i ic"><use href="#i-home"/></svg>MENU</button>
+      <button class="btn" id="btnResLobby"><svg class="i ic"><use href="#i-teams"/></svg>LOBBY</button>
+      <button class="btn gold big" id="btnAgain"><svg class="i ic"><use href="#i-play"/></svg>PRÓXIMA PARTIDA</button>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONFIGURAÇÕES -->
+<div id="settings" class="overlay hidden">
+  <div class="panel sticker">
+    <h2>CONFIGURAÇÕES</h2>
+    <div class="tabsrow" id="stabs"></div>
+    <div class="body" id="sbody"></div>
+    <div class="foot"><button class="btn gold" id="btnSetDone"><svg class="i ic"><use href="#i-check"/></svg>PRONTO</button></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="overlay modal hidden"><div class="panel sticker"><h2 id="mTitle">Certeza?</h2><p id="mText"></p><div class="foot"><button class="btn" id="mNo">CANCELAR</button><button class="btn danger" id="mYes">SIM</button></div></div></div>
+<div id="toasts"></div>
+<canvas id="confetti"></canvas>

@@ -1,8 +1,11 @@
 {
   "name": "67-the-chaos-arena",
   "private": true,
+  "type": "module",
   "scripts": {
-    "deploy": "wrangler deploy"
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && wrangler dev",
+    "deploy": "node scripts/build.mjs && wrangler deploy"
   },
   "devDependencies": {
     "wrangler": "4.151.0"
