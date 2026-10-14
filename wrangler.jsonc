@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "67-the-chaos-arena",
+  "account_id": "42d8747e1e9872237fa8d071950ab394",
+  "compatibility_date": "2026-10-14",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "single-page-application"
+  }
+}

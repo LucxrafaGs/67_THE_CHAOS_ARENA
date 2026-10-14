@@ -1,0 +1,10 @@
+{
+  "name": "67-the-chaos-arena",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.0"
+  }
+}
