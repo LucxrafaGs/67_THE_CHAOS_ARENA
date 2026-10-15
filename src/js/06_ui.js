@@ -7,7 +7,7 @@ const SCREENS=['home','custom','play','setup','online','lobby','arsenal','bye','
 function go(v){view=v;for(const s of SCREENS)$(s).classList.toggle('hidden',s!==v);
   const inGame=v==='game';$('hud').classList.toggle('hidden',!inGame);$('touch').classList.toggle('hidden',!inGame);document.body.classList.toggle('menu',!inGame);
   if(!inGame){$('death').classList.add('hidden');$('pause').classList.add('hidden');$('scoreOv').classList.add('hidden');$('perkOv').classList.add('hidden')}
-  if(v==='home')drawSpheres();if(v==='play')drawPlayArt();if(v==='custom')openCustom();if(v==='lobby'){renderLobby();lobbyAnim()}if(v==='setup')renderSetup($('setupPanel'),true);if(v==='arsenal')renderArsenal();
+  if(v==='home')drawSpheres();if(v==='play')drawPlayArt();if(v==='custom')openCustom();if(v==='lobby'){lobbyKey='';renderLobby();lobbyAnim()}if(v==='setup')renderSetup($('setupPanel'),true);if(v==='arsenal')renderArsenal();
   if(v==='online')$('nick').value=store.get('nick','');
   Sound.music(true,inGame?140:100)}
 function goHome(){leaveNet();players={};bullets=[];effects=[];started=false;over=false;paused=false;startDemo();$('result').classList.add('hidden');go('home')}
@@ -39,7 +39,8 @@ let draft=null,undo=[],ctab='corpo',pedFace=1,pedPose=0,pedTest=false,pedGun=0,p
 const CTABS=[['corpo','capy','Modelo'],['olhos','eye','Olhos'],['rosto','face','Rosto'],['cabeca','hat','Cabeça'],['roupa','shirt','Roupa'],['acess','glasses','Acessórios'],['extras','sparkle','Extras']];
 const customDirty=()=>draft&&JSON.stringify(draft)!==JSON.stringify(myLook);
 function openCustom(){draft=JSON.parse(JSON.stringify(myLook));undo=[];pedGun=randomGun(-1);renderCTabs();renderOpts();cancelAnimationFrame(pedRaf);pedLoop()}
-function setDraft(patch){undo.push(JSON.stringify(draft));if(undo.length>50)undo.shift();Object.assign(draft,patch);Sound.play('pop');renderOpts()}
+function setDraft(patch){undo.push(JSON.stringify(draft));if(undo.length>50)undo.shift();Object.assign(draft,patch);Sound.play('pop');autoSaveLook();renderOpts()}
+function autoSaveLook(){myLook=cleanLook(draft);store.set('look',myLook);drawSpheres();if(players[self]&&!started){players[self].look=myLook;if(host)sync(true);else if(conn)send(conn,{type:'look',look:myLook})}}
 function renderCTabs(){const el=$('ctabs');el.innerHTML='';for(const [k,i,n] of CTABS){const b=document.createElement('button');b.className='tab'+(k===ctab?' on':'');b.innerHTML=`${I(i,'ti')}${n}`;b.onclick=()=>{ctab=k;Sound.play('click');renderCTabs();renderOpts()};el.appendChild(b)}}
 function thumb(L,mode){const cv=document.createElement('canvas');cv.width=cv.height=128;drawPortrait(cv,L,mode==='full'?{full:true,bg:false}:{bg:false});return cv}
 function optGrid(title,key,list,mode='head',extra){const wrap=document.createElement('div');wrap.innerHTML=`<h3>${title}</h3>`;const g=document.createElement('div');g.className='grid';
@@ -60,7 +61,7 @@ function renderOpts(){const el=$('copts');el.innerHTML='';const add=n=>el.append
   if(ctab==='roupa'){add(optGrid('Tipo de roupa','out',OPT.out,'full'));add(swatches('Cor da roupa','ocol'));add(texRow('Textura da roupa','otex','ocol'))}
   if(ctab==='acess'){add(optGrid('Acessório','acc',OPT.acc,'full'));tip('Fone e cachecol usam a cor da roupa.')}
   if(ctab==='extras'){add(swatches('Cor do rastro do dash','trail',TRAILS));add(segRow('Contorno','line',OPT.line));tip('O rastro aparece quando você dá dash.')}}
-$('btnUndo').onclick=()=>{if(!undo.length){toast('Nada para desfazer');return}draft=JSON.parse(undo.pop());Sound.play('click');renderOpts()};
+$('btnUndo').onclick=()=>{if(!undo.length){toast('Nada para desfazer');return}draft=JSON.parse(undo.pop());Sound.play('click');autoSaveLook();renderOpts()};
 $('btnRandom').onclick=()=>{setDraft(randomLook());pedPose=.8};
 $('btnSaveLook').onclick=()=>{myLook=cleanLook(draft);draft=JSON.parse(JSON.stringify(myLook));store.set('look',myLook);Sound.play('level');toast('Visual salvo!','good');celebrate(40);drawSpheres();
   if(players[self]&&!started){players[self].look=myLook;if(host)sync(true);else if(conn)send(conn,{type:'look',look:myLook})}};
@@ -114,13 +115,14 @@ function renderSetup(el,editable,compact){const humans=Object.values(players).fi
   const pins=[...box.children];pins.forEach((p,i)=>{p.addEventListener('input',()=>{p.value=p.value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(p.value&&i<5)pins[i+1].focus()});
     p.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!p.value&&i>0)pins[i-1].focus();if(e.key==='Enter')$('btnJoin').click()});
     p.addEventListener('paste',e=>{e.preventDefault();const s=(e.clipboardData.getData('text')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);s.split('').forEach((ch,j)=>{if(pins[j])pins[j].value=ch});if(pins[Math.min(5,s.length)])pins[Math.min(5,s.length)].focus()})})})();
-$('nick').addEventListener('change',()=>store.set('nick',safe($('nick').value)));
+$('nick').addEventListener('input',()=>store.set('nick',safe($('nick').value)));
 $('btnDiceName').onclick=()=>{$('nick').value=pick(NICKS);store.set('nick',$('nick').value);Sound.play('boing')};
 $('btnHost').onclick=()=>{store.set('nick',myNick());if(!$('nick').value)$('nick').value=myNick();Sound.play('click');hostRoom()};
 $('btnJoin').onclick=()=>{store.set('nick',myNick());if(!$('nick').value)$('nick').value=myNick();Sound.play('click');joinRoom([...$('pins').children].map(p=>p.value).join(''))};
 
 // ---------- LOBBY ----------
-function renderLobby(){if(view!=='lobby')return;$('roomCode').textContent=room;const list=Object.values(players).filter(p=>!p.bot),el=$('roster');el.innerHTML='';
+let lobbyKey='';
+function renderLobby(force){if(view!=='lobby')return;const lk=JSON.stringify([room,host,cfg,Object.values(players).filter(p=>!p.bot).map(p=>[p.id,p.name,p.look])]);if(!force&&lk===lobbyKey)return;lobbyKey=lk;$('roomCode').textContent=room;const list=Object.values(players).filter(p=>!p.bot),el=$('roster');el.innerHTML='';
   for(let i=0;i<MAX_PLAYERS;i++){const p=list[i],d=document.createElement('div');d.className='slot'+(p?'':' empty');d.style.animationDelay=(i*.04)+'s';const cv=document.createElement('canvas');cv.width=200;cv.height=230;d.appendChild(cv);
     const isHost=p&&(p.id===(host?self:PEER_PREFIX+room));
     if(!p&&i>=list.length+cfg.bots){d.classList.add('ghost')}
@@ -235,7 +237,7 @@ $('statKills').onclick=$('statGems').onclick=()=>toggleScore(true);$('btnCloseSc
 // ---------- Resultado + votação ----------
 let myVote=null;
 function onMatchEnd(){$('death').classList.add('hidden');$('pause').classList.add('hidden');$('scoreOv').classList.add('hidden');for(const k of KEYLIST)keys[k]=false;pushInputs(true);myVote=null;
-  const list=rank(),me=players[self],place=list.findIndex(p=>p.id===self)+1;if(me)store.set('totalGems',store.get('totalGems',0)+me.gemsTotal);$('totalGems').textContent=store.get('totalGems',0);
+  const list=rank(),me=players[self],place=list.findIndex(p=>p.id===self)+1;$('totalGems').textContent=store.get('totalGems',0);
   const tw=teamWinner();$('teamWin').classList.toggle('hidden',tw===-1);
   if(tw>=0){$('teamWin').innerHTML=`<b style="--c:${TEAM[tw].c}">TIME ${TEAM[tw].n.toUpperCase()} VENCEU!</b><span>${ms.teamScore[0]} × ${ms.teamScore[1]}</span>`}else if(tw===-2){$('teamWin').innerHTML=`<b style="--c:#FFC531">EMPATE!</b><span>${ms.teamScore[0]} × ${ms.teamScore[1]}</span>`}
   const won=tw>=0?(me&&me.team===tw):place===1;$('resTitle').textContent=won?'VITÓRIA CAPIVARA!':'FIM DE PARTIDA';
@@ -254,9 +256,10 @@ function onMatchEnd(){$('death').classList.add('hidden');$('pause').classList.ad
   if(me&&me.kills===0)md.push(['peace','Pacifista: você não eliminou ninguém']);
   $('medals').innerHTML=md.slice(0,6).map(([i,t])=>`<div class="medal">${I(i)}${escapeHtml(t)}</div>`).join('');
   $('btnAgain').classList.toggle('hidden',!host);$('btnResLobby').classList.toggle('hidden',!(host&&!solo));
-  $('hud').classList.add('hidden');$('touch').classList.add('hidden');$('result').classList.remove('hidden');view='result';document.body.classList.add('menu');renderVotes();
+  $('hud').classList.add('hidden');$('touch').classList.add('hidden');$('result').classList.remove('hidden');view='result';document.body.classList.add('menu');voteKey='';renderVotes();
   if(won){Sound.play('win');celebrate(160)}else{Sound.play('level');celebrate(50)}}
-function renderVotes(){if(view!=='result')return;const count={};for(const v of Object.values(votes))count[v]=(count[v]||0)+1;const sel=myVote||(host?(topVote()||cfg.mode):null);
+let voteKey='';
+function renderVotes(force){if(view!=='result')return;const vk=JSON.stringify([votes,myVote,cfg.map,host]);if(!force&&vk===voteKey)return;voteKey=vk;const count={};for(const v of Object.values(votes))count[v]=(count[v]||0)+1;const sel=myVote||(host?(topVote()||cfg.mode):null);
   $('voteGrid').innerHTML=MODES.map(m=>`<button class="modecard small${m.id===sel?' on':''}" data-vote="${m.id}">${I(m.ic,'mi')}<b>${m.n}</b>${count[m.id]?`<span class="vc">${count[m.id]} ${I('thumb')}</span>`:''}</button>`).join('');
   $('voteGrid').querySelectorAll('[data-vote]').forEach(b=>b.onclick=()=>{myVote=b.dataset.vote;Sound.play('click');if(host)votes[self]=myVote;else if(conn)send(conn,{type:'vote',mode:myVote});renderVotes();if(host)sync(true)});
   const mr=$('resMaps');if(host){mr.innerHTML=`<span class="lbl2">${I('map')} Mapa:</span>`+MAPS.map(m=>`<button class="chip${m.id===cfg.map?' on':''}" data-rmap="${m.id}">${m.n}</button>`).join('')+`<button class="chip" data-rmap="random">${I('dice')} Sortear</button>`;
@@ -295,15 +298,15 @@ canvas.addEventListener('pointerup',stopShoot);canvas.addEventListener('pointerc
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 let applyJoy=()=>{};
 (()=>{const zone=$('joyZone'),joy=$('joy'),knob=$('knob');let id=null,cx=0,cy=0;
-  const home=()=>{const s=S.joySize;joy.style.left=(s*.5+30)+'px';joy.style.top=(innerHeight-s*.5-34)+'px'};
-  function setVec(px,py){const R0=S.joySize*.36;let dx=px-cx,dy=py-cy;const l=Math.hypot(dx,dy);if(l>R0){dx=dx/l*R0;dy=dy/l*R0}knob.style.transform=`translate(${dx}px,${dy}px)`;
+  const home=()=>{const s=S.joySize/(+getComputedStyle(document.documentElement).getPropertyValue('--uis')||1);joy.style.left=(s*.5+30)+'px';joy.style.top=(innerHeight-s*.5-34)+'px'};
+  function setVec(px,py){const R0=S.joySize/(+getComputedStyle(document.documentElement).getPropertyValue('--uis')||1)*.36;let dx=px-cx,dy=py-cy;const l=Math.hypot(dx,dy);if(l>R0){dx=dx/l*R0;dy=dy/l*R0}knob.style.transform=`translate(${dx}px,${dy}px)`;
     const x=dx/R0,y=dy/R0,dz=S.deadzone/100,mag=Math.hypot(x,y);if(mag<dz){keys.left=keys.right=keys.up=keys.down=false}else{const a=Math.atan2(y,x);keys.right=Math.cos(a)>.38;keys.left=Math.cos(a)<-.38;keys.down=Math.sin(a)>.38;keys.up=Math.sin(a)<-.38}pushInputs()}
   zone.addEventListener('pointerdown',e=>{if(id!==null||!playing())return;e.preventDefault();id=e.pointerId;zone.setPointerCapture(id);const r=zone.getBoundingClientRect(),m=S.joySize*.5;cx=clamp(e.clientX,r.left+m*.6,r.right-m*.6);cy=clamp(e.clientY,r.top+m,innerHeight-m*.8);
     joy.style.left=cx+'px';joy.style.top=cy+'px';joy.classList.remove('idle');setVec(e.clientX,e.clientY)});
   zone.addEventListener('pointermove',e=>{if(e.pointerId===id){e.preventDefault();setVec(e.clientX,e.clientY)}});
   const end=e=>{if(e.pointerId!==id)return;id=null;knob.style.transform='';joy.classList.add('idle');keys.left=keys.right=keys.up=keys.down=false;pushInputs(true);home()};
   zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);zone.addEventListener('lostpointercapture',end);
-  applyJoy=()=>{joy.style.width=joy.style.height=S.joySize+'px';joy.style.margin=`-${S.joySize/2}px 0 0 -${S.joySize/2}px`;joy.style.opacity=S.joyOpacity/100;home()};addEventListener('resize',home)})();
+  applyJoy=()=>{const js=S.joySize/(+getComputedStyle(document.documentElement).getPropertyValue('--uis')||1);joy.style.width=joy.style.height=js+'px';joy.style.margin=`-${js/2}px 0 0 -${js/2}px`;joy.style.opacity=S.joyOpacity/100;home()};addEventListener('resize',home)})();
 (()=>{const b=$('dashBtn');b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}keys.dash=true;pushInputs(true)});const up=()=>{keys.dash=false;pushInputs(true)};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up)})();
 document.addEventListener('pointerenter',e=>{if(e.target.classList&&e.target.classList.contains('btn')&&!isTouch)Sound.play('hover')},true);
 

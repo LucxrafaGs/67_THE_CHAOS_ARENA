@@ -72,12 +72,20 @@ const Sound=(()=>{
       noise(.04,s%4===2?.25:.08,s%4===2?2500:9000,t,musBus,s%4===2?.8:1);
       if(tempo>120&&s===6&&Math.random()<.5)tone(root*4,spb*.5,'sine',.08,1.5,t,musBus);
       nextT+=spb;step++}}
-  function music(on,bpm){init();if(!ac)return;if(bpm)tempo=bpm;if(on&&!musicOn){musicOn=true;nextT=ac.currentTime+.05;musTimer=setInterval(scheduleMusic,90)}if(!on&&musicOn){musicOn=false;clearInterval(musTimer)}}
-  function unlock(){init();if(ac&&ac.state==='suspended')ac.resume()}
+  function music(on,bpm){wantMusic=on;if(bpm)tempo=bpm;if(!ac&&!unlocked)return;init();if(!ac)return;if(bpm)tempo=bpm;if(on&&!musicOn){musicOn=true;nextT=ac.currentTime+.05;musTimer=setInterval(scheduleMusic,90)}if(!on&&musicOn){musicOn=false;clearInterval(musTimer)}}
+  let unlocked=false,silentEl=null;
+  function unlock(){init();if(!ac)return;try{if(ac.state!=='running')ac.resume()}catch(e){}
+    if(!unlocked){unlocked=true;try{const b=ac.createBuffer(1,1,22050),s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start(0)}catch(e){}
+      try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+      try{silentEl=document.createElement('audio');silentEl.setAttribute('playsinline','');silentEl.loop=true;silentEl.volume=.01;
+        silentEl.src='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';const pr=silentEl.play();if(pr&&pr.catch)pr.catch(()=>{})}catch(e){}}
+    if(musicOn===false&&wantMusic)music(true)}
+  let wantMusic=false;
   return {play,init,apply,music,unlock};
 })();
 const vibe=ms=>{if(S.vibrate&&navigator.vibrate)try{navigator.vibrate(ms)}catch(e){}};
-addEventListener('pointerdown',()=>Sound.unlock(),{capture:true});
+for(const ev of ['pointerdown','touchstart','touchend','mousedown','click'])addEventListener(ev,()=>Sound.unlock(),{capture:true,passive:true});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)Sound.unlock()});
 addEventListener('keydown',()=>Sound.unlock(),{capture:true});
 
 function toast(msg,kind=''){const d=document.createElement('div');d.className='toast '+kind;d.textContent=msg;$('toasts').appendChild(d);setTimeout(()=>d.remove(),2700)}

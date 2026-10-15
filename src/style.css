@@ -622,3 +622,22 @@ body.mobile .pedestal .hint{display:none}
   #online .namebar{margin-bottom:10px}
 }
 .subtitle{margin-top:clamp(16px,4.5vmin,40px)}@media (max-height:520px){.subtitle{margin-top:14px}}
+
+/* ===== v3.3: logo, celular escalado ===== */
+.logo{position:relative;text-shadow:0 clamp(8px,1.6vmin,16px) 0 var(--ink)}
+.logo .l2::before{display:none;content:none}
+.logo .burst{position:absolute;z-index:0;width:78%;left:18%;top:36%;transform:rotate(8deg);pointer-events:none}
+.logo .l1{position:relative;z-index:2}.logo .l2{position:relative;z-index:1}
+.logo.small .burst{top:30%}
+/* controles de toque mantêm o tamanho físico mesmo com a interface reduzida */
+body.mobile #dashBtn{width:calc(92px / var(--uis,1));height:calc(92px / var(--uis,1));font-size:calc(15px / var(--uis,1));right:calc(18px / var(--uis,1) + var(--sar));bottom:calc(18px / var(--uis,1) + var(--sab))}
+body.mobile #dashBtn .di{width:calc(28px / var(--uis,1));height:calc(28px / var(--uis,1))}
+body.mobile #swapBtn{width:calc(60px / var(--uis,1));height:calc(60px / var(--uis,1));right:calc(30px / var(--uis,1) + var(--sar));bottom:calc(122px / var(--uis,1) + var(--sab))}
+body.mobile #swapBtn .i{width:calc(28px / var(--uis,1));height:calc(28px / var(--uis,1))}
+body.mobile #knob{width:42%;height:42%;margin:-21% 0 0 -21%}
+body.mobile #reticle{width:calc(44px / var(--uis,1));height:calc(44px / var(--uis,1));margin:calc(-22px / var(--uis,1)) 0 0 calc(-22px / var(--uis,1))}
+body.mobile #weaponCard{right:calc(140px / var(--uis,1) + var(--sar))}
+@media (orientation:portrait){body.mobile #weaponCard{right:calc(10px + var(--sar));bottom:calc(210px / var(--uis,1) + var(--sab))}body.mobile #swapBtn{bottom:calc(126px / var(--uis,1) + var(--sab))}}
+.logo .burst{width:70%;left:22%;top:30%}
+.subtitle,.tagline{position:relative;z-index:3}
+#home .stage{isolation:isolate}
