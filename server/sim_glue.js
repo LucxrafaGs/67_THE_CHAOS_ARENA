@@ -53,4 +53,4 @@ return{
   get started(){return started},get over(){return over},humans:humansList,hasPlayer:id=>!!players[id],
   addPlayer,removePlayer,message,tick,summary,sync,MAX_PLAYERS,
   clearKeys(id){const p=players[id];if(p)p.keys={}},
-  debug(){return{players,bullets,cfg,ms,get started(){return started},get over(){return over}}}};
+  debug(){return{players,bullets,cfg,ms,harm,time,get started(){return started},get over(){return over}}}};

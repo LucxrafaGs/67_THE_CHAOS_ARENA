@@ -58,9 +58,12 @@ const isOwner=()=>host||(srvMode()&&!!self&&srvOwner===self);
 function ownerSend(d){if(srvMode()&&conn)send(conn,d)}
 async function api(path,opt){const r=await fetch(API_BASE+path,Object.assign({cache:'no-store'},opt||{}));if(!r.ok)throw new Error('http '+r.status);return r.json()}
 let srvCheckP=null;
+// No site publicado o jogo sempre usa o servidor; o P2P só existe quando o jogo é aberto como arquivo.
+const HOSTED=!!API_BASE&&!/^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname)||/[?&]srv=1/.test(location.search);
 function checkServer(){if(!API_BASE)return Promise.resolve(srvUp=false);if(srvCheckP)return srvCheckP;return srvCheckP=(async()=>{
-  try{const d=await Promise.race([api('/api/health'),new Promise((_,j)=>setTimeout(()=>j(new Error('tempo')),5000))]);srvUp=!!(d&&d.ok)}catch(e){srvUp=false}srvCheckP=null;return srvUp})()}
-const serverReady=()=>srvUp===null||srvCheckP?checkServer():Promise.resolve(srvUp);
+  for(let i=0;i<3;i++){try{const d=await Promise.race([api('/api/health'),new Promise((_,j)=>setTimeout(()=>j(new Error('tempo')),6000))]);if(d&&d.ok){srvUp=true;break}}catch(e){}srvUp=false;if(i<2)await new Promise(r=>setTimeout(r,700))}
+  srvCheckP=null;return srvUp})()}
+const serverReady=()=>srvUp?Promise.resolve(true):checkServer().then(up=>up||HOSTED);
 function stopPing(){if(pingTimer){clearInterval(pingTimer);pingTimer=null}}
 function startPing(){stopPing();const ping=()=>send(conn,{type:'ping',t:time()});ping();pingTimer=setInterval(ping,2000)}
 function wsOpen(code,join){const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/rooms/'+code+'/ws');

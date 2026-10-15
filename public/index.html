@@ -1,4 +1,12 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CapiBoom">
+<meta name="application-name" content="CapiBoom">
 <meta name="viewport" id="vp" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <script>/* Celular: escala a interface inteira para caber na tela (PC não muda) */(function(){var m=document.getElementById('vp');function fit(){if(!matchMedia('(pointer:coarse)').matches)return;var a=Math.min(screen.width,screen.height),b=Math.max(screen.width,screen.height);if(a>=700)return;var o=screen.orientation&&screen.orientation.type,land=o?o.indexOf('landscape')===0:Math.abs(window.orientation||0)===90;var w=land?b:a,h=land?a:b,s=Math.min(1,Math.max(.5,Math.min(w,h)/600));m.setAttribute('content','width='+Math.round(w/s)+',initial-scale='+s.toFixed(3)+',minimum-scale='+s.toFixed(3)+',maximum-scale='+s.toFixed(3)+',user-scalable=no,viewport-fit=cover');document.documentElement.style.setProperty('--uis',s)}fit();addEventListener('orientationchange',function(){setTimeout(fit,80)});if(screen.orientation&&screen.orientation.addEventListener)screen.orientation.addEventListener('change',function(){setTimeout(fit,80)})})();</script>
 
@@ -735,10 +743,98 @@ body.mobile .onlgrid.srv{max-height:calc(100dvh - 190px)}
 body.mobile .onlgrid.srv .roomlist{min-height:0}
 body.mobile .onlgrid.srv .rlbody{max-height:none;min-height:0}
 @media (orientation:portrait){body.mobile .onlgrid.srv{max-height:none}body.mobile .onlgrid.srv .rlbody{max-height:34vh;min-height:120px}}
+
+/* v3.6 — controles do celular: mira no canto inferior direito (espelho do joystick), dash acima, troca acima do dash */
+body.mobile #aimStick{--ds:calc(78px / var(--uis,1));--ss:calc(56px / var(--uis,1));width:var(--js,128px);height:var(--js,128px);right:calc(30px + var(--sar));bottom:calc(34px + var(--sab))}
+body.mobile #dashBtn{width:calc(78px / var(--uis,1));height:calc(78px / var(--uis,1));font-size:calc(13px / var(--uis,1));
+  right:calc(30px + var(--js,128px) / 2 - 39px / var(--uis,1) + var(--sar));bottom:calc(34px + var(--js,128px) + 14px / var(--uis,1) + var(--sab))}
+body.mobile #dashBtn .di{width:calc(24px / var(--uis,1));height:calc(24px / var(--uis,1))}
+body.mobile #swapBtn{width:calc(56px / var(--uis,1));height:calc(56px / var(--uis,1));
+  right:calc(30px + var(--js,128px) / 2 - 28px / var(--uis,1) + var(--sar));bottom:calc(34px + var(--js,128px) + 106px / var(--uis,1) + var(--sab))}
+body.mobile #weaponCard{right:auto;left:50%;bottom:calc(10px + var(--sab));transform:translateX(-50%) rotate(-1.5deg);transform-origin:center bottom}
+@media (orientation:portrait){
+  body.mobile #aimStick{bottom:calc(34px + var(--sab))}
+  body.mobile #dashBtn{bottom:calc(34px + var(--js,128px) + 14px / var(--uis,1) + var(--sab))}
+  body.mobile #swapBtn{bottom:calc(34px + var(--js,128px) + 106px / var(--uis,1) + var(--sab))}
+  body.mobile #weaponCard{right:auto;left:calc(24px + var(--sal));bottom:calc(48px + var(--js,128px) + var(--sab));transform:rotate(-1.5deg);transform-origin:left bottom}
+}
+
+/* v3.6 — CapyAmigos */
+[data-friends]{display:none!important}
+body.social [data-friends]{display:inline-flex!important}
+.tlgroup,.trgroup{display:flex;align-items:center;gap:10px}
+.frbtn{position:relative;align-items:center;justify-content:center;gap:6px}
+.frbtn.btn:not(.round){min-height:44px;padding:4px 14px;font-size:16px}
+.frbtn .i{width:22px;height:22px}
+.frbadge{position:absolute;top:-7px;right:-7px;min-width:22px;height:22px;padding:0 5px;border-radius:999px;background:var(--lime);color:var(--ink);border:2px solid var(--ink);font:400 13px/18px var(--font-display);text-align:center}
+.frbadge.red{background:var(--danger);color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.18)}}
+#hud .hudfr{width:44px;height:44px;font-size:18px}
+#hud .hudfr .i{width:22px;height:22px}
+#friendsOv{z-index:61}
+.panel.friends{width:min(860px,100%);height:min(620px,calc(100dvh - 32px));gap:10px;padding:14px 16px 16px}
+.frhead{display:flex;align-items:center;justify-content:center;position:relative}
+.frhead h2{margin:0}
+.frhead .btn{position:absolute;right:0;top:50%;transform:translateY(-50%);width:42px;height:42px}
+.frtop{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.mycode{display:flex;align-items:center;gap:8px;background:var(--gold);color:var(--ink);border:3px solid var(--ink);border-radius:16px;padding:3px 4px 3px 12px;box-shadow:0 4px 0 var(--ink)}
+.mycode span{font-size:12px;font-weight:800}
+.mycode b{font-family:var(--font-display);font-weight:400;font-size:26px;letter-spacing:3px}
+.mycode .btn{min-height:38px;padding:4px 12px;font-size:14px}
+.fradd{display:flex;gap:8px;align-items:center;flex:1;min-width:240px;max-width:380px}
+.fradd .field{flex:1;padding:8px 12px;font-size:16px;text-transform:uppercase;letter-spacing:2px}
+.fradd .btn{min-height:42px;padding:4px 14px;font-size:15px}
+.frbody{flex:1;min-height:0;display:grid;grid-template-columns:minmax(220px,.8fr) 1.2fr;gap:12px}
+.frlist{overflow:auto;display:flex;flex-direction:column;gap:7px;padding:2px 4px 6px 2px;min-height:0}
+.fritem{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:9px;padding:6px 8px;border-radius:16px;border:3px solid var(--ink);background:var(--plum-d);color:var(--cream);box-shadow:0 4px 0 var(--ink);text-align:left;font:inherit;cursor:pointer}
+.fritem.on{background:var(--plum);outline:3px solid var(--gold)}
+@media (hover:hover){.fritem:hover{background:var(--plum)}}
+.fritem canvas,.frchead canvas{width:44px;height:44px;border-radius:12px;border:2px solid var(--ink)}
+.frmain{display:flex;flex-direction:column;min-width:0}
+.frmain b{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frmain small{display:flex;align-items:center;gap:5px;font-size:12.5px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frmain small.on{opacity:1;color:var(--lime)}
+.frmain .dot{width:9px;height:9px;border-radius:50%;background:#8a7fb0;flex:none}
+.frmain small.on .dot{background:var(--lime);box-shadow:0 0 6px var(--lime)}
+.unread{width:14px;height:14px;border-radius:50%;background:var(--danger);border:2px solid var(--ink)}
+.frchat{display:flex;flex-direction:column;min-height:0;background:#0003;border:3px solid var(--ink);border-radius:18px;overflow:hidden}
+.frchead{display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--plum-d);border-bottom:3px solid var(--ink)}
+.frchead:empty{display:none}
+.frchead .frmain{flex:1}
+.frchead .btn.round{width:38px;height:38px;flex:none}.frchead .btn.round .i{width:18px;height:18px}
+.frchead .frjoin{min-height:38px;padding:4px 12px;font-size:13px;flex:none}
+.frback{display:none!important}
+.frmsgs{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:10px}
+.frday{align-self:center;font-size:11px;font-weight:800;opacity:.6;margin:4px 0}
+.bub{max-width:78%;display:flex;flex-direction:column;padding:6px 11px 4px;border-radius:16px;border:2px solid var(--ink);word-break:break-word}
+.bub span{font-size:15px;line-height:1.3}
+.bub small{align-self:flex-end;font-size:10.5px;opacity:.6}
+.bub.me{align-self:flex-end;background:var(--gold);color:var(--ink);border-bottom-right-radius:5px}
+.bub.them{align-self:flex-start;background:var(--plum);border-bottom-left-radius:5px}
+.frsend{display:flex;gap:8px;padding:8px;border-top:3px solid var(--ink);background:var(--plum-d)}
+.frsend .field{flex:1;padding:8px 12px;font-size:16px}
+.frsend .btn.round{width:44px;height:44px;flex:none}
+.frsend .field:disabled,.frsend .btn:disabled{opacity:.45}
+/* telas estreitas: lista OU conversa */
+.panel.friends.one .frbody{grid-template-columns:1fr}
+.panel.friends.one .frbody .frchat{display:none}
+.panel.friends.one .frbody.chatting .frlist{display:none}
+.panel.friends.one .frbody.chatting .frchat{display:flex}
+.panel.friends.one .frback{display:inline-flex!important}
+@media (max-height:520px){
+  .panel.friends{padding:8px 12px 10px;gap:6px}.frhead h2{font-size:22px}
+  .mycode b{font-size:20px}.frtop{gap:6px}
+  .fritem{padding:4px 6px}.fritem canvas,.frchead canvas{width:36px;height:36px}
+}
+body.mobile .tlgroup .frbtn span{display:none}
+body.mobile .tlgroup .frbtn.btn:not(.round){padding:4px 10px}
 </style></head><body class="menu">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
  <defs>
-  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 4.5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9l-5 4v-4H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z" fill="currentColor"/><circle cx="8" cy="11" r="1.6" fill="#1B1033"/><circle cx="12" cy="11" r="1.6" fill="#1B1033"/><circle cx="16" cy="11" r="1.6" fill="#1B1033"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M3 11.5 20.5 4l-5.5 17-3.6-6.6z" fill="currentColor"/><path d="M11.4 14.4 20.5 4" stroke="#1B1033" stroke-width="2"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.5h16M9 6.5V4.5h6v2M6.5 6.5l1 14h9l1-14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
 <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6" fill="currentColor"/><path d="M2.5 20c.4-4 3-6.4 6.5-6.4s6.1 2.4 6.5 6.4z" fill="currentColor"/><circle cx="16.8" cy="9" r="2.8" fill="currentColor" opacity=".7"/><path d="M15.5 13.8c3.3-.4 5.6 1.8 6 5.2h-4.2c-.3-2-.9-3.7-1.8-5.2z" fill="currentColor" opacity=".7"/></symbol>
 <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z" fill="currentColor"/></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="6.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></g></symbol>
@@ -815,7 +911,10 @@ body.mobile .onlgrid.srv .rlbody{max-height:none;min-height:0}
 <!-- HOME -->
 <section id="home" class="screen">
   <div class="topbar">
+    <div class="tlgroup">
     <div class="counter" title="Laranjinhas coletadas no total"><svg class="i lg"><use href="#i-orange"/></svg><span id="totalGems">0</span></div>
+    <button class="frbtn btn" data-friends aria-label="CapyAmigos"><svg class="i"><use href="#i-users"/></svg><span>AMIGOS</span><b class="frbadge hidden"></b></button>
+    </div>
     <button class="sphere" id="sphereBtn" aria-label="Personalizar capivara"><canvas width="148" height="148"></canvas><span class="pen"><svg class="i"><use href="#i-pencil"/></svg><b>EDITAR</b></span></button>
   </div>
   <div class="stage">
@@ -832,7 +931,7 @@ body.mobile .onlgrid.srv .rlbody{max-height:none;min-height:0}
     </div>
   </div>
   <button class="btn fsbtn" id="btnFs" title="Tela cheia" aria-label="Tela cheia"><svg class="i"><use href="#i-expand"/></svg></button>
-  <div class="version">v3.2 • CapiBoom</div>
+  <div class="version">v4.0 • CapiBoom</div>
 </section>
 
 <!-- PERSONALIZAÇÃO -->
@@ -899,7 +998,7 @@ body.mobile .onlgrid.srv .rlbody{max-height:none;min-height:0}
   <div class="topbar">
     <button class="btn round" data-back aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button>
     <h2>ONLINE</h2>
-    <button class="sphere sm" data-sphere aria-label="Personalizar"><canvas width="100" height="100"></canvas></button>
+    <span class="trgroup"><button class="frbtn btn round" data-friends aria-label="CapyAmigos"><svg class="i"><use href="#i-users"/></svg><b class="frbadge hidden"></b></button><button class="sphere sm" data-sphere aria-label="Personalizar"><canvas width="100" height="100"></canvas></button></span>
   </div>
   <div class="stage"><div class="onl">
     <div class="namebar">
@@ -939,6 +1038,7 @@ body.mobile .onlgrid.srv .rlbody{max-height:none;min-height:0}
     <div class="codebox"><span>SALA</span><b id="roomCode">------</b><button class="btn small ice" id="btnCopy"><svg class="i ic"><use href="#i-copy"/></svg>COPIAR</button></div>
     <button class="roominfo hidden" id="roomInfo" aria-label="Configurar sala"></button>
     <span class="spacer"></span>
+    <button class="frbtn btn round" data-friends aria-label="CapyAmigos"><svg class="i"><use href="#i-users"/></svg><b class="frbadge hidden"></b></button>
   </div>
   <div class="stage scroll" style="flex-direction:column;justify-content:flex-start">
     <div class="roster" id="roster"></div>
@@ -988,6 +1088,7 @@ body.mobile .onlgrid.srv .rlbody{max-height:none;min-height:0}
   <div class="stats">
     <div class="stat sticker" id="statKills" title="Eliminações"><svg class="i si"><use href="#i-skull"/></svg><span id="kNum">0</span></div>
     <div class="stat sticker" id="statGems" title="Laranjinhas"><svg class="i si"><use href="#i-orange"/></svg><span id="gNum">0</span></div>
+    <button class="frbtn btn round hudfr" data-friends aria-label="CapyAmigos"><svg class="i"><use href="#i-chat"/></svg><b class="frbadge hidden"></b></button>
     <button class="btn round pausebtn" id="btnPause" aria-label="Pausar"><svg class="i"><use href="#i-pause"/></svg></button>
   </div>
   <div class="perkrow" id="perkRow"></div>
@@ -1089,6 +1190,21 @@ body.mobile .onlgrid.srv .rlbody{max-height:none;min-height:0}
 </div>
 
 <!-- MODAL -->
+<div id="friendsOv" class="overlay hidden"><div class="panel sticker friends" id="frPanel">
+  <div class="frhead"><h2>CAPYAMIGOS</h2><button class="btn round small" id="frClose" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="frtop">
+    <div class="mycode"><span>SEU CÓDIGO</span><b id="frMyCode">······</b><button class="btn small ice" id="frCopy"><svg class="i ic"><use href="#i-copy"/></svg>COPIAR</button></div>
+    <div class="fradd"><input class="field" id="frCode" maxlength="6" placeholder="código do amigo" autocomplete="off"><button class="btn small gold" id="frAdd"><svg class="i ic"><use href="#i-plus"/></svg>ADICIONAR</button></div>
+  </div>
+  <div class="frbody" id="frBody">
+    <div class="frlist" id="frList"></div>
+    <div class="frchat" id="frChat">
+      <div class="frchead" id="frCHead"></div>
+      <div class="frmsgs" id="frMsgs"></div>
+      <div class="frsend"><input class="field" id="frTxt" maxlength="200" placeholder="Escreva uma mensagem…" autocomplete="off"><button class="btn round gold" id="frSendBtn" aria-label="Enviar"><svg class="i"><use href="#i-send"/></svg></button></div>
+    </div>
+  </div>
+</div></div>
 <div id="createOv" class="overlay modal hidden"><div class="panel sticker create">
   <h2 id="crTitle">CRIAR SALA</h2>
   <label class="crl">NOME DA SALA<input class="field" id="crName" maxlength="24" autocomplete="off"></label>
@@ -1815,7 +1931,8 @@ function harm(p,dmg,owner,gi,t,src){if(!p||!p.alive||p.picking||t<p.shieldUntil|
   if(p.hp<=0){p.hp=0;p.alive=false;p.deaths++;p.streak=0;p.respawnAt=t+3000*(p.mods.quick?.5:1);p.canRespawnAt=t+1500;p.frozenUntil=p.flashUntil=p.burnUntil=0;
     p.killer={id:owner,name:k?k.name:'o caos',gun:gi};dropFlag(p,t);
     if(p.mods.kami){p.mods.kami=0;explode(p.x,p.y,150,65,p.id,gi,t);p.mods.kami=1}
-    if(k&&k.id!==p.id){k.kills++;k.streak++;if(k.mods.feast)k.hp=Math.min(k.maxHp,k.hp+30*k.mods.feast);k.kc++;if(k.kc>=KILLS_PER_CARD){k.kc-=KILLS_PER_CARD;grantCard(k,t)}k.best=Math.max(k.best,k.streak);if(GUNS[gi]&&GUNS[gi].txt==='NÃO')k.noKills++;
+    if(k&&k.id!==p.id){const loot=p.energy;if(loot>0&&MODE.id!=='gun'){p.energy=0;fx('hit',{x:k.x,y:k.y-52,w:'+'+loot+' XP',c:'#FF8A1F'},900);gainEnergy(k,loot,t)}
+      k.kills++;k.streak++;if(k.mods.feast)k.hp=Math.min(k.maxHp,k.hp+30*k.mods.feast);k.kc++;if(k.kc>=KILLS_PER_CARD){k.kc-=KILLS_PER_CARD;grantCard(k,t)}k.best=Math.max(k.best,k.streak);if(GUNS[gi]&&GUNS[gi].txt==='NÃO')k.noKills++;
       if(MODE.id==='tdm'&&k.team>=0)ms.teamScore[k.team]++;
       if(MODE.id==='gun'){k.gunLvl++;if(k.gunLvl>=GUN_SEQ.length){ms.winner=k.id;endMatch()}else{k.guns=[GUN_SEQ[k.gunLvl],-1];k.slot=0;fx('crate',{x:k.x,y:k.y,pid:k.id,g:k.guns[0],lvl:1},900)}}}
     fx('ko',{x:p.x,y:p.y,c:p.look.body,pid:p.id},900);fx('kill',{k:k?k.name:'?',ki:owner,v:p.name,vi:p.id,g:gi,kt:k?k.team:-1,vt:p.team},4000)}
@@ -1872,9 +1989,13 @@ function updateP(p,dt,t){
   if(md.magnet){const R2=200+md.magnet*90;for(const g of gems){const d=dist(g.x,g.y,p.x,p.y);if(d<R2&&d>4){const sp2=(260+md.magnet*120)*dt*(1.4-d/R2);g.x+=(p.x-g.x)/d*Math.min(sp2,d);g.y+=(p.y-g.y)/d*Math.min(sp2,d)}}}
   for(let i=gems.length-1;i>=0;i--){const g=gems[i];if(Math.abs(g.x-p.x)<pr2&&Math.abs(g.y-p.y)<pr2){gems.splice(i,1);p.energy++;p.gemsTotal++;fx('gem',{x:g.x,y:g.y,pid:p.id,n:p.energy},500);
     if(MODE.id==='race'){if(p.energy>=67){ms.winner=p.id;endMatch();return}}
-    else if(p.energy>=67){p.energy-=67;p.level++;p.hp=p.maxHp;fx('67',{x:p.x,y:p.y,pid:p.id,lv:p.level},1800)}}}
+    else levelCheck(p,t)}}
   for(let i=meds.length-1;i>=0;i--){const m=meds[i];if(p.hp<p.maxHp&&dist(m.x,m.y,p.x,p.y)<30+md.magnet*50){meds.splice(i,1);p.hp=Math.min(p.maxHp,p.hp+(md.nurse?p.maxHp:50));fx('med',{x:m.x,y:m.y,pid:p.id},700)}}
   for(let i=crates.length-1;i>=0;i--){const c=crates[i];if(dist(c.x,c.y,p.x,p.y)<32+md.magnet*50){crates.splice(i,1);const ng=md.legend?randomGunTop(p.guns[p.slot]):randomGun(p.guns[p.slot],p.level,p.guns[1-p.slot]);if(p.guns[1]<0)p.guns[1]=ng;else p.guns[p.slot]=ng;fx('crate',{x:c.x,y:c.y,pid:p.id,g:ng},800)}}}
+
+// XP = laranjinhas. 67 laranjinhas sobem um nível, enchem a vida e dão uma carta de poder.
+function levelCheck(p,t){while(p.energy>=67&&!over){p.energy-=67;p.level++;p.hp=p.maxHp;fx('67',{x:p.x,y:p.y,pid:p.id,lv:p.level},1800);if(p.alive)grantCard(p,t)}}
+function gainEnergy(p,n,t){p.energy+=n;if(MODE.id==='race'){if(p.energy>=67&&!over){ms.winner=p.id;endMatch()}}else levelCheck(p,t)}
 
 // ---------- Bandeiras e zona ----------
 function dropFlag(p,t){if(p.carry<0)return;const f=ms.flags[p.carry];if(f){f.carrier=null;f.x=p.x;f.y=p.y;f.dropT=t;f.home=false}p.carry=-1}
@@ -2084,9 +2205,12 @@ const isOwner=()=>host||(srvMode()&&!!self&&srvOwner===self);
 function ownerSend(d){if(srvMode()&&conn)send(conn,d)}
 async function api(path,opt){const r=await fetch(API_BASE+path,Object.assign({cache:'no-store'},opt||{}));if(!r.ok)throw new Error('http '+r.status);return r.json()}
 let srvCheckP=null;
+// No site publicado o jogo sempre usa o servidor; o P2P só existe quando o jogo é aberto como arquivo.
+const HOSTED=!!API_BASE&&!/^(localhost|127\.|0\.0\.0\.0)/.test(location.hostname)||/[?&]srv=1/.test(location.search);
 function checkServer(){if(!API_BASE)return Promise.resolve(srvUp=false);if(srvCheckP)return srvCheckP;return srvCheckP=(async()=>{
-  try{const d=await Promise.race([api('/api/health'),new Promise((_,j)=>setTimeout(()=>j(new Error('tempo')),5000))]);srvUp=!!(d&&d.ok)}catch(e){srvUp=false}srvCheckP=null;return srvUp})()}
-const serverReady=()=>srvUp===null||srvCheckP?checkServer():Promise.resolve(srvUp);
+  for(let i=0;i<3;i++){try{const d=await Promise.race([api('/api/health'),new Promise((_,j)=>setTimeout(()=>j(new Error('tempo')),6000))]);if(d&&d.ok){srvUp=true;break}}catch(e){}srvUp=false;if(i<2)await new Promise(r=>setTimeout(r,700))}
+  srvCheckP=null;return srvUp})()}
+const serverReady=()=>srvUp?Promise.resolve(true):checkServer().then(up=>up||HOSTED);
 function stopPing(){if(pingTimer){clearInterval(pingTimer);pingTimer=null}}
 function startPing(){stopPing();const ping=()=>send(conn,{type:'ping',t:time()});ping();pingTimer=setInterval(ping,2000)}
 function wsOpen(code,join){const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/rooms/'+code+'/ws');
@@ -2487,11 +2611,13 @@ $('btnJoin').onclick=async()=>{nickReady();Sound.play('click');const code=[...$(
 let roomTimer=null,roomListKey='';
 async function enterOnline(){$('onlGrid').classList.add('p2p');$('onlGrid').classList.remove('srv');roomListKey='';
   $('roomList').innerHTML=`<div class="rlempty">Conectando ao servidor<span class="dots"></span></div>`;
-  const up=await checkServer();if(view!=='online')return;
-  $('onlGrid').classList.toggle('srv',up);$('onlGrid').classList.toggle('p2p',!up);
-  $('hostHint').textContent=up?'pública ou privada, com ou sem senha':'você vira o anfitrião (modo direto)';
-  if(up){setNet('Servidor online. Escolha uma sala ou crie a sua!','ok');refreshRooms();clearInterval(roomTimer);roomTimer=setInterval(()=>{if(view==='online')refreshRooms();else{clearInterval(roomTimer);roomTimer=null}},4000)}
-  else setNet(API_BASE?'Servidor fora do ar: usando o modo direto (P2P).':'Pronto para o caos.',API_BASE?'err':'')}
+  if(HOSTED){$('onlGrid').classList.add('srv');$('onlGrid').classList.remove('p2p')}
+  const up=await checkServer();if(view!=='online')return;const srv=up||HOSTED;
+  $('onlGrid').classList.toggle('srv',srv);$('onlGrid').classList.toggle('p2p',!srv);
+  $('hostHint').textContent=srv?'pública ou privada, com ou sem senha':'você vira o anfitrião (modo direto)';
+  if(srv){setNet(up?'Servidor online. Escolha uma sala ou crie a sua!':'O servidor não respondeu. Tentando de novo…',up?'ok':'err');refreshRooms();clearInterval(roomTimer);
+    roomTimer=setInterval(async()=>{if(view!=='online'){clearInterval(roomTimer);roomTimer=null;return}if(!srvUp&&await checkServer())setNet('Servidor online. Escolha uma sala ou crie a sua!','ok');refreshRooms()},4000)}
+  else setNet('Pronto para o caos.','')}
 function fmtLeft(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 async function refreshRooms(){let rooms;try{rooms=(await api('/api/rooms')).rooms||[]}catch(e){$('roomList').innerHTML=`<div class="rlempty">Não deu para buscar as salas agora.</div>`;return}
   if(view!=='online')return;const key=JSON.stringify(rooms);if(key===roomListKey)return;roomListKey=key;
@@ -2720,7 +2846,7 @@ let applyJoy=()=>{};
   zone.addEventListener('pointermove',e=>{if(e.pointerId===id){e.preventDefault();setVec(e.clientX,e.clientY)}});
   const end=e=>{if(e.pointerId!==id)return;id=null;knob.style.transform='';joy.classList.add('idle');keys.left=keys.right=keys.up=keys.down=false;pushInputs(true);home()};
   zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);zone.addEventListener('lostpointercapture',end);
-  applyJoy=()=>{const js=S.joySize/(+getComputedStyle(document.documentElement).getPropertyValue('--uis')||1);joy.style.width=joy.style.height=js+'px';joy.style.margin=`-${js/2}px 0 0 -${js/2}px`;joy.style.opacity=S.joyOpacity/100;home()};addEventListener('resize',home)})();
+  applyJoy=()=>{const js=S.joySize/(+getComputedStyle(document.documentElement).getPropertyValue('--uis')||1);joy.style.width=joy.style.height=js+'px';joy.style.margin=`-${js/2}px 0 0 -${js/2}px`;joy.style.opacity=S.joyOpacity/100;document.documentElement.style.setProperty('--js',js+'px');home()};addEventListener('resize',()=>applyJoy())})();
 (()=>{const base=$('aimStick'),knob=$('aimKnob');let id=null;
   function upd(e){const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,R0=r.width*.36;let dx=e.clientX-cx,dy=e.clientY-cy;const l=Math.hypot(dx,dy);if(l>R0){dx=dx/l*R0;dy=dy/l*R0}
     knob.style.transform=`translate(${dx}px,${dy}px)`;const mag=Math.min(1,l/R0);aimStick.mag=mag;if(mag>.12){aimStick.a=Math.atan2(dy,dx);aimStick.on=true}
@@ -2740,6 +2866,7 @@ if(location.hash==='#debug')window.__67={get players(){return players},get self(
   harmMe:d=>harm(players[self],d,Object.keys(players).find(k=>k!==self),Math.floor(Math.random()*GUNS.length),time()),level:()=>{players[self].energy=66},view:()=>view,
   setGun:g=>{players[self].guns[players[self].slot]=g;players[self].gun=g},tpGem:()=>{const p=players[self],g=gems[0];p.x=g.x;p.y=g.y},god:()=>{players[self].shieldUntil=1e12},card:g=>showRespawnCard(g),
   freezeMe:()=>{players[self].frozenUntil=time()+3000},grant:()=>grantCard(players[self],time()),me:()=>players[self],flashMe:()=>{players[self].flashUntil=time()+2500},bullets:()=>bullets.length,gi:n=>GUNS.findIndex(g=>g.n===n),builds:()=>builds.length,fields:()=>fields.length,
+  portrait:(cv,o)=>drawPortrait(cv,myLook,o||{bg:false}),
   get room(){return room},rtt:()=>rtt,isOwner:()=>isOwner(),goHome:()=>goHome(),ownerEnd:()=>ownerSend({type:'end'}),dropWs:()=>{try{conn.ws.close()}catch(e){}}};
 if(location.hash==='#debug')window.__67.sweep=()=>{const out=[];const saveP=players,saveCfg={...cfg};cfg.mode='ffa';cfg.map='ilha';setupMode();host=true;solo=true;
   for(const g of GUNS){players={};bullets=[];builds=[];fields=[];effects=[];gems=[];meds=[];crates=[];
@@ -2772,6 +2899,100 @@ if(location.hash==='#debug')window.__67.offTest=(names,offs)=>{const out=[];cfg.
 if(location.hash==='#debug')window.__67.teleTest=()=>{cfg.mode='ffa';cfg.map='labirinto';setupMode();host=true;solo=true;players={};bullets=[];builds=[];fields=[];effects=[];
   const me=newPlayer('me','Eu',defaultLook(0));players={me};self='me';const g=GUNS.find(x=>x.n==='Porta de Bolso');me.guns=[g.id,-1];me.gun=g.id;me.x=300;me.y=400;me.aim=Math.PI/2;const y0=me.y;let t0=time()+200000;
   for(let i=0;i<90;i++){const t=t0+i*1000/60;me.keys={fire:i<3};step(1/60,t)}return {from:[300,y0],to:[Math.round(me.x),Math.round(me.y)],inWall:inWall(me.x,me.y,0)}};
+
+// ===== CapyAmigos: amigos por código, quem está online, mensagens =====
+// Conta guardada no navegador (67x_social). O servidor é o Durable Object "Social".
+const SOC={me:null,friends:{},ws:null,open:false,sel:null,hist:{},fails:0,ping:null,lastSt:'',lastProf:'',narrowChat:false};
+let socReads=store.get('socReads',{});
+const socOn=()=>!!API_BASE;
+function socAgo(t){if(!t)return'há muito tempo';const m=Math.floor((Date.now()-t)/60000);if(m<2)return'agora há pouco';if(m<60)return`há ${m} min`;const h=Math.floor(m/60);if(h<24)return`há ${h} h`;const d=Math.floor(h/24);return d===1?'ontem':`há ${d} dias`}
+function socWhere(f){if(!f.online)return'visto '+socAgo(f.seen);const st=f.st||{};
+  return st.w==='game'?'em partida'+(st.rn?' • '+st.rn:''):st.w==='lobby'?'no saguão'+(st.rn?' • '+st.rn:''):st.w==='result'?'vendo o resultado':st.w==='bots'?'treinando com bots':'online no menu'}
+const socUnread=f=>f.lastIn>(socReads[f.id]||0);
+function socMarkRead(id){const f=SOC.friends[id];if(!f)return;socReads[id]=Math.max(f.lastIn||0,Date.now());store.set('socReads',socReads);socBadges()}
+
+async function socInit(){if(!socOn())return;document.body.classList.add('social');let acc=store.get('social',null);
+  if(!acc||!acc.id){try{const r=await fetch(API_BASE+'/api/social/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:myNick(),look:myLook})});
+      if(!r.ok)throw new Error('http '+r.status);acc=await r.json();store.set('social',acc)}catch(e){setTimeout(socInit,20000);return}}
+  socConnect()}
+function socConnect(){const acc=store.get('social',null);if(!acc)return;
+  let ws;try{ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/social/ws?id='+encodeURIComponent(acc.id)+'&s='+encodeURIComponent(acc.secret))}catch(e){return}
+  SOC.ws=ws;let opened=false;
+  ws.onopen=()=>{opened=true;SOC.open=true;SOC.fails=0;SOC.lastSt='';SOC.lastProf='';socTick();clearInterval(SOC.ping);SOC.ping=setInterval(()=>{if(ws.readyState===1)ws.send('ping')},25000)};
+  ws.onmessage=e=>{if(e.data==='pong')return;let d;try{d=JSON.parse(e.data)}catch(_){return}socMsg(d)};
+  ws.onclose=()=>{SOC.open=false;clearInterval(SOC.ping);if(SOC.ws!==ws)return;SOC.ws=null;
+    if(!opened&&++SOC.fails>=4){SOC.fails=0;store.set('social',null);setTimeout(socInit,3000);return} // conta sumiu do servidor: cria outra
+    setTimeout(socConnect,Math.min(30000,2000*(1+SOC.fails)))}}
+function socSend(d){if(SOC.ws&&SOC.ws.readyState===1)SOC.ws.send(JSON.stringify(d))}
+
+function socMsg(d){switch(d.type){
+  case 'state':SOC.me=d.me;SOC.friends={};for(const f of d.friends)SOC.friends[f.id]=f;$('frMyCode').textContent=d.me.code;socRender();break;
+  case 'list':for(const f of d.friends)SOC.friends[f.id]=Object.assign(SOC.friends[f.id]||{},f);socRender();break;
+  case 'presence':{const f=SOC.friends[d.id];if(!f)break;const was=f.online;Object.assign(f,{online:d.online,seen:d.seen,st:d.st,name:d.name,look:d.look});
+    if(d.online&&!was&&view!=='game')toast(f.name+' ficou online','good');socRender();break}
+  case 'friend':{const f=d.f;SOC.friends[f.id]=f;if(d.by){toast(f.name+' te adicionou como CapyAmigo!','good');Sound.play('yes')}if(d.added){toast(f.name+' agora é seu CapyAmigo!','good');Sound.play('yes');$('frCode').value='';socSelect(f.id)}socRender();break}
+  case 'unfriend':delete SOC.friends[d.id];if(SOC.sel===d.id){SOC.sel=null;SOC.narrowChat=false}socRender();break;
+  case 'msg':{const m=d.m,mine=m.a===(SOC.me&&SOC.me.id),other=mine?m.b:m.a,f=SOC.friends[other];if(!f)break;
+    (SOC.hist[other]=SOC.hist[other]||[]).push(m);if(!mine){f.lastIn=m.t;const reading=socIsOpen()&&SOC.sel===other;
+      if(reading)socMarkRead(other);else{toast(f.name+': '+m.txt);Sound.play('pop')}}
+    socRender();break}
+  case 'hist':SOC.hist[d.with]=d.msgs;if(d.with===SOC.sel)socRenderChat(true);break;
+  case 'err':toast(d.msg,'bad');Sound.play('no');break}}
+
+// Onde estou (para os amigos verem e poderem entrar na sala)
+function socTick(){if(!SOC.open)return;const inRoom=srvMode()&&!!self&&!!room&&room!=='OFFLINE';
+  const w=started&&solo?'bots':inRoom?(started?(over?'result':'game'):'lobby'):'menu';
+  const st={w,room:inRoom?room:'',rn:inRoom&&srvInfo?srvInfo.name:'',mode:started?MODE.n:''};const k=JSON.stringify(st);if(k!==SOC.lastSt){SOC.lastSt=k;socSend(Object.assign({type:'st'},st))}
+  const prof=JSON.stringify([myNick(),myLook]);if(prof!==SOC.lastProf){SOC.lastProf=prof;socSend({type:'profile',name:myNick(),look:myLook})}}
+setInterval(socTick,2000);
+
+// ---------- Painel ----------
+const socIsOpen=()=>!$('friendsOv').classList.contains('hidden');
+function socOpen(){if(!socOn())return;Sound.play('click');$('friendsOv').classList.remove('hidden');
+  if(view==='game'){for(const k of KEYLIST)keys[k]=false;pushInputs(true)}
+  $('frPanel').classList.toggle('one',innerWidth<760);socSend({type:'list'});if(SOC.sel){socSend({type:'hist',with:SOC.sel});socMarkRead(SOC.sel)}socRender();
+  if(!SOC.open)$('frList').innerHTML=`<div class="rlempty">Conectando aos CapyAmigos<span class="dots"></span></div>`}
+function socClose(){$('friendsOv').classList.add('hidden');document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}
+function socSelect(id){SOC.sel=id;SOC.narrowChat=true;socMarkRead(id);socSend({type:'hist',with:id});socRender()}
+function socBadges(){const fs=Object.values(SOC.friends),unread=fs.filter(socUnread).length,online=fs.filter(f=>f.online).length;
+  document.querySelectorAll('[data-friends] .frbadge').forEach(b=>{b.classList.toggle('hidden',!unread&&!online);b.classList.toggle('red',!!unread);b.textContent=unread||online})}
+function socRender(){socBadges();if(!socIsOpen())return;const fs=Object.values(SOC.friends).sort((a,b)=>(b.online-a.online)||(socUnread(b)-socUnread(a))||a.name.localeCompare(b.name));
+  $('frBody').classList.toggle('chatting',SOC.narrowChat&&!!SOC.sel);
+  if(!SOC.open&&!fs.length)return;
+  $('frList').innerHTML=fs.length?fs.map(f=>`<button class="fritem${f.id===SOC.sel?' on':''}" data-fid="${f.id}"><canvas width="80" height="80"></canvas><span class="frmain"><b>${escapeHtml(f.name)}</b><small class="${f.online?'on':''}"><i class="dot"></i>${escapeHtml(socWhere(f))}</small></span>${socUnread(f)?'<em class="unread"></em>':''}</button>`).join('')
+    :`<div class="rlempty">${I('users')}<b>Nenhum CapyAmigo ainda.</b><span>Mande seu código para os amigos ou digite o código deles acima.</span></div>`;
+  $('frList').querySelectorAll('.fritem').forEach((b,i)=>{drawPortrait(b.querySelector('canvas'),cleanLook(fs[i].look),{bg:true});b.onclick=()=>{Sound.play('click');socSelect(b.dataset.fid)}});
+  socRenderChat()}
+function socRenderChat(scroll){const f=SOC.friends[SOC.sel];const head=$('frCHead');
+  if(!f){head.innerHTML='';$('frMsgs').innerHTML=`<div class="rlempty">${I('chat')}<b>Escolha um amigo para conversar.</b></div>`;$('frTxt').disabled=true;$('frSendBtn').disabled=true;return}
+  $('frTxt').disabled=false;$('frSendBtn').disabled=false;
+  const canJoin=f.online&&f.st&&f.st.room&&!(srvMode()&&room===f.st.room&&self);
+  head.innerHTML=`<button class="btn round small frback" aria-label="Voltar">${I('back')}</button><canvas width="80" height="80"></canvas><span class="frmain"><b>${escapeHtml(f.name)}</b><small class="${f.online?'on':''}"><i class="dot"></i>${escapeHtml(socWhere(f))}</small></span>
+    ${canJoin?`<button class="btn small gold frjoin">${I('arrow','ic')}ENTRAR NA SALA</button>`:''}<button class="btn round small danger frdel" aria-label="Remover amigo" title="Remover amigo">${I('trash')}</button>`;
+  drawPortrait(head.querySelector('canvas'),cleanLook(f.look),{bg:true});
+  head.querySelector('.frback').onclick=()=>{Sound.play('click');SOC.narrowChat=false;socRender()};
+  head.querySelector('.frdel').onclick=async()=>{if(await confirmBox('Remover amigo?',`${f.name} vai sair da sua lista de CapyAmigos.`,'REMOVER','CANCELAR'))socSend({type:'del',id:f.id})};
+  const j=head.querySelector('.frjoin');if(j)j.onclick=async()=>{const busy=started||(conn&&self);if(busy&&!await confirmBox('Entrar na sala de '+f.name+'?','Você vai sair da partida atual.','ENTRAR','FICAR'))return;socClose();nickReady&&nickReady();srvJoin(f.st.room)};
+  const box=$('frMsgs'),atEnd=box.scrollHeight-box.scrollTop-box.clientHeight<40,ms=SOC.hist[f.id];
+  if(!ms){box.innerHTML=`<div class="rlempty">Carregando conversa<span class="dots"></span></div>`;return}
+  const me=SOC.me&&SOC.me.id;let lastDay='';
+  box.innerHTML=ms.length?ms.map(m=>{const d=new Date(m.t),day=d.toLocaleDateString('pt-BR'),hm=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});const sep=day!==lastDay?`<div class="frday">${day===new Date().toLocaleDateString('pt-BR')?'hoje':day}</div>`:'';lastDay=day;
+    return sep+`<div class="bub ${m.a===me?'me':'them'}"><span>${escapeHtml(m.txt)}</span><small>${hm}</small></div>`}).join(''):`<div class="rlempty"><b>Diga oi para ${escapeHtml(f.name)}!</b></div>`;
+  if(scroll||atEnd)box.scrollTop=box.scrollHeight}
+function socSendMsg(){const t=$('frTxt').value.trim();if(!t||!SOC.sel)return;if(!SOC.open){toast('Sem conexão com os CapyAmigos agora.','bad');return}socSend({type:'msg',to:SOC.sel,txt:t});$('frTxt').value='';Sound.play('pop')}
+document.querySelectorAll('[data-friends]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();socOpen()}));
+$('frClose').onclick=()=>{Sound.play('click');socClose()};
+$('friendsOv').addEventListener('pointerdown',e=>{if(e.target.id==='friendsOv')socClose()});
+$('frCopy').onclick=()=>{const c=SOC.me&&SOC.me.code;if(!c)return;const done=()=>{toast('Código copiado! Manda pros amigos.','good');Sound.play('yes')};try{navigator.clipboard.writeText(c).then(done,()=>toast('Seu código: '+c))}catch(e){toast('Seu código: '+c)}};
+$('frAdd').onclick=()=>{const c=$('frCode').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length!==6){toast('O código tem 6 letras ou números.','bad');return}if(!SOC.open){toast('Sem conexão com os CapyAmigos agora.','bad');return}Sound.play('click');socSend({type:'add',code:c})};
+$('frCode').addEventListener('input',()=>{$('frCode').value=$('frCode').value.toUpperCase().replace(/[^A-Z0-9]/g,'')});
+$('frCode').onkeydown=e=>{if(e.key==='Enter')$('frAdd').click();if(e.key==='Escape')socClose()};
+$('frTxt').onkeydown=e=>{if(e.key==='Enter')socSendMsg();if(e.key==='Escape')socClose()};
+$('frSendBtn').onclick=socSendMsg;
+addEventListener('keydown',e=>{if(e.key==='Escape'&&socIsOpen()){e.stopImmediatePropagation();socClose()}},true);
+addEventListener('resize',()=>{if(socIsOpen()){$('frPanel').classList.toggle('one',innerWidth<760);socRender()}});
+setInterval(()=>{if(socIsOpen()){socSend({type:'list'});socRender()}else socBadges()},30000);
+socInit();
 
 })();
 </script></body></html>

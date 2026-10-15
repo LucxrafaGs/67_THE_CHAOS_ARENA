@@ -125,11 +125,13 @@ $('btnJoin').onclick=async()=>{nickReady();Sound.play('click');const code=[...$(
 let roomTimer=null,roomListKey='';
 async function enterOnline(){$('onlGrid').classList.add('p2p');$('onlGrid').classList.remove('srv');roomListKey='';
   $('roomList').innerHTML=`<div class="rlempty">Conectando ao servidor<span class="dots"></span></div>`;
-  const up=await checkServer();if(view!=='online')return;
-  $('onlGrid').classList.toggle('srv',up);$('onlGrid').classList.toggle('p2p',!up);
-  $('hostHint').textContent=up?'pública ou privada, com ou sem senha':'você vira o anfitrião (modo direto)';
-  if(up){setNet('Servidor online. Escolha uma sala ou crie a sua!','ok');refreshRooms();clearInterval(roomTimer);roomTimer=setInterval(()=>{if(view==='online')refreshRooms();else{clearInterval(roomTimer);roomTimer=null}},4000)}
-  else setNet(API_BASE?'Servidor fora do ar: usando o modo direto (P2P).':'Pronto para o caos.',API_BASE?'err':'')}
+  if(HOSTED){$('onlGrid').classList.add('srv');$('onlGrid').classList.remove('p2p')}
+  const up=await checkServer();if(view!=='online')return;const srv=up||HOSTED;
+  $('onlGrid').classList.toggle('srv',srv);$('onlGrid').classList.toggle('p2p',!srv);
+  $('hostHint').textContent=srv?'pública ou privada, com ou sem senha':'você vira o anfitrião (modo direto)';
+  if(srv){setNet(up?'Servidor online. Escolha uma sala ou crie a sua!':'O servidor não respondeu. Tentando de novo…',up?'ok':'err');refreshRooms();clearInterval(roomTimer);
+    roomTimer=setInterval(async()=>{if(view!=='online'){clearInterval(roomTimer);roomTimer=null;return}if(!srvUp&&await checkServer())setNet('Servidor online. Escolha uma sala ou crie a sua!','ok');refreshRooms()},4000)}
+  else setNet('Pronto para o caos.','')}
 function fmtLeft(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 async function refreshRooms(){let rooms;try{rooms=(await api('/api/rooms')).rooms||[]}catch(e){$('roomList').innerHTML=`<div class="rlempty">Não deu para buscar as salas agora.</div>`;return}
   if(view!=='online')return;const key=JSON.stringify(rooms);if(key===roomListKey)return;roomListKey=key;
@@ -358,7 +360,7 @@ let applyJoy=()=>{};
   zone.addEventListener('pointermove',e=>{if(e.pointerId===id){e.preventDefault();setVec(e.clientX,e.clientY)}});
   const end=e=>{if(e.pointerId!==id)return;id=null;knob.style.transform='';joy.classList.add('idle');keys.left=keys.right=keys.up=keys.down=false;pushInputs(true);home()};
   zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);zone.addEventListener('lostpointercapture',end);
-  applyJoy=()=>{const js=S.joySize/(+getComputedStyle(document.documentElement).getPropertyValue('--uis')||1);joy.style.width=joy.style.height=js+'px';joy.style.margin=`-${js/2}px 0 0 -${js/2}px`;joy.style.opacity=S.joyOpacity/100;home()};addEventListener('resize',home)})();
+  applyJoy=()=>{const js=S.joySize/(+getComputedStyle(document.documentElement).getPropertyValue('--uis')||1);joy.style.width=joy.style.height=js+'px';joy.style.margin=`-${js/2}px 0 0 -${js/2}px`;joy.style.opacity=S.joyOpacity/100;document.documentElement.style.setProperty('--js',js+'px');home()};addEventListener('resize',()=>applyJoy())})();
 (()=>{const base=$('aimStick'),knob=$('aimKnob');let id=null;
   function upd(e){const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,R0=r.width*.36;let dx=e.clientX-cx,dy=e.clientY-cy;const l=Math.hypot(dx,dy);if(l>R0){dx=dx/l*R0;dy=dy/l*R0}
     knob.style.transform=`translate(${dx}px,${dy}px)`;const mag=Math.min(1,l/R0);aimStick.mag=mag;if(mag>.12){aimStick.a=Math.atan2(dy,dx);aimStick.on=true}
@@ -378,6 +380,7 @@ if(location.hash==='#debug')window.__67={get players(){return players},get self(
   harmMe:d=>harm(players[self],d,Object.keys(players).find(k=>k!==self),Math.floor(Math.random()*GUNS.length),time()),level:()=>{players[self].energy=66},view:()=>view,
   setGun:g=>{players[self].guns[players[self].slot]=g;players[self].gun=g},tpGem:()=>{const p=players[self],g=gems[0];p.x=g.x;p.y=g.y},god:()=>{players[self].shieldUntil=1e12},card:g=>showRespawnCard(g),
   freezeMe:()=>{players[self].frozenUntil=time()+3000},grant:()=>grantCard(players[self],time()),me:()=>players[self],flashMe:()=>{players[self].flashUntil=time()+2500},bullets:()=>bullets.length,gi:n=>GUNS.findIndex(g=>g.n===n),builds:()=>builds.length,fields:()=>fields.length,
+  portrait:(cv,o)=>drawPortrait(cv,myLook,o||{bg:false}),
   get room(){return room},rtt:()=>rtt,isOwner:()=>isOwner(),goHome:()=>goHome(),ownerEnd:()=>ownerSend({type:'end'}),dropWs:()=>{try{conn.ws.close()}catch(e){}}};
 if(location.hash==='#debug')window.__67.sweep=()=>{const out=[];const saveP=players,saveCfg={...cfg};cfg.mode='ffa';cfg.map='ilha';setupMode();host=true;solo=true;
   for(const g of GUNS){players={};bullets=[];builds=[];fields=[];effects=[];gems=[];meds=[];crates=[];

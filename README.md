@@ -6,6 +6,7 @@ Arena shooter 2D online com capivaras. Roda direto no navegador (PC e celular).
 
 ```
 public/index.html      jogo pronto (gerado pelo build; é o que vai pro Cloudflare)
+public/manifest.webmanifest + icon-*.png + apple-touch-icon.png   ícone e dados do app na tela inicial do celular
 src/
   head.html            ajuste de escala para celular
   body.html            telas e ícones SVG
@@ -19,10 +20,12 @@ src/
     04_net.js          rede: servidor online (WebSocket) e modo direto P2P de reserva
     05_render.js       câmera, efeitos, partículas, previsão local e laço principal
     06_ui.js           menus, salas online, HUD, Arsenal, votação e controles
+    07_social.js       CapyAmigos: amigos por código, online/visto por último, mensagens
 server/
   worker.js            Worker: serve o jogo e a API /api/*
   room.js              Durable Object "Room": uma sala = uma partida rodando na nuvem
   lobby.js             Durable Object "Lobby": lista de salas abertas
+  social.js            Durable Object "Social": contas, amigos e mensagens (SQLite)
   sim_glue.js          liga a simulação do jogo à sala
   sim.gen.js           GERADO pelo build (00_util + 02_data + 04_game + sim_glue)
 scripts/build.mjs      junta src/ em public/index.html e gera server/sim.gen.js
@@ -41,16 +44,33 @@ Edite sempre os arquivos em `src/` (e `server/`) e rode `npm run build`. Não ed
 
 ## Online
 
-O servidor roda no mesmo Worker do jogo, no Cloudflare (Workers + Durable Objects). Cada sala é um Durable Object que executa a mesma simulação de `04_game.js`. O navegador manda os controles e desenha o estado que o servidor devolve.
+- O servidor roda no Cloudflare (Workers + Durable Objects, plano gratuito). Cada sala é um Durable Object
+  que roda a MESMA simulação do jogo (`04_game.js`); os navegadores só mandam os controles e desenham o estado.
+- Salas: públicas (aparecem na lista) ou privadas (só com o código), com ou sem senha. O dono configura modo,
+  mapa e bots; se ele sair, outro jogador vira dono. Dá para entrar no meio da partida.
+- Se a conexão cair, o jogo tenta voltar sozinho por ~20 s sem perder a vaga.
+- No site publicado o jogo sempre usa o servidor. O modo direto P2P antigo só aparece quando o jogo é aberto como arquivo local.
+- Cota grátis do Cloudflare: 100 mil requisições e 13 mil GB-s de Durable Objects por dia. Uma sala usa ~1 req/s
+  por jogador e fica "acordada" só enquanto tem gente — sobra bastante para jogar com os amigos.
 
-- Salas públicas aparecem na lista. Salas privadas só entram com o código de 6 caracteres. A sala pode ter senha.
-- O dono escolhe modo, mapa e bots. Se ele sair, outro jogador vira dono. Dá para entrar no meio da partida.
-- Na partida, o servidor envia o estado a cada 50 ms, só com o que mudou. A cada 2 s manda um quadro completo. Os controles só saem quando mudam.
-- Se a conexão cair, a vaga fica reservada por 20 s e o jogo tenta voltar sozinho.
-- Se o servidor não responder, ou o jogo for aberto como arquivo, a tela Online usa o modo direto entre jogadores (P2P).
-- No plano gratuito, o Cloudflare inclui 100 mil requisições e 13 mil GB-s de Durable Objects por dia. A sala só fica ligada enquanto tem alguém dentro.
+## CapyAmigos
+
+- Cada navegador ganha uma conta automática com um código de 6 letras (guardada no navegador: limpar os dados do site cria uma conta nova).
+- Adicione amigos pelo código; a lista mostra quem está online, onde está (menu, saguão, partida) e quando foi visto pela última vez.
+- Dá para conversar na tela inicial, no saguão e durante a partida (botão de conversa no HUD), e entrar na sala de um amigo direto pelo chat.
+- As mensagens ficam guardadas por 30 dias.
+
+## Progresso na partida
+
+- Laranjinhas são XP: 67 sobem um nível (vida cheia + uma carta de poder).
+- Ao eliminar alguém, você rouba todas as laranjinhas que ele estava carregando (na Corrida 67, elas contam para a vitória).
+- A cada 3 eliminações você também ganha uma carta de poder.
+
+## App no celular
+
+No navegador do celular, use "Adicionar à tela inicial": o jogo ganha o ícone da capivara e abre em tela cheia, como um app.
 
 ## Controles
 
 - PC: WASD anda, mouse mira e atira, Espaço/Shift dá dash, Q (ou rodinha, 1/2) troca de arma, Tab mostra o placar, Esc pausa.
-- Celular: joystick à esquerda, analógico de mira à direita (até a metade mira, empurrando mais atira), botões de dash e troca de arma.
+- Celular: joystick de movimento no canto inferior esquerdo; analógico de mira no canto inferior direito (até a metade mira, empurrando mais atira); dash acima da mira e troca de arma acima do dash.

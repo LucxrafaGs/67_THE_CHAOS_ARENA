@@ -274,7 +274,8 @@ function harm(p,dmg,owner,gi,t,src){if(!p||!p.alive||p.picking||t<p.shieldUntil|
   if(p.hp<=0){p.hp=0;p.alive=false;p.deaths++;p.streak=0;p.respawnAt=t+3000*(p.mods.quick?.5:1);p.canRespawnAt=t+1500;p.frozenUntil=p.flashUntil=p.burnUntil=0;
     p.killer={id:owner,name:k?k.name:'o caos',gun:gi};dropFlag(p,t);
     if(p.mods.kami){p.mods.kami=0;explode(p.x,p.y,150,65,p.id,gi,t);p.mods.kami=1}
-    if(k&&k.id!==p.id){k.kills++;k.streak++;if(k.mods.feast)k.hp=Math.min(k.maxHp,k.hp+30*k.mods.feast);k.kc++;if(k.kc>=KILLS_PER_CARD){k.kc-=KILLS_PER_CARD;grantCard(k,t)}k.best=Math.max(k.best,k.streak);if(GUNS[gi]&&GUNS[gi].txt==='NÃO')k.noKills++;
+    if(k&&k.id!==p.id){const loot=p.energy;if(loot>0&&MODE.id!=='gun'){p.energy=0;fx('hit',{x:k.x,y:k.y-52,w:'+'+loot+' XP',c:'#FF8A1F'},900);gainEnergy(k,loot,t)}
+      k.kills++;k.streak++;if(k.mods.feast)k.hp=Math.min(k.maxHp,k.hp+30*k.mods.feast);k.kc++;if(k.kc>=KILLS_PER_CARD){k.kc-=KILLS_PER_CARD;grantCard(k,t)}k.best=Math.max(k.best,k.streak);if(GUNS[gi]&&GUNS[gi].txt==='NÃO')k.noKills++;
       if(MODE.id==='tdm'&&k.team>=0)ms.teamScore[k.team]++;
       if(MODE.id==='gun'){k.gunLvl++;if(k.gunLvl>=GUN_SEQ.length){ms.winner=k.id;endMatch()}else{k.guns=[GUN_SEQ[k.gunLvl],-1];k.slot=0;fx('crate',{x:k.x,y:k.y,pid:k.id,g:k.guns[0],lvl:1},900)}}}
     fx('ko',{x:p.x,y:p.y,c:p.look.body,pid:p.id},900);fx('kill',{k:k?k.name:'?',ki:owner,v:p.name,vi:p.id,g:gi,kt:k?k.team:-1,vt:p.team},4000)}
@@ -331,9 +332,13 @@ function updateP(p,dt,t){
   if(md.magnet){const R2=200+md.magnet*90;for(const g of gems){const d=dist(g.x,g.y,p.x,p.y);if(d<R2&&d>4){const sp2=(260+md.magnet*120)*dt*(1.4-d/R2);g.x+=(p.x-g.x)/d*Math.min(sp2,d);g.y+=(p.y-g.y)/d*Math.min(sp2,d)}}}
   for(let i=gems.length-1;i>=0;i--){const g=gems[i];if(Math.abs(g.x-p.x)<pr2&&Math.abs(g.y-p.y)<pr2){gems.splice(i,1);p.energy++;p.gemsTotal++;fx('gem',{x:g.x,y:g.y,pid:p.id,n:p.energy},500);
     if(MODE.id==='race'){if(p.energy>=67){ms.winner=p.id;endMatch();return}}
-    else if(p.energy>=67){p.energy-=67;p.level++;p.hp=p.maxHp;fx('67',{x:p.x,y:p.y,pid:p.id,lv:p.level},1800)}}}
+    else levelCheck(p,t)}}
   for(let i=meds.length-1;i>=0;i--){const m=meds[i];if(p.hp<p.maxHp&&dist(m.x,m.y,p.x,p.y)<30+md.magnet*50){meds.splice(i,1);p.hp=Math.min(p.maxHp,p.hp+(md.nurse?p.maxHp:50));fx('med',{x:m.x,y:m.y,pid:p.id},700)}}
   for(let i=crates.length-1;i>=0;i--){const c=crates[i];if(dist(c.x,c.y,p.x,p.y)<32+md.magnet*50){crates.splice(i,1);const ng=md.legend?randomGunTop(p.guns[p.slot]):randomGun(p.guns[p.slot],p.level,p.guns[1-p.slot]);if(p.guns[1]<0)p.guns[1]=ng;else p.guns[p.slot]=ng;fx('crate',{x:c.x,y:c.y,pid:p.id,g:ng},800)}}}
+
+// XP = laranjinhas. 67 laranjinhas sobem um nível, enchem a vida e dão uma carta de poder.
+function levelCheck(p,t){while(p.energy>=67&&!over){p.energy-=67;p.level++;p.hp=p.maxHp;fx('67',{x:p.x,y:p.y,pid:p.id,lv:p.level},1800);if(p.alive)grantCard(p,t)}}
+function gainEnergy(p,n,t){p.energy+=n;if(MODE.id==='race'){if(p.energy>=67&&!over){ms.winner=p.id;endMatch()}}else levelCheck(p,t)}
 
 // ---------- Bandeiras e zona ----------
 function dropFlag(p,t){if(p.carry<0)return;const f=ms.flags[p.carry];if(f){f.carrier=null;f.x=p.x;f.y=p.y;f.dropT=t;f.home=false}p.carry=-1}
@@ -538,6 +543,6 @@ return{
   get started(){return started},get over(){return over},humans:humansList,hasPlayer:id=>!!players[id],
   addPlayer,removePlayer,message,tick,summary,sync,MAX_PLAYERS,
   clearKeys(id){const p=players[id];if(p)p.keys={}},
-  debug(){return{players,bullets,cfg,ms,get started(){return started},get over(){return over}}}};
+  debug(){return{players,bullets,cfg,ms,harm,time,get started(){return started},get over(){return over}}}};
 
 }
