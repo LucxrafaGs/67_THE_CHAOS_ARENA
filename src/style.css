@@ -641,3 +641,14 @@ body.mobile #weaponCard{right:calc(140px / var(--uis,1) + var(--sar))}
 .logo .burst{width:70%;left:22%;top:30%}
 .subtitle,.tagline{position:relative;z-index:3}
 #home .stage{isolation:isolate}
+
+/* v3.4 — analógico de mira (mobile) */
+#aimStick{position:absolute;right:calc(14px / var(--uis,1) + var(--sar));bottom:calc(196px / var(--uis,1) + var(--sab));width:calc(116px / var(--uis,1));height:calc(116px / var(--uis,1));border-radius:50%;pointer-events:auto;touch-action:none;
+  border:3px solid #1b1033aa;background:radial-gradient(circle,#ffffff22,#ffffff0d 70%);box-shadow:inset 0 0 0 6px #ffffff14;opacity:.6;transition:opacity .15s,border-color .15s}
+#aimStick .half{position:absolute;left:50%;top:50%;width:40%;height:40%;transform:translate(-50%,-50%);border-radius:50%;border:2px dashed #ffffff55;pointer-events:none}
+#aimStick.on{opacity:.95}
+#aimStick.firing{border-color:var(--hot,#FF3B47);background:radial-gradient(circle,#ff3b4733,#ff3b4710 70%)}
+#aimKnob{position:absolute;left:50%;top:50%;width:46%;height:46%;margin:-23% 0 0 -23%;border-radius:50%;border:3px solid var(--ink);background:var(--cream);color:var(--ink);box-shadow:0 4px 0 var(--ink);display:flex;align-items:center;justify-content:center;pointer-events:none}
+#aimKnob svg{width:72%;height:72%}
+#aimStick.firing #aimKnob{background:#FF3B47;color:#fff}
+@media (orientation:portrait){body.mobile #aimStick{bottom:calc(290px / var(--uis,1) + var(--sab))}}

@@ -307,6 +307,14 @@ let applyJoy=()=>{};
   const end=e=>{if(e.pointerId!==id)return;id=null;knob.style.transform='';joy.classList.add('idle');keys.left=keys.right=keys.up=keys.down=false;pushInputs(true);home()};
   zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);zone.addEventListener('lostpointercapture',end);
   applyJoy=()=>{const js=S.joySize/(+getComputedStyle(document.documentElement).getPropertyValue('--uis')||1);joy.style.width=joy.style.height=js+'px';joy.style.margin=`-${js/2}px 0 0 -${js/2}px`;joy.style.opacity=S.joyOpacity/100;home()};addEventListener('resize',home)})();
+(()=>{const base=$('aimStick'),knob=$('aimKnob');let id=null;
+  function upd(e){const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,R0=r.width*.36;let dx=e.clientX-cx,dy=e.clientY-cy;const l=Math.hypot(dx,dy);if(l>R0){dx=dx/l*R0;dy=dy/l*R0}
+    knob.style.transform=`translate(${dx}px,${dy}px)`;const mag=Math.min(1,l/R0);aimStick.mag=mag;if(mag>.12){aimStick.a=Math.atan2(dy,dx);aimStick.on=true}
+    const fire=mag>=.55;if(fire!==keys.fire){keys.fire=fire;base.classList.toggle('firing',fire);if(fire)vibe(8);pushInputs(true)}}
+  base.addEventListener('pointerdown',e=>{if(id!==null||!playing())return;e.preventDefault();id=e.pointerId;try{base.setPointerCapture(id)}catch(_){}base.classList.add('on');upd(e)});
+  base.addEventListener('pointermove',e=>{if(e.pointerId===id){e.preventDefault();upd(e)}});
+  const end=e=>{if(e.pointerId!==id)return;id=null;knob.style.transform='';base.classList.remove('on','firing');aimStick.on=false;aimStick.mag=0;if(shootId===null){keys.fire=false;pushInputs(true)}};
+  base.addEventListener('pointerup',end);base.addEventListener('pointercancel',end);base.addEventListener('lostpointercapture',end)})();
 (()=>{const b=$('dashBtn');b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}keys.dash=true;pushInputs(true)});const up=()=>{keys.dash=false;pushInputs(true)};b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up)})();
 document.addEventListener('pointerenter',e=>{if(e.target.classList&&e.target.classList.contains('btn')&&!isTouch)Sound.play('hover')},true);
 

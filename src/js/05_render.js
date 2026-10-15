@@ -31,6 +31,7 @@ function drawParts(c){for(const p of parts){const k=p.life/p.max;c.save();c.tran
 
 // ---------- Rastreamento por jogador (lado do cliente) ----------
 let mouseSX=-1,mouseSY=-1,mouseOn=false;
+const aimStick={on:false,a:0,mag:0};
 const track={};let demoFocus='d0',demoSwap=0,hurtFlash=0,distortT=0;
 function nearCam(x,y,m=200){return x>cam.x-m&&x<cam.x+VW+m&&y>cam.y-m&&y<cam.y+VH+m}
 function onShot(p,tr){const g=GUNS[p.gun];if(!g)return;const me=p.id===self;
@@ -158,6 +159,7 @@ function frame(t){requestAnimationFrame(frame);
   else if(host&&started&&!(paused&&solo)){pushInputs();step(dt,time());sync()}
   else if(!host&&started){pushInputs()}
   if(started&&!isTouch&&mouseOn&&view==='game'&&players[self])aimAt(mouseSX,mouseSY);
+  if(started&&isTouch&&aimStick.on&&view==='game'&&players[self]){const me=players[self],g=GUNS[me.gun],R=g?Math.max(90,gunReach(g,me.mods||defaultMods())):300,d=g&&g.instant?R*.8:R*.92;mouseSX=((me.rx??me.x)+Math.cos(aimStick.a)*d-cam.x)*zoom;mouseSY=((me.ry??me.y)+Math.sin(aimStick.a)*d-cam.y)*zoom;aimAt(mouseSX,mouseSY)}
   if(!active){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#20164a';ctx.fillRect(0,0,canvas.width,canvas.height);return}
   processEffects(t);
   const sm=Math.min(1,dt*14);
@@ -185,7 +187,7 @@ function drawMinimap(){const c=$('minimap').getContext('2d'),w=340,h=226,sx=w/W,
 
 // ---------- Mira personalizada (PC) ----------
 function gunReach(g,md){if(g.melee)return g.range*md.range;if(g.instant)return (g.range2||g.build&&g.build.dist||300)*md.range;const L=g.life*md.range/md.bspd,v=g.sp*md.bspd;if(g.fric){const k=g.fric*1.6;return v/k*(1-Math.exp(-k*L))}return v*L}
-function drawCrosshair(t){const me=players[self];if(isTouch||!mouseOn||!me||!me.alive||me.picking||demo||!started||over)return;const g=GUNS[me.gun];if(!g)return;const md=me.mods||defaultMods();
+function drawCrosshair(t){const me=players[self];if((isTouch?!aimStick.on:!mouseOn)||!me||!me.alive||me.picking||demo||!started||over)return;const g=GUNS[me.gun];if(!g)return;const md=me.mods||defaultMods();
   const k=canvas.width/VW;ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);const c=ctx;const px=me.rx,py=me.ry,a=localAim,wx=mouseSX/zoom+cam.x,wy=mouseSY/zoom+cam.y,d=Math.hypot(wx-px,wy-py);
   const col=CATS[g.cat][1],reach=gunReach(g,md),ht=hostNow(),cdp=clamp((ht-me.shotAt)/(g.cd*md.cd),0,1);const ca=Math.cos(a),sa=Math.sin(a);
   c.save();c.lineCap='round';c.lineJoin='round';
