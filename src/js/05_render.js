@@ -1,7 +1,9 @@
 // ===== Render, partículas, efeitos e laço principal =====
 const canvas=$('game'),ctx=canvas.getContext('2d');
 let VW=960,VH=540,zoom=1,pr=1,resScale=1;const cam={x:W/2-480,y:H/2-270};let shakeA=0;
-function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:1.25)*resScale;
+// Atrás dos menus a arena é só decoração: meia resolução e 30 fps (bem mais leve em telas retina)
+const menuBg=()=>document.body.classList.contains('menu')&&!started;
+function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:1.25)*(menuBg()?.5:resScale);
   canvas.width=Math.round(innerWidth*pr);canvas.height=Math.round(innerHeight*pr);zoom=clamp(Math.min(innerWidth,innerHeight)/(isTouch?470:560),.6,1.4);VW=innerWidth/zoom;VH=innerHeight/zoom;floorFor=''}
 addEventListener('resize',resize);resize();
 
@@ -168,10 +170,11 @@ function predictSelf(p){const t=time(),ht=hostNow(),dt=pred.on?clamp((t-pred.lt)
   p.rx=pred.x;p.ry=pred.y;return true}
 
 // ---------- Laço ----------
-let lastFrame=0,hudAt=0,mmAt=0,slowT=0;
+let lastFrame=0,hudAt=0,mmAt=0,slowT=0,wasMenuBg=null;
 function frame(t){requestAnimationFrame(frame);
-  const minDt=1000/S.fps-1.5;if(t-lastFrame<minDt)return;let dt=Math.min(.05,(t-lastFrame)/1000);
-  if(S.dynres&&dt>.026){slowT+=dt;if(slowT>2&&resScale>.55){resScale*=.85;resize();slowT=0}}else slowT=Math.max(0,slowT-dt*.5);
+  const mb=menuBg();if(mb!==wasMenuBg){wasMenuBg=mb;resize()}
+  const minDt=1000/(mb?Math.min(30,S.fps):S.fps)-1.5;if(t-lastFrame<minDt)return;let dt=Math.min(.05,(t-lastFrame)/1000);
+  if(S.dynres&&!mb&&view==='game'&&dt>.026){slowT+=dt;if(slowT>2&&resScale>.55){resScale*=.85;resize();slowT=0}}else slowT=Math.max(0,slowT-dt*.5);
   lastFrame=t;
   const active=demo||started;
   if(demo)step(dt,time());
