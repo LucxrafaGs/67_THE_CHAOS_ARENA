@@ -1,6 +1,8 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
  <defs>
-  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z" fill="currentColor"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6" fill="currentColor"/><path d="M2.5 20c.4-4 3-6.4 6.5-6.4s6.1 2.4 6.5 6.4z" fill="currentColor"/><circle cx="16.8" cy="9" r="2.8" fill="currentColor" opacity=".7"/><path d="M15.5 13.8c3.3-.4 5.6 1.8 6 5.2h-4.2c-.3-2-.9-3.7-1.8-5.2z" fill="currentColor" opacity=".7"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z" fill="currentColor"/></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="6.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></g></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4.5L7.5 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -167,18 +169,25 @@
       <input class="field" id="nick" maxlength="15" placeholder="Seu apelido" autocomplete="off">
       <button class="btn round ice" id="btnDiceName" aria-label="Nome aleatório"><svg class="i"><use href="#i-dice"/></svg></button>
     </div>
-    <div class="cards">
-      <div class="card sticker">
-        <svg class="i door"><use href="#i-door"/></svg>
-        <h3>CRIAR SALA</h3>
-        <p>você vira o anfitrião</p>
-        <button class="btn gold" id="btnHost" style="margin-top:12px"><svg class="i ic"><use href="#i-plus"/></svg>CRIAR</button>
+    <div class="onlgrid" id="onlGrid">
+      <div class="roomlist sticker" id="roomBox">
+        <div class="rlhead"><h3><svg class="i"><use href="#i-globe"/></svg>SALAS ABERTAS</h3><span class="rlcount" id="roomCount"></span><button class="btn round small ice" id="btnRefresh" aria-label="Atualizar lista"><svg class="i"><use href="#i-refresh"/></svg></button></div>
+        <div class="rlbody" id="roomList"><div class="rlempty">Procurando salas<span class="dots"></span></div></div>
+        <button class="btn gold" id="btnQuick"><svg class="i ic"><use href="#i-bolt"/></svg>JOGAR RÁPIDO</button>
       </div>
-      <div class="card sticker online">
-        <h3>ENTRAR</h3>
-        <p>digite o código da sala</p>
-        <div class="pins" id="pins"></div>
-        <button class="btn ice" id="btnJoin"><svg class="i ic"><use href="#i-arrow"/></svg>ENTRAR</button>
+      <div class="cards">
+        <div class="card sticker">
+          <svg class="i door"><use href="#i-door"/></svg>
+          <h3>CRIAR SALA</h3>
+          <p id="hostHint">pública ou privada, com ou sem senha</p>
+          <button class="btn gold" id="btnHost" style="margin-top:12px"><svg class="i ic"><use href="#i-plus"/></svg>CRIAR</button>
+        </div>
+        <div class="card sticker online">
+          <h3>ENTRAR</h3>
+          <p>digite o código da sala</p>
+          <div class="pins" id="pins"></div>
+          <button class="btn ice" id="btnJoin"><svg class="i ic"><use href="#i-arrow"/></svg>ENTRAR</button>
+        </div>
       </div>
     </div>
     <div class="statusline" id="netStatus"><span class="dot"></span><span class="txt">Pronto para o caos.</span></div>
@@ -190,6 +199,7 @@
   <div class="topbar">
     <button class="btn danger small" id="btnLeaveLobby"><svg class="i ic"><use href="#i-back"/></svg>SAIR</button>
     <div class="codebox"><span>SALA</span><b id="roomCode">------</b><button class="btn small ice" id="btnCopy"><svg class="i ic"><use href="#i-copy"/></svg>COPIAR</button></div>
+    <button class="roominfo hidden" id="roomInfo" aria-label="Configurar sala"></button>
     <span class="spacer"></span>
   </div>
   <div class="stage scroll" style="flex-direction:column;justify-content:flex-start">
@@ -341,6 +351,14 @@
 </div>
 
 <!-- MODAL -->
-<div id="modal" class="overlay modal hidden"><div class="panel sticker"><h2 id="mTitle">Certeza?</h2><p id="mText"></p><div class="foot"><button class="btn" id="mNo">CANCELAR</button><button class="btn danger" id="mYes">SIM</button></div></div></div>
+<div id="createOv" class="overlay modal hidden"><div class="panel sticker create">
+  <h2 id="crTitle">CRIAR SALA</h2>
+  <label class="crl">NOME DA SALA<input class="field" id="crName" maxlength="24" autocomplete="off"></label>
+  <div class="crl">QUEM PODE VER<div class="seg" id="crVis"><button data-vis="public" class="on"><svg class="i"><use href="#i-globe"/></svg>Pública</button><button data-vis="private"><svg class="i"><use href="#i-eye"/></svg>Privada</button></div>
+    <small id="crVisHint">aparece na lista de salas abertas</small></div>
+  <div class="crl">SENHA<div class="crpass"><button class="toggle" id="crLock" role="switch" aria-checked="false" aria-label="Sala com senha"></button><input class="field" id="crPass" maxlength="24" placeholder="sem senha" autocomplete="off" disabled></div></div>
+  <div class="foot"><button class="btn" id="crNo">CANCELAR</button><button class="btn gold" id="crYes"><svg class="i ic"><use href="#i-plus"/></svg>CRIAR SALA</button></div>
+</div></div>
+<div id="modal" class="overlay modal hidden"><div class="panel sticker"><h2 id="mTitle">Certeza?</h2><p id="mText"></p><input class="field hidden" id="mInput" maxlength="24" autocomplete="off"><div class="foot"><button class="btn" id="mNo">CANCELAR</button><button class="btn danger" id="mYes">SIM</button></div></div></div>
 <div id="toasts"></div>
 <canvas id="confetti"></canvas>

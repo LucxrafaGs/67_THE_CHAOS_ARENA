@@ -236,54 +236,13 @@ function startDemo(){if(host||conn)return;demo=true;solo=false;self='';MODE=mode
   for(let i=0;i<6;i++){const p=players['d'+i]=newPlayer('d'+i,BOT_NAMES[i],randomLook(),true);const [x,y]=freeSpot();p.x=x;p.y=y;p.guns=[randomGun(-1),randomGun(-1)]}spawnPickups();started=false}
 function stopDemo(){demo=false;players={};bullets=[];effects=[];gems=[];meds=[];crates=[];builds=[];fields=[]}
 
-// ---------- Rede (PeerJS, anfitrião autoritativo) ----------
-let netAt=0;
+// ---------- Estado serializado (enviado aos jogadores) ----------
 const packP=p=>({id:p.id,name:p.name,look:p.look,bot:p.bot,team:p.team,x:Math.round(p.x),y:Math.round(p.y),hp:Math.round(p.hp),alive:p.alive,respawnAt:p.respawnAt,canRespawnAt:p.canRespawnAt,level:p.level,energy:p.energy,kills:p.kills,deaths:p.deaths,gemsTotal:p.gemsTotal,heals:p.heals,noKills:p.noKills,best:p.best,
   hold:+p.hold.toFixed(1),caps:p.caps,zone:+p.zone.toFixed(1),gunLvl:p.gunLvl,carry:p.carry,guns:p.guns,slot:p.slot,aim:+p.aim.toFixed(2),face:p.face,mv:p.mv,shotAt:p.shotAt,dashAt:p.dashAt,dashTime:p.dashTime,dx:+p.dx.toFixed(2),dy:+p.dy.toFixed(2),
   stunUntil:p.stunUntil,confuseUntil:p.confuseUntil,shieldUntil:p.shieldUntil,frozenUntil:p.frozenUntil,flashUntil:p.flashUntil,maxHp:p.maxHp,mods:p.mods,perks:p.perks,kc:p.kc,fc:p.fc,picking:p.picking,offer:p.offer,pickUntil:p.pickUntil,bubbleAt:p.bubbleAt,burnUntil:p.burnUntil,slowUntil:p.slowUntil,hurtAt:p.hurtAt,killer:p.killer});
 function snapshot(){const P={};for(const k in players)P[k]=packP(players[k]);return{type:'s',ht:time(),P,B:bullets.map(b=>({id:b.id,g:b.g,x:Math.round(b.x),y:Math.round(b.y),vx:Math.round(b.vx),vy:Math.round(b.vy),r:b.r,life:+b.life.toFixed(2),six:b.six,stick:b.stick})),
   G:gems,MD:meds,CR:crates,BU:builds,FI:fields,E:effects,st:started,ov:over,me:matchEnd,cfg,ms,votes}}
-function send(c,d){try{if(c&&c.open)c.send(d)}catch(e){}}
-function sync(force){if(!host||solo)return;const t=time();if(!force&&t-netAt<66)return;netAt=t;const s=snapshot();for(const c of Object.values(clients))send(c,s)}
 function filterKeys(k){const o={};for(const s of KEYLIST)o[s]=!!(k&&k[s]===true);return o}
-function setNet(msg,kind=''){const el=$('netStatus');el.className='statusline '+kind;el.querySelector('.txt').textContent=msg}
-function hostRoom(){if(typeof Peer==='undefined'){setNet('Não deu para carregar o módulo online. Verifique a internet.','err');return}
-  stopDemo();leaveNet();host=true;solo=false;room=roomId();setNet('Criando sala no servidor do caos…','busy');
-  peer=new Peer(PEER_PREFIX+room);
-  peer.on('open',()=>{self=peer.id;players={};players[self]=newPlayer(self,myNick(),myLook);started=false;over=false;setNet('Sala criada!','ok');go('lobby');renderLobby()});
-  peer.on('connection',c=>{c.on('data',d=>hostMessage(c,d));c.on('close',()=>{delete clients[c.peer];delete votes[c.peer];if(players[c.peer]){toast(players[c.peer].name+' saiu da sala');dropFlag(players[c.peer],time());delete players[c.peer]}sync(true);renderLobby()});c.on('error',()=>{})});
-  peer.on('error',e=>{setNet('Erro: '+(e.type||'desconhecido')+'. Tente de novo.','err');if(view==='lobby')toast('Conexão perdida','bad')})}
-function joinRoom(code){if(typeof Peer==='undefined'){setNet('Não deu para carregar o módulo online. Verifique a internet.','err');return}
-  code=(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){setNet('O código tem 6 letras ou números.','err');return}
-  stopDemo();leaveNet();host=false;solo=false;room=code;setNet('Procurando a sala '+code+'…','busy');
-  peer=new Peer();
-  peer.on('open',pid=>{self=pid;conn=peer.connect(PEER_PREFIX+code,{reliable:true});const to=setTimeout(()=>{if(!conn||!conn.open){setNet('Sala não encontrada. Será que ela foi pegar um lanche?','err');leaveNet(true)}},9000);
-    conn.on('open',()=>{clearTimeout(to);send(conn,{type:'join',name:myNick(),look:myLook})});
-    conn.on('data',clientMessage);
-    conn.on('close',()=>{if(conn){toast('O anfitrião fechou a sala','bad');leaveNet();goHome()}});conn.on('error',()=>setNet('A conexão falhou.','err'))});
-  peer.on('error',e=>{setNet(e.type==='peer-unavailable'?'Sala não encontrada. Será que ela foi pegar um lanche?':'Erro de conexão: '+e.type,'err')})}
-function hostMessage(c,d){if(!d||typeof d!=='object')return;
-  if(d.type==='join'){const humans=Object.values(players).filter(p=>!p.bot).length;if((started&&!over)||humans>=MAX_PLAYERS){send(c,{type:'reject',reason:started?'A partida já começou. Espere a próxima!':'Sala cheia (10/10).'});return}
-    clients[c.peer]=c;players[c.peer]=newPlayer(c.peer,d.name,d.look);send(c,{type:'welcome',id:c.peer,room});toast(players[c.peer].name+' entrou!','good');Sound.play('boing');sync(true);renderLobby()}
-  if(d.type==='i'&&players[c.peer]){players[c.peer].keys=filterKeys(d.k);if(Number.isFinite(d.a))players[c.peer].aim=d.a;if(Number.isFinite(d.d))players[c.peer].ad=d.d}
-  if(d.type==='swap'&&players[c.peer])players[c.peer].swapReq=1;
-  if(d.type==='perk'&&players[c.peer])choosePerk(players[c.peer],d.id,time());
-  if(d.type==='look'&&players[c.peer]&&!started){players[c.peer].look=cleanLook(d.look);sync(true);renderLobby()}
-  if(d.type==='vote'&&players[c.peer]&&MODES.some(m=>m.id===d.mode)){votes[c.peer]=d.mode;sync(true);if(view==='result')renderVotes()}}
-let lastState=null;
-function clientMessage(d){if(!d||typeof d!=='object')return;
-  if(d.type==='reject'){setNet(d.reason,'err');leaveNet(true);return}
-  if(d.type==='welcome'){self=d.id;room=d.room;setNet('Conectado!','ok');go('lobby');return}
-  if(d.type==='s'){const off=d.ht-time();clockOff=lastState?lerp(clockOff,off,Math.abs(off-clockOff)>500?1:.1):off;lastState=d;
-    const old=players;players={};for(const k in d.P){const n=d.P[k],o=old[k];n.rx=o?o.rx:n.x;n.ry=o?o.ry:n.y;n.keys={};n.gun=n.guns[n.slot];players[k]=n}
-    bullets=d.B||[];gems=d.G||[];meds=d.MD||[];crates=d.CR||[];builds=d.BU||[];fields=d.FI||[];effects=d.E||[];matchEnd=d.me;ms=d.ms||ms;votes=d.votes||{};
-    if(d.cfg&&(d.cfg.mode!==cfg.mode||d.cfg.map!==cfg.map||!started)){Object.assign(cfg,d.cfg);MODE=modeById(cfg.mode);M=mapById(cfg.map)}else if(d.cfg)Object.assign(cfg,d.cfg);
-    const wasStarted=started,wasOver=over;started=!!d.st;over=!!d.ov;
-    if(started&&(!wasStarted||(wasOver&&!over)))onMatchStart();if(!started&&wasStarted)go('lobby');if(over&&!wasOver)onMatchEnd();if(view==='lobby')renderLobby();if(view==='result')renderVotes()}}
-let lastInput=0;
-function pushInputs(force){const me=players[self];if(host||demo){if(me){me.keys=filterKeys(keys);me.aim=localAim;me.ad=localAimDist}}else if(conn&&(force||time()-lastInput>45)){send(conn,{type:'i',k:filterKeys(keys),a:+localAim.toFixed(3),d:Math.round(localAimDist)});lastInput=time()}}
-function leaveNet(keepStatus){try{if(conn){const c=conn;conn=null;c.close()}}catch(e){}try{if(peer){peer.destroy()}}catch(e){}peer=null;conn=null;clients={};lastState=null;
-  if(!keepStatus){host=false;solo=false;started=false;over=false;paused=false}}
 
 // ---------- Cartas de power-up ----------
 function pickPerks(p,n=3){let pool=PERKS.filter(k=>!(k.u&&p.perks[k.id]));const out=[];while(out.length<n&&pool.length){const tot=pool.reduce((s,k)=>s+RARITY[k.r][2],0);let r=Math.random()*tot;let ch=pool[pool.length-1];for(const k of pool){r-=RARITY[k.r][2];if(r<=0){ch=k;break}}out.push(ch.id);pool=pool.filter(k=>k!==ch)}return out}

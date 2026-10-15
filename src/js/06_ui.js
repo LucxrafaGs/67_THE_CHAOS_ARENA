@@ -8,7 +8,7 @@ function go(v){view=v;for(const s of SCREENS)$(s).classList.toggle('hidden',s!==
   const inGame=v==='game';$('hud').classList.toggle('hidden',!inGame);$('touch').classList.toggle('hidden',!inGame);document.body.classList.toggle('menu',!inGame);
   if(!inGame){$('death').classList.add('hidden');$('pause').classList.add('hidden');$('scoreOv').classList.add('hidden');$('perkOv').classList.add('hidden')}
   if(v==='home')drawSpheres();if(v==='play')drawPlayArt();if(v==='custom')openCustom();if(v==='lobby'){lobbyKey='';renderLobby();lobbyAnim()}if(v==='setup')renderSetup($('setupPanel'),true);if(v==='arsenal')renderArsenal();
-  if(v==='online')$('nick').value=store.get('nick','');
+  if(v==='online'){$('nick').value=store.get('nick','');enterOnline()}
   Sound.music(true,inGame?140:100)}
 function goHome(){leaveNet();players={};bullets=[];effects=[];started=false;over=false;paused=false;startDemo();$('result').classList.add('hidden');go('home')}
 
@@ -103,7 +103,7 @@ function renderSetup(el,editable,compact){const humans=Object.values(players).fi
       <div><h3>${I('timer')} TEMPO</h3><div class="seg">${[[120,'2 min'],[180,'3 min'],[300,'5 min']].map(([v,l])=>`<button data-time="${v}" class="${cfg.time===v?'on':''}" ${editable?'':'disabled'}>${l}</button>`).join('')}</div></div>
     </div>`;
   el.querySelectorAll('.mapcard canvas').forEach((cv,i)=>drawMapThumb(cv,MAPS[i]));
-  if(!editable)return;const changed=()=>{store.set('cfg',cfg);Sound.play('click');if(host&&!solo)sync(true);renderSetup(el,editable,compact)};
+  if(!editable)return;const changed=()=>{store.set('cfg',cfg);Sound.play('click');if(host&&!solo)sync(true);else if(srvMode())ownerSend({type:'cfg',cfg:{mode:cfg.mode,map:cfg.map,bots:cfg.bots,time:cfg.time,diff:cfg.diff}});renderSetup(el,editable,compact)};
   el.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.mode;changed()});
   el.querySelectorAll('[data-map]').forEach(b=>b.onclick=()=>{cfg.map=b.dataset.map;changed()});
   el.querySelectorAll('[data-bots]').forEach(b=>b.onclick=()=>{cfg.bots=clamp(cfg.bots+ +b.dataset.bots,0,maxBots);changed()});
@@ -117,26 +117,78 @@ function renderSetup(el,editable,compact){const humans=Object.values(players).fi
     p.addEventListener('paste',e=>{e.preventDefault();const s=(e.clipboardData.getData('text')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);s.split('').forEach((ch,j)=>{if(pins[j])pins[j].value=ch});if(pins[Math.min(5,s.length)])pins[Math.min(5,s.length)].focus()})})})();
 $('nick').addEventListener('input',()=>store.set('nick',safe($('nick').value)));
 $('btnDiceName').onclick=()=>{$('nick').value=pick(NICKS);store.set('nick',$('nick').value);Sound.play('boing')};
-$('btnHost').onclick=()=>{store.set('nick',myNick());if(!$('nick').value)$('nick').value=myNick();Sound.play('click');hostRoom()};
-$('btnJoin').onclick=()=>{store.set('nick',myNick());if(!$('nick').value)$('nick').value=myNick();Sound.play('click');joinRoom([...$('pins').children].map(p=>p.value).join(''))};
+const nickReady=()=>{store.set('nick',myNick());if(!$('nick').value)$('nick').value=myNick()};
+$('btnHost').onclick=async()=>{nickReady();Sound.play('click');if(await serverReady())openRoomDialog();else hostRoom()};
+$('btnJoin').onclick=async()=>{nickReady();Sound.play('click');const code=[...$('pins').children].map(p=>p.value).join('');if(await serverReady())srvJoin(code);else joinRoom(code)};
+
+// ---------- Salas no servidor: lista, criar, senha ----------
+let roomTimer=null,roomListKey='';
+async function enterOnline(){$('onlGrid').classList.add('p2p');$('onlGrid').classList.remove('srv');roomListKey='';
+  $('roomList').innerHTML=`<div class="rlempty">Conectando ao servidor<span class="dots"></span></div>`;
+  const up=await checkServer();if(view!=='online')return;
+  $('onlGrid').classList.toggle('srv',up);$('onlGrid').classList.toggle('p2p',!up);
+  $('hostHint').textContent=up?'pública ou privada, com ou sem senha':'você vira o anfitrião (modo direto)';
+  if(up){setNet('Servidor online. Escolha uma sala ou crie a sua!','ok');refreshRooms();clearInterval(roomTimer);roomTimer=setInterval(()=>{if(view==='online')refreshRooms();else{clearInterval(roomTimer);roomTimer=null}},4000)}
+  else setNet(API_BASE?'Servidor fora do ar: usando o modo direto (P2P).':'Pronto para o caos.',API_BASE?'err':'')}
+function fmtLeft(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+async function refreshRooms(){let rooms;try{rooms=(await api('/api/rooms')).rooms||[]}catch(e){$('roomList').innerHTML=`<div class="rlempty">Não deu para buscar as salas agora.</div>`;return}
+  if(view!=='online')return;const key=JSON.stringify(rooms);if(key===roomListKey)return;roomListKey=key;
+  $('roomCount').textContent=rooms.length?rooms.length+(rooms.length>1?' salas':' sala'):'';
+  if(!rooms.length){$('roomList').innerHTML=`<div class="rlempty">${I('capy')}<b>Nenhuma sala aberta agora.</b><span>Crie a sua ou use o Jogar rápido!</span></div>`;return}
+  $('roomList').innerHTML=rooms.map(r=>{const md=modeById(r.mode),mp=mapById(r.map),full=r.humans>=r.max;
+    const st=r.state==='lobby'?`<em class="st lobby">NO SAGUÃO</em>`:r.state==='game'?`<em class="st game">EM JOGO ${fmtLeft(r.left||0)}</em>`:`<em class="st res">RESULTADO</em>`;
+    return`<button class="ritem${full?' full':''}" data-code="${r.code}" data-locked="${r.locked?1:0}" ${full?'disabled':''}><span class="rmi">${I(md.ic)}</span>
+      <span class="rmain"><b>${r.locked?I('lock','lk'):''}${escapeHtml(r.name)}</b><small>${escapeHtml(md.n)} • ${escapeHtml(mp.n)} • dono: ${escapeHtml(r.owner)}</small></span>
+      <span class="rside">${st}<b class="rn">${I('users')}${r.humans}/${r.max}</b></span></button>`}).join('');
+  $('roomList').querySelectorAll('.ritem').forEach(b=>b.onclick=async()=>{nickReady();Sound.play('click');const code=b.dataset.code;
+    if(b.dataset.locked==='1'){askRoomPass(code)}else srvJoin(code)})}
+$('btnRefresh').onclick=()=>{Sound.play('click');roomListKey='';refreshRooms()};
+$('btnQuick').onclick=async()=>{nickReady();Sound.play('boing');setNet('Procurando uma sala boa…','busy');let rooms=[];try{rooms=(await api('/api/rooms')).rooms||[]}catch(e){}
+  const ok=rooms.filter(r=>!r.locked&&r.humans<r.max).sort((a,b)=>(a.state==='lobby'?0:1)-(b.state==='lobby'?0:1)||b.humans-a.humans);
+  if(ok.length)srvJoin(ok[0].code);else srvCreate({name:'Sala de '+myNick(),vis:'public',pass:''})};
+async function askRoomPass(code,msg){const v=await promptBox('SALA COM SENHA',msg||'Digite a senha da sala '+code+':','senha','ENTRAR','CANCELAR');if(v)srvJoin(code,v)}
+function promptBox(title,text,ph='',yes='OK',no='CANCELAR'){return new Promise(res=>{const inp=$('mInput');inp.value='';inp.placeholder=ph;inp.classList.remove('hidden');
+  $('mTitle').textContent=title;$('mText').textContent=text;$('mYes').textContent=yes;$('mNo').textContent=no;$('mYes').className='btn gold';$('modal').classList.remove('hidden');setTimeout(()=>inp.focus(),60);
+  const done=v=>{$('modal').classList.add('hidden');inp.classList.add('hidden');$('mYes').className='btn danger';$('mYes').onclick=$('mNo').onclick=inp.onkeydown=null;Sound.play('click');res(v)};
+  $('mYes').onclick=()=>done(inp.value.trim()||null);$('mNo').onclick=()=>done(null);inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value.trim()||null);if(e.key==='Escape')done(null)}})}
+// Diálogo de criar/editar sala
+let crVis='public',crEdit=false;
+function setCrVis(v){crVis=v;$('crVis').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.vis===v));$('crVisHint').textContent=v==='public'?'aparece na lista de salas abertas':'não aparece na lista: só entra quem tiver o código'}
+function setCrLock(on){$('crLock').classList.toggle('on',on);$('crLock').setAttribute('aria-checked',on);$('crPass').disabled=!on;$('crPass').placeholder=on?'digite a senha':'sem senha';if(on)setTimeout(()=>$('crPass').focus(),30)}
+function openRoomDialog(edit){crEdit=!!edit;const inf=edit&&srvInfo||{};$('crTitle').textContent=edit?'CONFIGURAR SALA':'CRIAR SALA';
+  $('crYes').innerHTML=edit?`${I('check','ic')}SALVAR`:`${I('plus','ic')}CRIAR SALA`;$('crName').value=edit?inf.name||'':'Sala de '+myNick();
+  setCrVis(edit?inf.vis||'public':'public');$('crPass').value='';setCrLock(edit?!!inf.locked:false);if(edit&&inf.locked)$('crPass').placeholder='mantém a senha atual';
+  $('createOv').classList.remove('hidden')}
+$('crVis').querySelectorAll('button').forEach(b=>b.onclick=()=>{Sound.play('click');setCrVis(b.dataset.vis)});
+$('crLock').onclick=()=>{Sound.play('click');setCrLock(!$('crLock').classList.contains('on'))};
+$('crNo').onclick=()=>{Sound.play('click');$('createOv').classList.add('hidden')};
+$('crYes').onclick=()=>{const name=$('crName').value.trim()||'Sala de '+myNick(),lock=$('crLock').classList.contains('on'),pw=$('crPass').value.trim();
+  if(lock&&!pw&&!(crEdit&&srvInfo&&srvInfo.locked)){toast('Digite uma senha (ou desligue a senha).','bad');$('crPass').focus();return}
+  Sound.play('boing');$('createOv').classList.add('hidden');
+  if(crEdit){const d={type:'room',name,vis:crVis};if(!lock)d.pass='';else if(pw)d.pass=pw;ownerSend(d);toast('Sala atualizada!','good')}
+  else srvCreate({name,vis:crVis,pass:lock?pw:''})};
+$('crName').onkeydown=$('crPass').onkeydown=e=>{if(e.key==='Enter')$('crYes').click()};
+$('roomInfo').onclick=()=>{if(isOwner()&&srvMode()){Sound.play('click');openRoomDialog(true)}};
 
 // ---------- LOBBY ----------
 let lobbyKey='';
-function renderLobby(force){if(view!=='lobby')return;const lk=JSON.stringify([room,host,cfg,Object.values(players).filter(p=>!p.bot).map(p=>[p.id,p.name,p.look])]);if(!force&&lk===lobbyKey)return;lobbyKey=lk;$('roomCode').textContent=room;const list=Object.values(players).filter(p=>!p.bot),el=$('roster');el.innerHTML='';
+function renderLobby(force){if(view!=='lobby')return;const lk=JSON.stringify([room,host,srvOwner,srvInfo,cfg,Object.values(players).filter(p=>!p.bot).map(p=>[p.id,p.name,p.look])]);if(!force&&lk===lobbyKey)return;lobbyKey=lk;$('roomCode').textContent=room;const list=Object.values(players).filter(p=>!p.bot),el=$('roster');el.innerHTML='';
   for(let i=0;i<MAX_PLAYERS;i++){const p=list[i],d=document.createElement('div');d.className='slot'+(p?'':' empty');d.style.animationDelay=(i*.04)+'s';const cv=document.createElement('canvas');cv.width=200;cv.height=230;d.appendChild(cv);
-    const isHost=p&&(p.id===(host?self:PEER_PREFIX+room));
+    const isHost=p&&(p.id===(host?self:srvMode()?srvOwner:PEER_PREFIX+room));
     if(!p&&i>=list.length+cfg.bots){d.classList.add('ghost')}
-    d.insertAdjacentHTML('beforeend',`<div class="nm">${p?escapeHtml(p.name)+(p.id===self?' (você)':''):i<list.length+cfg.bots?'bot':'vaga'}</div><div class="tag ${isHost?'host':''}">${p?(isHost?I('crown')+' ANFITRIÃO':I('check')+' PRONTO'):i<list.length+cfg.bots?I('bot'):''}</div>`);
+    d.insertAdjacentHTML('beforeend',`<div class="nm">${p?escapeHtml(p.name)+(p.id===self?' (você)':''):i<list.length+cfg.bots?'bot':'vaga'}</div><div class="tag ${isHost?'host':''}">${p?(isHost?I('crown')+(srvMode()?' DONO':' ANFITRIÃO'):I('check')+' PRONTO'):i<list.length+cfg.bots?I('bot'):''}</div>`);
     el.appendChild(d)}
-  renderSetup($('lobbyCfg'),host);$('btnStart').classList.toggle('hidden',!host);$('lobbyWait').classList.toggle('hidden',host)}
+  const own=isOwner();$('lobbyWait').firstChild.textContent=srvMode()?'Aguardando o dono da sala':'Aguardando o anfitrião';renderSetup($('lobbyCfg'),own);$('btnStart').classList.toggle('hidden',!own);$('lobbyWait').classList.toggle('hidden',own);
+  const ri=$('roomInfo');ri.classList.toggle('hidden',!(srvMode()&&srvInfo));if(srvMode()&&srvInfo){ri.classList.toggle('own',own);
+    ri.innerHTML=`<b>${escapeHtml(srvInfo.name)}</b><span>${srvInfo.vis==='public'?I('globe')+'Pública':I('eye')+'Privada'}${srvInfo.locked?' • '+I('lock')+'senha':''}</span>${own?I('gear','cog'):''}`}}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const ghostBots=[];
 function lobbyAnim(){if(view!=='lobby')return;requestAnimationFrame(lobbyAnim);const t=time(),list=Object.values(players).filter(p=>!p.bot);document.querySelectorAll('#roster .slot canvas').forEach((cv,i)=>{const c=cv.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);const p=list[i];
   c.translate(100,170);c.scale(3.1,3.1);if(p)drawChar(c,p.look,{face:i%2?-1:1,t:t+i*333,noGun:true,shout:Math.sin(t/700+i)>.85});else if(i<list.length+cfg.bots){c.globalAlpha=.7;if(!ghostBots[i])ghostBots[i]=randomLook();drawChar(c,ghostBots[i],{face:i%2?-1:1,t:t+i*333,noGun:true,bot:true})}
   else{c.globalAlpha=.5;c.setLineDash([3,3]);c.strokeStyle='#fff';c.lineWidth=1.2;capyPath(c);c.stroke()}LW=2.2})}
 $('btnCopy').onclick=()=>{const done=()=>{toast('Copiado! Manda pros amigos.','good');Sound.play('yes');celebrate(25)};try{navigator.clipboard.writeText(room).then(done,()=>toast('Código: '+room))}catch(e){toast('Código: '+room)}};
-$('btnStart').onclick=()=>{if(!host)return;Sound.play('boing');startMatch()};
-$('btnLeaveLobby').onclick=async()=>{if(await confirmBox('Sair da sala?',host?'Você é o anfitrião: a sala fecha para todos.':'Você vai sair desta sala.','SAIR','FICAR'))goHome()};
+$('btnStart').onclick=()=>{if(host){Sound.play('boing');startMatch()}else if(isOwner()){Sound.play('boing');ownerSend({type:'start'})}};
+$('btnLeaveLobby').onclick=async()=>{if(await confirmBox('Sair da sala?',host?'Você é o anfitrião: a sala fecha para todos.':isOwner()?'A sala continua: outro jogador vira o dono.':'Você vai sair desta sala.','SAIR','FICAR'))goHome()};
 
 // ---------- ARSENAL ----------
 let arsCat='all',arsTier='all';
@@ -222,13 +274,13 @@ function flyGem(x,y){if(document.querySelectorAll('.flyer').length>6)return;cons
   requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.left=(r.left+r.width*clamp((players[self]?.energy||0)/67,.05,.95))+'px';d.style.top=(r.top+r.height/2-9)+'px';d.style.transform='scale(.6) rotate(180deg)'}));setTimeout(()=>{d.remove();const b=$('bar67');b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')},560)}
 
 // ---------- Pause / placar ----------
-function openPause(){if(view!=='game'||over)return;$('pause').classList.remove('hidden');if(solo)paused=true;$('pauseNote').textContent=solo?'Os bots estão congelados esperando você.':'A partida continua sem você!';
+function openPause(){if(view!=='game'||over)return;$('pause').classList.remove('hidden');if(solo)paused=true;$('pauseNote').textContent=solo?'Os bots estão congelados esperando você.':'A partida continua sem você!'+(srvMode()&&rtt?` (ping ${Math.round(rtt)} ms)`:'');
   $('btnRestart').classList.toggle('hidden',!solo);$('pauseTip').textContent='Dica: '+pick(['o dash atravessa a confusão: use para fugir de granadas.','kits médicos recuperam metade da vida.','caixas com "?" trocam sua arma atual.','aperte Q (ou o botão de troca) para alternar entre as duas armas.','a Pausa Dramática congela até os tiros dentro dela.','paredes da Pá de Pedreiro bloqueiam tiros por 16 segundos.']);
   for(const k of KEYLIST)keys[k]=false;pushInputs(true);Sound.play('click')}
 function closePause(){$('pause').classList.add('hidden');paused=false;lastFrame=performance.now();Sound.play('click')}
 $('btnPause').onclick=openPause;$('btnResume').onclick=closePause;$('btnPauseSettings').onclick=openSettings;
 $('btnRestart').onclick=()=>{closePause();startBots()};
-$('btnQuitMatch').onclick=async()=>{if(await confirmBox('Sair da partida?',solo?'Seu progresso nesta partida será perdido.':host?'Você é o anfitrião: a partida acaba para todos.':'Você vai sair da sala.','SAIR','FICAR'))goHome()};
+$('btnQuitMatch').onclick=async()=>{if(await confirmBox('Sair da partida?',solo?'Seu progresso nesta partida será perdido.':host?'Você é o anfitrião: a partida acaba para todos.':isOwner()?'A partida continua: outro jogador vira o dono da sala.':'Você vai sair da sala.','SAIR','FICAR'))goHome()};
 function scoreLabel(p){switch(MODE.score){case 'hold':return Math.floor(p.hold)+'s';case 'caps':return p.caps;case 'zone':return Math.floor(p.zone);case 'gun':return (p.gunLvl+1)+'/12';case 'gems':return p.energy;default:return p.kills}}
 function renderScore(){const list=rank();$('scoreTable').innerHTML=`<tr><th>#</th><th>Capivara</th><th>${MODE.unit}</th><th>Elim.</th><th>Mortes</th><th>Nível</th></tr>`+list.map((p,i)=>`<tr class="${p.id===self?'me':''}"><td>${i+1}</td><td><span class="dotc" style="background:${p.team>=0&&isTeams()?TEAM[p.team].c:'transparent'}"></span>${escapeHtml(p.name)}${p.bot?' '+I('bot'):''}</td><td>${scoreLabel(p)}</td><td>${p.kills}</td><td>${p.deaths}</td><td>${p.level}</td></tr>`).join('')}
 function toggleScore(on){if(view!=='game')return;$('scoreOv').classList.toggle('hidden',!on);if(on)renderScore()}
@@ -255,19 +307,19 @@ function onMatchEnd(){$('death').classList.add('hidden');$('pause').classList.ad
   const d1=top(p=>p.deaths);if(d1&&d1.deaths>0)md.push(['magnet',`Ímã de bala: ${d1.name}`]);
   if(me&&me.kills===0)md.push(['peace','Pacifista: você não eliminou ninguém']);
   $('medals').innerHTML=md.slice(0,6).map(([i,t])=>`<div class="medal">${I(i)}${escapeHtml(t)}</div>`).join('');
-  $('btnAgain').classList.toggle('hidden',!host);$('btnResLobby').classList.toggle('hidden',!(host&&!solo));
+  $('btnAgain').classList.toggle('hidden',!isOwner());$('btnResLobby').classList.toggle('hidden',!(isOwner()&&!solo));
   $('hud').classList.add('hidden');$('touch').classList.add('hidden');$('result').classList.remove('hidden');view='result';document.body.classList.add('menu');voteKey='';renderVotes();
   if(won){Sound.play('win');celebrate(160)}else{Sound.play('level');celebrate(50)}}
 let voteKey='';
-function renderVotes(force){if(view!=='result')return;const vk=JSON.stringify([votes,myVote,cfg.map,host]);if(!force&&vk===voteKey)return;voteKey=vk;const count={};for(const v of Object.values(votes))count[v]=(count[v]||0)+1;const sel=myVote||(host?(topVote()||cfg.mode):null);
+function renderVotes(force){if(view!=='result')return;const own=isOwner();const vk=JSON.stringify([votes,myVote,cfg.map,host,own]);if(!force&&vk===voteKey)return;voteKey=vk;$('btnAgain').classList.toggle('hidden',!own);$('btnResLobby').classList.toggle('hidden',!(own&&!solo));const count={};for(const v of Object.values(votes))count[v]=(count[v]||0)+1;const sel=myVote||(own?(topVote()||cfg.mode):null);
   $('voteGrid').innerHTML=MODES.map(m=>`<button class="modecard small${m.id===sel?' on':''}" data-vote="${m.id}">${I(m.ic,'mi')}<b>${m.n}</b>${count[m.id]?`<span class="vc">${count[m.id]} ${I('thumb')}</span>`:''}</button>`).join('');
   $('voteGrid').querySelectorAll('[data-vote]').forEach(b=>b.onclick=()=>{myVote=b.dataset.vote;Sound.play('click');if(host)votes[self]=myVote;else if(conn)send(conn,{type:'vote',mode:myVote});renderVotes();if(host)sync(true)});
-  const mr=$('resMaps');if(host){mr.innerHTML=`<span class="lbl2">${I('map')} Mapa:</span>`+MAPS.map(m=>`<button class="chip${m.id===cfg.map?' on':''}" data-rmap="${m.id}">${m.n}</button>`).join('')+`<button class="chip" data-rmap="random">${I('dice')} Sortear</button>`;
-    mr.querySelectorAll('[data-rmap]').forEach(b=>b.onclick=()=>{cfg.map=b.dataset.rmap==='random'?pick(MAPS.filter(m=>m.id!==cfg.map)).id:b.dataset.rmap;Sound.play('click');renderVotes()})}
-  else mr.innerHTML=`<span class="lbl2">${myVote?'Voto enviado! ':''}Aguardando o anfitrião começar a próxima<span class="dots"></span></span>`;
+  const mr=$('resMaps');if(own){mr.innerHTML=`<span class="lbl2">${I('map')} Mapa:</span>`+MAPS.map(m=>`<button class="chip${m.id===cfg.map?' on':''}" data-rmap="${m.id}">${m.n}</button>`).join('')+`<button class="chip" data-rmap="random">${I('dice')} Sortear</button>`;
+    mr.querySelectorAll('[data-rmap]').forEach(b=>b.onclick=()=>{cfg.map=b.dataset.rmap==='random'?pick(MAPS.filter(m=>m.id!==cfg.map)).id:b.dataset.rmap;Sound.play('click');if(srvMode())ownerSend({type:'cfg',cfg:{map:cfg.map}});renderVotes()})}
+  else mr.innerHTML=`<span class="lbl2">${myVote?'Voto enviado! ':''}Aguardando ${srvMode()?'o dono da sala':'o anfitrião'} começar a próxima<span class="dots"></span></span>`;
   $('btnAgain').innerHTML=`${I('play','ic')}PRÓXIMA: ${escapeHtml(modeById(sel||cfg.mode).n.toUpperCase())}`}
-$('btnAgain').onclick=()=>{if(!host)return;Sound.play('boing');$('result').classList.add('hidden');nextMatch(myVote||topVote()||cfg.mode,cfg.map)};
-$('btnResLobby').onclick=()=>{Sound.play('click');$('result').classList.add('hidden');backToLobby();go('lobby')};
+$('btnAgain').onclick=()=>{if(!isOwner())return;Sound.play('boing');const md=myVote||topVote()||cfg.mode;if(host){$('result').classList.add('hidden');nextMatch(md,cfg.map)}else ownerSend({type:'next',mode:md,map:cfg.map})};
+$('btnResLobby').onclick=()=>{Sound.play('click');if(host){$('result').classList.add('hidden');backToLobby();go('lobby')}else ownerSend({type:'lobby'})};
 $('btnResMenu').onclick=()=>{Sound.play('click');goHome()};
 
 // ---------- Confete (tela) ----------
@@ -325,7 +377,8 @@ document.fonts&&document.fonts.ready.then(()=>{drawSpheres();if(view==='play')dr
 if(location.hash==='#debug')window.__67={get players(){return players},get self(){return self},get ms(){return ms},endMatch,cfg,MODES,
   harmMe:d=>harm(players[self],d,Object.keys(players).find(k=>k!==self),Math.floor(Math.random()*GUNS.length),time()),level:()=>{players[self].energy=66},view:()=>view,
   setGun:g=>{players[self].guns[players[self].slot]=g;players[self].gun=g},tpGem:()=>{const p=players[self],g=gems[0];p.x=g.x;p.y=g.y},god:()=>{players[self].shieldUntil=1e12},card:g=>showRespawnCard(g),
-  freezeMe:()=>{players[self].frozenUntil=time()+3000},grant:()=>grantCard(players[self],time()),me:()=>players[self],flashMe:()=>{players[self].flashUntil=time()+2500},bullets:()=>bullets.length,gi:n=>GUNS.findIndex(g=>g.n===n),builds:()=>builds.length,fields:()=>fields.length};
+  freezeMe:()=>{players[self].frozenUntil=time()+3000},grant:()=>grantCard(players[self],time()),me:()=>players[self],flashMe:()=>{players[self].flashUntil=time()+2500},bullets:()=>bullets.length,gi:n=>GUNS.findIndex(g=>g.n===n),builds:()=>builds.length,fields:()=>fields.length,
+  get room(){return room},rtt:()=>rtt,isOwner:()=>isOwner(),goHome:()=>goHome(),ownerEnd:()=>ownerSend({type:'end'}),dropWs:()=>{try{conn.ws.close()}catch(e){}}};
 if(location.hash==='#debug')window.__67.sweep=()=>{const out=[];const saveP=players,saveCfg={...cfg};cfg.mode='ffa';cfg.map='ilha';setupMode();host=true;solo=true;
   for(const g of GUNS){players={};bullets=[];builds=[];fields=[];effects=[];gems=[];meds=[];crates=[];
     const me=newPlayer('me','Eu',defaultLook(0));const dum=newPlayer('dum','Alvo',defaultLook(1));players={me,dum};self='me';

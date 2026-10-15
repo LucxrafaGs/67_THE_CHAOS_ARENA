@@ -662,10 +662,85 @@ body.mobile #weaponCard{right:calc(140px / var(--uis,1) + var(--sar))}
 #aimKnob svg{width:72%;height:72%}
 #aimStick.firing #aimKnob{background:#FF3B47;color:#fff}
 @media (orientation:portrait){body.mobile #aimStick{bottom:calc(290px / var(--uis,1) + var(--sab))}}
+
+/* v3.5 — salas no servidor: lista, criar sala, info da sala */
+.onlgrid{width:100%;display:flex;justify-content:center}
+.onlgrid.p2p .roomlist{display:none}
+.onlgrid.srv{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(250px,.75fr);gap:clamp(12px,2.2vw,26px);align-items:stretch;max-width:980px}
+#online .onl:has(.onlgrid.srv){max-width:1000px}
+.onlgrid.srv .cards{flex-direction:column;flex-wrap:nowrap;gap:14px;justify-content:flex-start}
+.onlgrid.srv .card{width:100%;padding:12px 14px 14px;gap:4px;transform:none}
+.onlgrid.srv .card h3{font-size:clamp(22px,2.6vw,30px);margin:0}
+.onlgrid.srv .card .door{display:none}
+.onlgrid.srv .card .btn{margin-top:6px!important}
+.onlgrid.srv .pins{margin:4px 0 6px}
+.roomlist{display:flex;flex-direction:column;gap:10px;padding:12px;min-height:0;transform:rotate(-.6deg)}
+.rlhead{display:flex;align-items:center;gap:10px}
+.rlhead h3{margin:0;flex:1;display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:400;font-size:clamp(20px,2.4vw,26px);color:var(--ice);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
+.rlhead h3 .i{width:24px;height:24px;color:var(--ice)}
+.rlcount{font-weight:800;font-size:13px;opacity:.75;white-space:nowrap}
+.rlhead .btn.round{width:42px;height:42px;font-size:18px;flex:none}
+.rlbody{flex:1;min-height:150px;max-height:min(46vh,360px);overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px 4px 6px 2px}
+.rlempty{margin:auto;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;opacity:.85;font-weight:700;padding:16px}
+.rlempty .i{width:46px;height:46px;opacity:.6}
+.rlempty span{font-size:14px;opacity:.8}
+.ritem{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;text-align:left;width:100%;padding:8px 10px;border-radius:16px;border:3px solid var(--ink);background:var(--plum-d);color:var(--cream);box-shadow:0 4px 0 var(--ink);cursor:pointer;transition:transform .15s,background .15s;font:inherit}
+@media (hover:hover){.ritem:hover{transform:translateY(-2px);background:var(--plum)}}
+.ritem:active{transform:translateY(2px);box-shadow:0 2px 0 var(--ink)}
+.ritem.full{opacity:.5;cursor:not-allowed}
+.rmi{width:42px;height:42px;border-radius:12px;background:var(--night);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;color:var(--gold)}
+.rmi .i{width:24px;height:24px}
+.rmain{display:flex;flex-direction:column;min-width:0}
+.rmain b{font-size:17px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.rmain b .lk{width:15px;height:15px;color:var(--gold);flex:none}
+.rmain small{font-size:12.5px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rside{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.rside .st{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.5px;padding:1px 8px;border-radius:999px;border:2px solid var(--ink);white-space:nowrap}
+.st.lobby{background:var(--lime);color:var(--ink)}.st.game{background:var(--chaos);color:var(--ink)}.st.res{background:var(--ice);color:var(--ink)}
+.rn{display:flex;align-items:center;gap:4px;font-size:15px}.rn .i{width:16px;height:16px}
+#btnQuick{width:100%}
+/* diálogo criar/configurar sala */
+.panel.create{width:min(430px,100%);text-align:left;gap:10px}
+.panel.create h2{margin-bottom:2px}
+.crl{display:flex;flex-direction:column;gap:5px;font-weight:800;font-size:13px;letter-spacing:.5px}
+.crl small{font-weight:600;font-size:13px;opacity:.75;letter-spacing:0}
+.crl .seg button{display:flex;align-items:center;justify-content:center;gap:6px;font-size:16px}
+.crl .seg .i{width:18px;height:18px}
+.crpass{display:flex;align-items:center;gap:10px}.crpass .field{flex:1}
+.crpass .field:disabled{opacity:.55}
+#mInput{width:100%;margin:8px 0 2px;text-align:center}
+/* info da sala no saguão */
+.roominfo{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 12px;border-radius:14px;border:3px solid var(--ink);background:var(--plum-d);color:var(--cream);box-shadow:0 4px 0 var(--ink);font:inherit;text-align:left;max-width:min(320px,34vw);position:relative;cursor:default}
+.roominfo b{font-size:15px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.roominfo span{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;opacity:.85}
+.roominfo span .i{width:13px;height:13px}
+.roominfo.own{cursor:pointer;padding-right:34px}
+.roominfo .cog{position:absolute;right:8px;top:50%;width:18px;height:18px;transform:translateY(-50%);color:var(--gold)}
+@media (hover:hover){.roominfo.own:hover{background:var(--plum)}}
+@media (max-height:520px){
+  .onlgrid.srv{gap:12px}
+  .roomlist{padding:8px;gap:6px}.rlbody{min-height:110px;max-height:none}
+  .onlgrid.srv .cards{gap:10px}.onlgrid.srv .card{padding:8px 10px 10px}
+  .onlgrid.srv .card p{font-size:13px}
+  .ritem{padding:6px 8px;grid-template-columns:34px minmax(0,1fr) auto;gap:8px}.rmi{width:34px;height:34px}.rmi .i{width:20px;height:20px}
+  .rmain b{font-size:15px}
+  .panel.create{gap:6px}.panel.create .field{padding:7px 12px;font-size:16px}
+}
+@media (max-width:700px){
+  .onlgrid.srv{grid-template-columns:1fr}
+  .rlbody{max-height:40vh}
+  .roominfo{max-width:46vw}
+}
+body.mobile .onlgrid.srv{max-height:calc(100dvh - 190px)}
+body.mobile .onlgrid.srv .roomlist{min-height:0}
+body.mobile .onlgrid.srv .rlbody{max-height:none;min-height:0}
+@media (orientation:portrait){body.mobile .onlgrid.srv{max-height:none}body.mobile .onlgrid.srv .rlbody{max-height:34vh;min-height:120px}}
 </style></head><body class="menu">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
  <defs>
-  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z" fill="currentColor"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6" fill="currentColor"/><path d="M2.5 20c.4-4 3-6.4 6.5-6.4s6.1 2.4 6.5 6.4z" fill="currentColor"/><circle cx="16.8" cy="9" r="2.8" fill="currentColor" opacity=".7"/><path d="M15.5 13.8c3.3-.4 5.6 1.8 6 5.2h-4.2c-.3-2-.9-3.7-1.8-5.2z" fill="currentColor" opacity=".7"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z" fill="currentColor"/></symbol>
   <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="6.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></g></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4.5L7.5 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -832,18 +907,25 @@ body.mobile #weaponCard{right:calc(140px / var(--uis,1) + var(--sar))}
       <input class="field" id="nick" maxlength="15" placeholder="Seu apelido" autocomplete="off">
       <button class="btn round ice" id="btnDiceName" aria-label="Nome aleatório"><svg class="i"><use href="#i-dice"/></svg></button>
     </div>
-    <div class="cards">
-      <div class="card sticker">
-        <svg class="i door"><use href="#i-door"/></svg>
-        <h3>CRIAR SALA</h3>
-        <p>você vira o anfitrião</p>
-        <button class="btn gold" id="btnHost" style="margin-top:12px"><svg class="i ic"><use href="#i-plus"/></svg>CRIAR</button>
+    <div class="onlgrid" id="onlGrid">
+      <div class="roomlist sticker" id="roomBox">
+        <div class="rlhead"><h3><svg class="i"><use href="#i-globe"/></svg>SALAS ABERTAS</h3><span class="rlcount" id="roomCount"></span><button class="btn round small ice" id="btnRefresh" aria-label="Atualizar lista"><svg class="i"><use href="#i-refresh"/></svg></button></div>
+        <div class="rlbody" id="roomList"><div class="rlempty">Procurando salas<span class="dots"></span></div></div>
+        <button class="btn gold" id="btnQuick"><svg class="i ic"><use href="#i-bolt"/></svg>JOGAR RÁPIDO</button>
       </div>
-      <div class="card sticker online">
-        <h3>ENTRAR</h3>
-        <p>digite o código da sala</p>
-        <div class="pins" id="pins"></div>
-        <button class="btn ice" id="btnJoin"><svg class="i ic"><use href="#i-arrow"/></svg>ENTRAR</button>
+      <div class="cards">
+        <div class="card sticker">
+          <svg class="i door"><use href="#i-door"/></svg>
+          <h3>CRIAR SALA</h3>
+          <p id="hostHint">pública ou privada, com ou sem senha</p>
+          <button class="btn gold" id="btnHost" style="margin-top:12px"><svg class="i ic"><use href="#i-plus"/></svg>CRIAR</button>
+        </div>
+        <div class="card sticker online">
+          <h3>ENTRAR</h3>
+          <p>digite o código da sala</p>
+          <div class="pins" id="pins"></div>
+          <button class="btn ice" id="btnJoin"><svg class="i ic"><use href="#i-arrow"/></svg>ENTRAR</button>
+        </div>
       </div>
     </div>
     <div class="statusline" id="netStatus"><span class="dot"></span><span class="txt">Pronto para o caos.</span></div>
@@ -855,6 +937,7 @@ body.mobile #weaponCard{right:calc(140px / var(--uis,1) + var(--sar))}
   <div class="topbar">
     <button class="btn danger small" id="btnLeaveLobby"><svg class="i ic"><use href="#i-back"/></svg>SAIR</button>
     <div class="codebox"><span>SALA</span><b id="roomCode">------</b><button class="btn small ice" id="btnCopy"><svg class="i ic"><use href="#i-copy"/></svg>COPIAR</button></div>
+    <button class="roominfo hidden" id="roomInfo" aria-label="Configurar sala"></button>
     <span class="spacer"></span>
   </div>
   <div class="stage scroll" style="flex-direction:column;justify-content:flex-start">
@@ -1006,13 +1089,21 @@ body.mobile #weaponCard{right:calc(140px / var(--uis,1) + var(--sar))}
 </div>
 
 <!-- MODAL -->
-<div id="modal" class="overlay modal hidden"><div class="panel sticker"><h2 id="mTitle">Certeza?</h2><p id="mText"></p><div class="foot"><button class="btn" id="mNo">CANCELAR</button><button class="btn danger" id="mYes">SIM</button></div></div></div>
+<div id="createOv" class="overlay modal hidden"><div class="panel sticker create">
+  <h2 id="crTitle">CRIAR SALA</h2>
+  <label class="crl">NOME DA SALA<input class="field" id="crName" maxlength="24" autocomplete="off"></label>
+  <div class="crl">QUEM PODE VER<div class="seg" id="crVis"><button data-vis="public" class="on"><svg class="i"><use href="#i-globe"/></svg>Pública</button><button data-vis="private"><svg class="i"><use href="#i-eye"/></svg>Privada</button></div>
+    <small id="crVisHint">aparece na lista de salas abertas</small></div>
+  <div class="crl">SENHA<div class="crpass"><button class="toggle" id="crLock" role="switch" aria-checked="false" aria-label="Sala com senha"></button><input class="field" id="crPass" maxlength="24" placeholder="sem senha" autocomplete="off" disabled></div></div>
+  <div class="foot"><button class="btn" id="crNo">CANCELAR</button><button class="btn gold" id="crYes"><svg class="i ic"><use href="#i-plus"/></svg>CRIAR SALA</button></div>
+</div></div>
+<div id="modal" class="overlay modal hidden"><div class="panel sticker"><h2 id="mTitle">Certeza?</h2><p id="mText"></p><input class="field hidden" id="mInput" maxlength="24" autocomplete="off"><div class="foot"><button class="btn" id="mNo">CANCELAR</button><button class="btn danger" id="mYes">SIM</button></div></div></div>
 <div id="toasts"></div>
 <canvas id="confetti"></canvas>
 
 <script>
 (()=>{'use strict';
-// ===== Utilidades, configurações e áudio =====
+// ===== Utilidades puras (usadas também pelo servidor) =====
 const $=id=>document.getElementById(id);
 const rand=(a,b)=>a+Math.random()*(b-a),clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t;
 const time=()=>performance.now();
@@ -1020,6 +1111,10 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const safe=s=>String(s||'Jogador').replace(/[<>]/g,'').trim().slice(0,15)||'Jogador';
 const roomId=()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=A[Math.floor(Math.random()*A.length)];return s};
 const store={get(k,d){try{const v=localStorage.getItem('67x_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('67x_'+k,JSON.stringify(v))}catch(e){}}};
+// Gerador determinístico
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// ===== Utilidades, configurações e áudio =====
 const isTouch=matchMedia('(pointer:coarse)').matches||('ontouchstart' in window&&innerWidth<1100);
 if(isTouch)document.body.classList.add('mobile');
 
@@ -1103,11 +1198,9 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)Sound.unlo
 addEventListener('keydown',()=>Sound.unlock(),{capture:true});
 
 function toast(msg,kind=''){const d=document.createElement('div');d.className='toast '+kind;d.textContent=msg;$('toasts').appendChild(d);setTimeout(()=>d.remove(),2700)}
-function confirmBox(title,text,yes='SIM',no='CANCELAR'){return new Promise(res=>{$('mTitle').textContent=title;$('mText').textContent=text;$('mYes').textContent=yes;$('mNo').textContent=no;$('modal').classList.remove('hidden');
+function confirmBox(title,text,yes='SIM',no='CANCELAR'){return new Promise(res=>{const mi=$('mInput');if(mi)mi.classList.add('hidden');$('mTitle').textContent=title;$('mText').textContent=text;$('mYes').textContent=yes;$('mNo').textContent=no;$('modal').classList.remove('hidden');
   const done=v=>{$('modal').classList.add('hidden');$('mYes').onclick=$('mNo').onclick=null;Sound.play('click');res(v)};$('mYes').onclick=()=>done(true);$('mNo').onclick=()=>done(false)})}
 
-// Gerador determinístico
-function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 // ===== Dados: capivaras, modos, mapas e arsenal =====
 const INK='#2A1A12';
@@ -1909,16 +2002,32 @@ function startDemo(){if(host||conn)return;demo=true;solo=false;self='';MODE=mode
   for(let i=0;i<6;i++){const p=players['d'+i]=newPlayer('d'+i,BOT_NAMES[i],randomLook(),true);const [x,y]=freeSpot();p.x=x;p.y=y;p.guns=[randomGun(-1),randomGun(-1)]}spawnPickups();started=false}
 function stopDemo(){demo=false;players={};bullets=[];effects=[];gems=[];meds=[];crates=[];builds=[];fields=[]}
 
-// ---------- Rede (PeerJS, anfitrião autoritativo) ----------
-let netAt=0;
+// ---------- Estado serializado (enviado aos jogadores) ----------
 const packP=p=>({id:p.id,name:p.name,look:p.look,bot:p.bot,team:p.team,x:Math.round(p.x),y:Math.round(p.y),hp:Math.round(p.hp),alive:p.alive,respawnAt:p.respawnAt,canRespawnAt:p.canRespawnAt,level:p.level,energy:p.energy,kills:p.kills,deaths:p.deaths,gemsTotal:p.gemsTotal,heals:p.heals,noKills:p.noKills,best:p.best,
   hold:+p.hold.toFixed(1),caps:p.caps,zone:+p.zone.toFixed(1),gunLvl:p.gunLvl,carry:p.carry,guns:p.guns,slot:p.slot,aim:+p.aim.toFixed(2),face:p.face,mv:p.mv,shotAt:p.shotAt,dashAt:p.dashAt,dashTime:p.dashTime,dx:+p.dx.toFixed(2),dy:+p.dy.toFixed(2),
   stunUntil:p.stunUntil,confuseUntil:p.confuseUntil,shieldUntil:p.shieldUntil,frozenUntil:p.frozenUntil,flashUntil:p.flashUntil,maxHp:p.maxHp,mods:p.mods,perks:p.perks,kc:p.kc,fc:p.fc,picking:p.picking,offer:p.offer,pickUntil:p.pickUntil,bubbleAt:p.bubbleAt,burnUntil:p.burnUntil,slowUntil:p.slowUntil,hurtAt:p.hurtAt,killer:p.killer});
 function snapshot(){const P={};for(const k in players)P[k]=packP(players[k]);return{type:'s',ht:time(),P,B:bullets.map(b=>({id:b.id,g:b.g,x:Math.round(b.x),y:Math.round(b.y),vx:Math.round(b.vx),vy:Math.round(b.vy),r:b.r,life:+b.life.toFixed(2),six:b.six,stick:b.stick})),
   G:gems,MD:meds,CR:crates,BU:builds,FI:fields,E:effects,st:started,ov:over,me:matchEnd,cfg,ms,votes}}
+function filterKeys(k){const o={};for(const s of KEYLIST)o[s]=!!(k&&k[s]===true);return o}
+
+// ---------- Cartas de power-up ----------
+function pickPerks(p,n=3){let pool=PERKS.filter(k=>!(k.u&&p.perks[k.id]));const out=[];while(out.length<n&&pool.length){const tot=pool.reduce((s,k)=>s+RARITY[k.r][2],0);let r=Math.random()*tot;let ch=pool[pool.length-1];for(const k of pool){r-=RARITY[k.r][2];if(r<=0){ch=k;break}}out.push(ch.id);pool=pool.filter(k=>k!==ch)}return out}
+function grantCard(p,t){if(over)return;p.pending++;if(!p.picking)offerCard(p,t)}
+function offerCard(p,t){p.offer=pickPerks(p,3);if(p.bot||demo){applyPerk(p,pick(p.offer),t);p.offer=null;p.pending=Math.max(0,p.pending-1);if(p.pending>0)offerCard(p,t);return}
+  p.picking=true;p.pickUntil=t+12000;p.keys={};dropFlag(p,t);fx('vanish',{x:p.x,y:p.y,pid:p.id},700)}
+function choosePerk(p,id,t){if(!p||!p.picking||!p.offer||!p.offer.includes(id))return;applyPerk(p,id,t);p.picking=false;p.offer=null;p.pending=Math.max(0,p.pending-1);p.shieldUntil=Math.max(p.shieldUntil,t+1200);
+  pushOut(p);fx('reappear',{x:p.x,y:p.y,pid:p.id,perk:id},900);if(p.pending>0)offerCard(p,t)}
+function applyPerk(p,id,t){p.perks[id]=(p.perks[id]||0)+1;const m=p.mods;switch(id){
+  case 'vida':p.maxHp+=25;p.hp=p.maxHp;break;case 'forca':m.dmg*=1.15;break;case 'gatilho':m.cd*=.85;break;case 'patas':m.spd*=1.12;break;case 'dashcd':m.dashcd*=.65;break;case 'superdash':m.dashlen*=1.4;break;
+  case 'regen':m.regen++;break;case 'vampiro':m.ls+=.15;break;case 'casca':m.armor+=.15;break;case 'balas':m.bspd*=1.25;break;case 'alcance':m.range*=1.25;break;case 'duplo':m.extra++;break;case 'explosao':m.boom*=1.35;break;
+  case 'lendario':m.legend=1;break;case 'presente':if(MODE.id!=='gun'){p.guns[p.slot]=randomGunTop(p.guns[p.slot]);p.gun=p.guns[p.slot]}break;case 'bolha':m.bubble=1;break;case 'espinhos':m.thorns+=.25;break;case 'chumbo':m.heavy=1;break;
+  case 'ima':m.magnet++;break;case 'banquete':m.feast++;break;case 'enfermeira':m.nurse=1;break;case 'volta':m.quick=1;break;case 'sorte':m.crit+=.15;break;case 'fogo':m.fire=1;break;case 'gelo':m.ice++;break;
+  case 'mira':m.aim=1;break;case 'ricochete':m.bounce++;break;case 'adrenalina':m.adren=1;break;case 'kamikaze':m.kami=1;break;case 'atropelo':m.ram=1;break}}
+
+// ---------- Rede (PeerJS, anfitrião autoritativo) ----------
+let netAt=0;
 function send(c,d){try{if(c&&c.open)c.send(d)}catch(e){}}
 function sync(force){if(!host||solo)return;const t=time();if(!force&&t-netAt<66)return;netAt=t;const s=snapshot();for(const c of Object.values(clients))send(c,s)}
-function filterKeys(k){const o={};for(const s of KEYLIST)o[s]=!!(k&&k[s]===true);return o}
 function setNet(msg,kind=''){const el=$('netStatus');el.className='statusline '+kind;el.querySelector('.txt').textContent=msg}
 function hostRoom(){if(typeof Peer==='undefined'){setNet('Não deu para carregar o módulo online. Verifique a internet.','err');return}
   stopDemo();leaveNet();host=true;solo=false;room=roomId();setNet('Criando sala no servidor do caos…','busy');
@@ -1954,23 +2063,67 @@ function clientMessage(d){if(!d||typeof d!=='object')return;
     const wasStarted=started,wasOver=over;started=!!d.st;over=!!d.ov;
     if(started&&(!wasStarted||(wasOver&&!over)))onMatchStart();if(!started&&wasStarted)go('lobby');if(over&&!wasOver)onMatchEnd();if(view==='lobby')renderLobby();if(view==='result')renderVotes()}}
 let lastInput=0;
-function pushInputs(force){const me=players[self];if(host||demo){if(me){me.keys=filterKeys(keys);me.aim=localAim;me.ad=localAimDist}}else if(conn&&(force||time()-lastInput>45)){send(conn,{type:'i',k:filterKeys(keys),a:+localAim.toFixed(3),d:Math.round(localAimDist)});lastInput=time()}}
-function leaveNet(keepStatus){try{if(conn){const c=conn;conn=null;c.close()}}catch(e){}try{if(peer){peer.destroy()}}catch(e){}peer=null;conn=null;clients={};lastState=null;
+let lastSig='';
+function pushInputs(force){const me=players[self];if(host||demo){if(me){me.keys=filterKeys(keys);me.aim=localAim;me.ad=localAimDist}}
+  else if(conn&&netMode==='srv'){const k=filterKeys(keys),a=+localAim.toFixed(2),d=Math.round(localAimDist/10)*10,sig=KEYLIST.map(x=>+k[x]).join('')+a+'|'+d,t=time();
+    if(force||(sig!==lastSig&&t-lastInput>40)||t-lastInput>500){send(conn,{type:'i',k,a,d});lastInput=t;lastSig=sig}}
+  else if(conn&&(force||time()-lastInput>45)){send(conn,{type:'i',k:filterKeys(keys),a:+localAim.toFixed(3),d:Math.round(localAimDist)});lastInput=time()}}
+function leaveNet(keepStatus){srvSession++;stopPing();srvOwner=null;srvInfo=null;wsTok='';try{if(conn){const c=conn;conn=null;c.close()}}catch(e){}try{if(peer){peer.destroy()}}catch(e){}peer=null;conn=null;clients={};lastState=null;
   if(!keepStatus){host=false;solo=false;started=false;over=false;paused=false}}
 
-// ---------- Cartas de power-up ----------
-function pickPerks(p,n=3){let pool=PERKS.filter(k=>!(k.u&&p.perks[k.id]));const out=[];while(out.length<n&&pool.length){const tot=pool.reduce((s,k)=>s+RARITY[k.r][2],0);let r=Math.random()*tot;let ch=pool[pool.length-1];for(const k of pool){r-=RARITY[k.r][2];if(r<=0){ch=k;break}}out.push(ch.id);pool=pool.filter(k=>k!==ch)}return out}
-function grantCard(p,t){if(over)return;p.pending++;if(!p.picking)offerCard(p,t)}
-function offerCard(p,t){p.offer=pickPerks(p,3);if(p.bot||demo){applyPerk(p,pick(p.offer),t);p.offer=null;p.pending=Math.max(0,p.pending-1);if(p.pending>0)offerCard(p,t);return}
-  p.picking=true;p.pickUntil=t+12000;p.keys={};dropFlag(p,t);fx('vanish',{x:p.x,y:p.y,pid:p.id},700)}
-function choosePerk(p,id,t){if(!p||!p.picking||!p.offer||!p.offer.includes(id))return;applyPerk(p,id,t);p.picking=false;p.offer=null;p.pending=Math.max(0,p.pending-1);p.shieldUntil=Math.max(p.shieldUntil,t+1200);
-  pushOut(p);fx('reappear',{x:p.x,y:p.y,pid:p.id,perk:id},900);if(p.pending>0)offerCard(p,t)}
-function applyPerk(p,id,t){p.perks[id]=(p.perks[id]||0)+1;const m=p.mods;switch(id){
-  case 'vida':p.maxHp+=25;p.hp=p.maxHp;break;case 'forca':m.dmg*=1.15;break;case 'gatilho':m.cd*=.85;break;case 'patas':m.spd*=1.12;break;case 'dashcd':m.dashcd*=.65;break;case 'superdash':m.dashlen*=1.4;break;
-  case 'regen':m.regen++;break;case 'vampiro':m.ls+=.15;break;case 'casca':m.armor+=.15;break;case 'balas':m.bspd*=1.25;break;case 'alcance':m.range*=1.25;break;case 'duplo':m.extra++;break;case 'explosao':m.boom*=1.35;break;
-  case 'lendario':m.legend=1;break;case 'presente':if(MODE.id!=='gun'){p.guns[p.slot]=randomGunTop(p.guns[p.slot]);p.gun=p.guns[p.slot]}break;case 'bolha':m.bubble=1;break;case 'espinhos':m.thorns+=.25;break;case 'chumbo':m.heavy=1;break;
-  case 'ima':m.magnet++;break;case 'banquete':m.feast++;break;case 'enfermeira':m.nurse=1;break;case 'volta':m.quick=1;break;case 'sorte':m.crit+=.15;break;case 'fogo':m.fire=1;break;case 'gelo':m.ice++;break;
-  case 'mira':m.aim=1;break;case 'ricochete':m.bounce++;break;case 'adrenalina':m.adren=1;break;case 'kamikaze':m.kami=1;break;case 'atropelo':m.ram=1;break}}
+
+// ---------- Servidor online (Cloudflare: Worker + Durable Objects) ----------
+// O navegador vira um "convidado" do servidor: as mensagens são as mesmas do modo P2P,
+// só que a partida roda numa sala na nuvem. O P2P continua aqui como reserva.
+let netMode='p2p',srvOwner=null,srvInfo=null,wsTok='',rtt=0,pingTimer=null,srvUp=null,reconnectTry=0,srvSession=0;
+let srvCache={st:{},G:[],MD:[],CR:[],E:[]};
+const API_BASE=/^https?:$/.test(location.protocol)?location.origin:'';
+const SRV_STATIC=['name','look','bot','mods','perks','maxHp','offer','killer'];
+const srvMode=()=>netMode==='srv';
+const isOwner=()=>host||(srvMode()&&!!self&&srvOwner===self);
+function ownerSend(d){if(srvMode()&&conn)send(conn,d)}
+async function api(path,opt){const r=await fetch(API_BASE+path,Object.assign({cache:'no-store'},opt||{}));if(!r.ok)throw new Error('http '+r.status);return r.json()}
+let srvCheckP=null;
+function checkServer(){if(!API_BASE)return Promise.resolve(srvUp=false);if(srvCheckP)return srvCheckP;return srvCheckP=(async()=>{
+  try{const d=await Promise.race([api('/api/health'),new Promise((_,j)=>setTimeout(()=>j(new Error('tempo')),5000))]);srvUp=!!(d&&d.ok)}catch(e){srvUp=false}srvCheckP=null;return srvUp})()}
+const serverReady=()=>srvUp===null||srvCheckP?checkServer():Promise.resolve(srvUp);
+function stopPing(){if(pingTimer){clearInterval(pingTimer);pingTimer=null}}
+function startPing(){stopPing();const ping=()=>send(conn,{type:'ping',t:time()});ping();pingTimer=setInterval(ping,2000)}
+function wsOpen(code,join){const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/rooms/'+code+'/ws');
+  const c={ws,open:false,send(d){if(ws.readyState===1)ws.send(JSON.stringify(d))},close(){try{if(ws.readyState===1)ws.send('{"type":"bye"}')}catch(e){}try{ws.close(1000)}catch(e){}}};
+  ws.onopen=()=>{c.open=true;c.send(join)};
+  ws.onmessage=e=>{if(conn!==c)return;let d;try{d=JSON.parse(e.data)}catch(_){return}srvMessage(d)};
+  ws.onclose=()=>{c.open=false;if(conn===c)srvLost()};
+  return c}
+function srvBegin(code,extra){stopDemo();leaveNet();netMode='srv';host=false;solo=false;room=code;self='';reconnectTry=0;srvCache={st:{},G:[],MD:[],CR:[],E:[]};
+  conn=wsOpen(code,Object.assign({type:'join',name:myNick(),look:myLook},extra));const c=conn,ses=srvSession;
+  setTimeout(()=>{if(conn===c&&ses===srvSession&&!self){setNet('O servidor não respondeu. Tente de novo.','err');leaveNet(true)}},10000)}
+async function srvCreate(o){setNet('Criando sala no servidor…','busy');
+  try{const {code}=await api('/api/rooms',{method:'POST'});
+    srvBegin(code,{create:{name:o.name,vis:o.vis,pass:o.pass||'',cfg:{mode:cfg.mode,map:cfg.map,bots:cfg.bots,time:cfg.time,diff:cfg.diff}}})}
+  catch(e){setNet('O servidor não respondeu. Tente de novo.','err')}}
+function srvJoin(code,pass){code=(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){setNet('O código tem 6 letras ou números.','err');return}
+  setNet('Entrando na sala '+code+'…','busy');srvBegin(code,pass?{pass}:{})}
+function srvMerge(d){const st=srvCache.st;
+  for(const id in d.P){const p=d.P[id];if('look' in p){const o={};for(const f of SRV_STATIC)o[f]=p[f];st[id]=o}
+    else{const o=st[id];if(o)for(const f of SRV_STATIC)p[f]=o[f];else{p.name=p.name||'...';p.look=defaultLook(0);p.mods=defaultMods();p.perks={};p.maxHp=100;p.offer=null;p.killer=null}}}
+  for(const id in st)if(!d.P[id])delete st[id];
+  for(const k of ['G','MD','CR']){if(d[k])srvCache[k]=d[k];else d[k]=srvCache[k]}
+  srvCache.E=srvCache.E.filter(e=>e.end>d.ht).concat(d.E||[]);d.E=srvCache.E}
+function srvMessage(d){if(!d||typeof d!=='object')return;
+  switch(d.type){
+    case 's':srvMerge(d);srvOwner=d.owner||null;srvInfo=d.info||srvInfo;clientMessage(d);return;
+    case 'welcome':wsTok=d.token;srvOwner=d.owner;srvInfo=d.info;reconnectTry=0;startPing();
+      if(d.resumed){self=d.id;toast('Reconectado!','good');return}clientMessage(d);return;
+    case 'reject':{const was=self;if(d.code==='pass'){const code=room;leaveNet(true);askRoomPass(code,d.reason);return}
+      setNet(d.reason||'Não deu para entrar.','err');leaveNet(true);if(was||view!=='online'){toast(d.reason||'A sala foi encerrada.','bad');goHome()}return}
+    case 'pong':{const r=time()-d.t;rtt=rtt?lerp(rtt,r,.3):r;return}
+    case 'note':toast(d.msg,d.kind||'');if(d.snd)Sound.play(d.snd);return}}
+function srvLost(){stopPing();const ses=srvSession;
+  if(!self){setNet('Não deu para conectar ao servidor.','err');conn=null;return}
+  if(reconnectTry===0)toast('A conexão caiu… reconectando','bad');
+  if(reconnectTry++>=12){toast('Sem conexão com o servidor.','bad');leaveNet();goHome();return}
+  setTimeout(()=>{if(ses!==srvSession||!srvMode()||!self)return;conn=wsOpen(room,{type:'join',name:myNick(),look:myLook,resume:{id:self,token:wsTok}})},Math.min(2500,400+reconnectTry*300))}
 
 // ===== Render, partículas, efeitos e laço principal =====
 const canvas=$('game'),ctx=canvas.getContext('2d');
@@ -2122,6 +2275,25 @@ function applyDistortion(t){if(!distCv)distCv=document.createElement('canvas');i
   ctx.globalCompositeOperation='screen';ctx.globalAlpha=distortT*.35;ctx.drawImage(distCv,6*pr*distortT,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
   ctx.fillStyle=`rgba(120,170,255,${distortT*.22})`;ctx.fillRect(0,0,w,h)}
 
+// ---------- Previsão local (modo servidor) ----------
+// Sua capivara anda na hora no seu aparelho; quando o estado do servidor chega, comparamos com onde
+// você estava há "ping" milissegundos e corrigimos aos poucos. Erros grandes (teleporte, respawn) encaixam direto.
+const pred={on:false,x:0,y:0,hist:[],dashT:0,dashAt:-1e9,dx:0,dy:0,snap:null,lt:0};
+function predictSelf(p){const t=time(),ht=hostNow(),dt=pred.on?clamp((t-pred.lt)/1000,0,.25):0;pred.lt=t;
+  if(!p.alive||p.picking||over||view!=='game'){pred.on=false;return false}
+  if(!pred.on){pred.on=true;pred.x=p.x;pred.y=p.y;pred.hist=[];pred.dashT=0;pred.snap=lastState}
+  const md=p.mods||defaultMods(),frozen=ht<p.frozenUntil,stun=ht<p.stunUntil||frozen,conf=ht<p.confuseUntil?-1:1;
+  let dx=((+!!keys.right)-(+!!keys.left))*conf,dy=((+!!keys.down)-(+!!keys.up))*conf;if(stun)dx=dy=0;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+  if(keys.dash&&!stun&&pred.dashT<=0&&ht-Math.max(p.dashAt||0,pred.dashAt)>2800*md.dashcd){pred.dashAt=ht;pred.dashT=.19*md.dashlen;pred.dx=dx||Math.cos(localAim);pred.dy=dy||Math.sin(localAim)}
+  const dashing=pred.dashT>0&&!frozen;pred.dashT=Math.max(0,pred.dashT-dt);
+  let sp=dashing?900:215*md.spd*(md.adren&&p.hp<p.maxHp*.35?1.3:1);if(ht<p.slowUntil)sp*=.5;if(p.carry>=0)sp*=.88;
+  if(!frozen){const o={x:pred.x,y:pred.y},n=Math.max(1,Math.ceil(dt/.04));for(let i=0;i<n;i++){o.x+=(dashing?pred.dx:dx)*sp*dt/n;o.y+=(dashing?pred.dy:dy)*sp*dt/n;pushOut(o)}pred.x=o.x;pred.y=o.y}
+  pred.hist.push({t,x:pred.x,y:pred.y});while(pred.hist.length>2&&t-pred.hist[0].t>1500)pred.hist.shift();
+  if(lastState!==pred.snap){pred.snap=lastState;const back=t-(rtt||90)-12;let h=pred.hist[0];for(const q of pred.hist){if(q.t<=back)h=q;else break}
+    const ex=p.x-h.x,ey=p.y-h.y,e=Math.hypot(ex,ey);
+    if(e>140){pred.x=p.x;pred.y=p.y;pred.hist=[]}else if(e>3){const k=.3;pred.x+=ex*k;pred.y+=ey*k;for(const q of pred.hist){q.x+=ex*k;q.y+=ey*k}}}
+  p.rx=pred.x;p.ry=pred.y;return true}
+
 // ---------- Laço ----------
 let lastFrame=0,hudAt=0,mmAt=0,slowT=0;
 function frame(t){requestAnimationFrame(frame);
@@ -2138,7 +2310,7 @@ function frame(t){requestAnimationFrame(frame);
   processEffects(t);
   const sm=Math.min(1,dt*14);
   for(const p of Object.values(players)){let tr=track[p.id];if(!tr){tr=track[p.id]={shot:p.shotAt,dash:p.dashAt,slot:p.slot,shotT:-1e9,swing:0,recoil:0,alive:p.alive}}
-    if(host||demo){p.rx=p.x;p.ry=p.y}else{if(Math.hypot(p.x-p.rx,p.y-p.ry)>300||!tr.alive){p.rx=p.x;p.ry=p.y}else{p.rx+=(p.x-p.rx)*sm;p.ry+=(p.y-p.ry)*sm}}
+    if(host||demo){p.rx=p.x;p.ry=p.y}else if(p.id===self&&srvMode()&&predictSelf(p)){}else{if(Math.hypot(p.x-p.rx,p.y-p.ry)>300||!tr.alive){p.rx=p.x;p.ry=p.y}else{p.rx+=(p.x-p.rx)*sm;p.ry+=(p.y-p.ry)*sm}}
     if(p.shotAt!==tr.shot){tr.shot=p.shotAt;tr.shotT=t;onShot(p,tr)}
     if(p.slot!==tr.slot){tr.slot=p.slot;if(p.id===self){Sound.play('swap');hudGun=-1}}
     if(p.dashAt!==tr.dash){tr.dash=p.dashAt;if(p.dashAt>0&&nearCam(p.x,p.y)){if(p.id===self||!demo)Sound.play('dash');for(let i=0;i<8;i++)addP({x:p.x+rand(-10,10),y:p.y+rand(-12,18),vx:-(p.dx||0)*rand(200,420),vy:-(p.dy||0)*rand(200,420),type:'line',col:p.look.trail,size:4,life:.3,drag:4})}}
@@ -2198,7 +2370,7 @@ function go(v){view=v;for(const s of SCREENS)$(s).classList.toggle('hidden',s!==
   const inGame=v==='game';$('hud').classList.toggle('hidden',!inGame);$('touch').classList.toggle('hidden',!inGame);document.body.classList.toggle('menu',!inGame);
   if(!inGame){$('death').classList.add('hidden');$('pause').classList.add('hidden');$('scoreOv').classList.add('hidden');$('perkOv').classList.add('hidden')}
   if(v==='home')drawSpheres();if(v==='play')drawPlayArt();if(v==='custom')openCustom();if(v==='lobby'){lobbyKey='';renderLobby();lobbyAnim()}if(v==='setup')renderSetup($('setupPanel'),true);if(v==='arsenal')renderArsenal();
-  if(v==='online')$('nick').value=store.get('nick','');
+  if(v==='online'){$('nick').value=store.get('nick','');enterOnline()}
   Sound.music(true,inGame?140:100)}
 function goHome(){leaveNet();players={};bullets=[];effects=[];started=false;over=false;paused=false;startDemo();$('result').classList.add('hidden');go('home')}
 
@@ -2293,7 +2465,7 @@ function renderSetup(el,editable,compact){const humans=Object.values(players).fi
       <div><h3>${I('timer')} TEMPO</h3><div class="seg">${[[120,'2 min'],[180,'3 min'],[300,'5 min']].map(([v,l])=>`<button data-time="${v}" class="${cfg.time===v?'on':''}" ${editable?'':'disabled'}>${l}</button>`).join('')}</div></div>
     </div>`;
   el.querySelectorAll('.mapcard canvas').forEach((cv,i)=>drawMapThumb(cv,MAPS[i]));
-  if(!editable)return;const changed=()=>{store.set('cfg',cfg);Sound.play('click');if(host&&!solo)sync(true);renderSetup(el,editable,compact)};
+  if(!editable)return;const changed=()=>{store.set('cfg',cfg);Sound.play('click');if(host&&!solo)sync(true);else if(srvMode())ownerSend({type:'cfg',cfg:{mode:cfg.mode,map:cfg.map,bots:cfg.bots,time:cfg.time,diff:cfg.diff}});renderSetup(el,editable,compact)};
   el.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{cfg.mode=b.dataset.mode;changed()});
   el.querySelectorAll('[data-map]').forEach(b=>b.onclick=()=>{cfg.map=b.dataset.map;changed()});
   el.querySelectorAll('[data-bots]').forEach(b=>b.onclick=()=>{cfg.bots=clamp(cfg.bots+ +b.dataset.bots,0,maxBots);changed()});
@@ -2307,26 +2479,78 @@ function renderSetup(el,editable,compact){const humans=Object.values(players).fi
     p.addEventListener('paste',e=>{e.preventDefault();const s=(e.clipboardData.getData('text')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);s.split('').forEach((ch,j)=>{if(pins[j])pins[j].value=ch});if(pins[Math.min(5,s.length)])pins[Math.min(5,s.length)].focus()})})})();
 $('nick').addEventListener('input',()=>store.set('nick',safe($('nick').value)));
 $('btnDiceName').onclick=()=>{$('nick').value=pick(NICKS);store.set('nick',$('nick').value);Sound.play('boing')};
-$('btnHost').onclick=()=>{store.set('nick',myNick());if(!$('nick').value)$('nick').value=myNick();Sound.play('click');hostRoom()};
-$('btnJoin').onclick=()=>{store.set('nick',myNick());if(!$('nick').value)$('nick').value=myNick();Sound.play('click');joinRoom([...$('pins').children].map(p=>p.value).join(''))};
+const nickReady=()=>{store.set('nick',myNick());if(!$('nick').value)$('nick').value=myNick()};
+$('btnHost').onclick=async()=>{nickReady();Sound.play('click');if(await serverReady())openRoomDialog();else hostRoom()};
+$('btnJoin').onclick=async()=>{nickReady();Sound.play('click');const code=[...$('pins').children].map(p=>p.value).join('');if(await serverReady())srvJoin(code);else joinRoom(code)};
+
+// ---------- Salas no servidor: lista, criar, senha ----------
+let roomTimer=null,roomListKey='';
+async function enterOnline(){$('onlGrid').classList.add('p2p');$('onlGrid').classList.remove('srv');roomListKey='';
+  $('roomList').innerHTML=`<div class="rlempty">Conectando ao servidor<span class="dots"></span></div>`;
+  const up=await checkServer();if(view!=='online')return;
+  $('onlGrid').classList.toggle('srv',up);$('onlGrid').classList.toggle('p2p',!up);
+  $('hostHint').textContent=up?'pública ou privada, com ou sem senha':'você vira o anfitrião (modo direto)';
+  if(up){setNet('Servidor online. Escolha uma sala ou crie a sua!','ok');refreshRooms();clearInterval(roomTimer);roomTimer=setInterval(()=>{if(view==='online')refreshRooms();else{clearInterval(roomTimer);roomTimer=null}},4000)}
+  else setNet(API_BASE?'Servidor fora do ar: usando o modo direto (P2P).':'Pronto para o caos.',API_BASE?'err':'')}
+function fmtLeft(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+async function refreshRooms(){let rooms;try{rooms=(await api('/api/rooms')).rooms||[]}catch(e){$('roomList').innerHTML=`<div class="rlempty">Não deu para buscar as salas agora.</div>`;return}
+  if(view!=='online')return;const key=JSON.stringify(rooms);if(key===roomListKey)return;roomListKey=key;
+  $('roomCount').textContent=rooms.length?rooms.length+(rooms.length>1?' salas':' sala'):'';
+  if(!rooms.length){$('roomList').innerHTML=`<div class="rlempty">${I('capy')}<b>Nenhuma sala aberta agora.</b><span>Crie a sua ou use o Jogar rápido!</span></div>`;return}
+  $('roomList').innerHTML=rooms.map(r=>{const md=modeById(r.mode),mp=mapById(r.map),full=r.humans>=r.max;
+    const st=r.state==='lobby'?`<em class="st lobby">NO SAGUÃO</em>`:r.state==='game'?`<em class="st game">EM JOGO ${fmtLeft(r.left||0)}</em>`:`<em class="st res">RESULTADO</em>`;
+    return`<button class="ritem${full?' full':''}" data-code="${r.code}" data-locked="${r.locked?1:0}" ${full?'disabled':''}><span class="rmi">${I(md.ic)}</span>
+      <span class="rmain"><b>${r.locked?I('lock','lk'):''}${escapeHtml(r.name)}</b><small>${escapeHtml(md.n)} • ${escapeHtml(mp.n)} • dono: ${escapeHtml(r.owner)}</small></span>
+      <span class="rside">${st}<b class="rn">${I('users')}${r.humans}/${r.max}</b></span></button>`}).join('');
+  $('roomList').querySelectorAll('.ritem').forEach(b=>b.onclick=async()=>{nickReady();Sound.play('click');const code=b.dataset.code;
+    if(b.dataset.locked==='1'){askRoomPass(code)}else srvJoin(code)})}
+$('btnRefresh').onclick=()=>{Sound.play('click');roomListKey='';refreshRooms()};
+$('btnQuick').onclick=async()=>{nickReady();Sound.play('boing');setNet('Procurando uma sala boa…','busy');let rooms=[];try{rooms=(await api('/api/rooms')).rooms||[]}catch(e){}
+  const ok=rooms.filter(r=>!r.locked&&r.humans<r.max).sort((a,b)=>(a.state==='lobby'?0:1)-(b.state==='lobby'?0:1)||b.humans-a.humans);
+  if(ok.length)srvJoin(ok[0].code);else srvCreate({name:'Sala de '+myNick(),vis:'public',pass:''})};
+async function askRoomPass(code,msg){const v=await promptBox('SALA COM SENHA',msg||'Digite a senha da sala '+code+':','senha','ENTRAR','CANCELAR');if(v)srvJoin(code,v)}
+function promptBox(title,text,ph='',yes='OK',no='CANCELAR'){return new Promise(res=>{const inp=$('mInput');inp.value='';inp.placeholder=ph;inp.classList.remove('hidden');
+  $('mTitle').textContent=title;$('mText').textContent=text;$('mYes').textContent=yes;$('mNo').textContent=no;$('mYes').className='btn gold';$('modal').classList.remove('hidden');setTimeout(()=>inp.focus(),60);
+  const done=v=>{$('modal').classList.add('hidden');inp.classList.add('hidden');$('mYes').className='btn danger';$('mYes').onclick=$('mNo').onclick=inp.onkeydown=null;Sound.play('click');res(v)};
+  $('mYes').onclick=()=>done(inp.value.trim()||null);$('mNo').onclick=()=>done(null);inp.onkeydown=e=>{if(e.key==='Enter')done(inp.value.trim()||null);if(e.key==='Escape')done(null)}})}
+// Diálogo de criar/editar sala
+let crVis='public',crEdit=false;
+function setCrVis(v){crVis=v;$('crVis').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.vis===v));$('crVisHint').textContent=v==='public'?'aparece na lista de salas abertas':'não aparece na lista: só entra quem tiver o código'}
+function setCrLock(on){$('crLock').classList.toggle('on',on);$('crLock').setAttribute('aria-checked',on);$('crPass').disabled=!on;$('crPass').placeholder=on?'digite a senha':'sem senha';if(on)setTimeout(()=>$('crPass').focus(),30)}
+function openRoomDialog(edit){crEdit=!!edit;const inf=edit&&srvInfo||{};$('crTitle').textContent=edit?'CONFIGURAR SALA':'CRIAR SALA';
+  $('crYes').innerHTML=edit?`${I('check','ic')}SALVAR`:`${I('plus','ic')}CRIAR SALA`;$('crName').value=edit?inf.name||'':'Sala de '+myNick();
+  setCrVis(edit?inf.vis||'public':'public');$('crPass').value='';setCrLock(edit?!!inf.locked:false);if(edit&&inf.locked)$('crPass').placeholder='mantém a senha atual';
+  $('createOv').classList.remove('hidden')}
+$('crVis').querySelectorAll('button').forEach(b=>b.onclick=()=>{Sound.play('click');setCrVis(b.dataset.vis)});
+$('crLock').onclick=()=>{Sound.play('click');setCrLock(!$('crLock').classList.contains('on'))};
+$('crNo').onclick=()=>{Sound.play('click');$('createOv').classList.add('hidden')};
+$('crYes').onclick=()=>{const name=$('crName').value.trim()||'Sala de '+myNick(),lock=$('crLock').classList.contains('on'),pw=$('crPass').value.trim();
+  if(lock&&!pw&&!(crEdit&&srvInfo&&srvInfo.locked)){toast('Digite uma senha (ou desligue a senha).','bad');$('crPass').focus();return}
+  Sound.play('boing');$('createOv').classList.add('hidden');
+  if(crEdit){const d={type:'room',name,vis:crVis};if(!lock)d.pass='';else if(pw)d.pass=pw;ownerSend(d);toast('Sala atualizada!','good')}
+  else srvCreate({name,vis:crVis,pass:lock?pw:''})};
+$('crName').onkeydown=$('crPass').onkeydown=e=>{if(e.key==='Enter')$('crYes').click()};
+$('roomInfo').onclick=()=>{if(isOwner()&&srvMode()){Sound.play('click');openRoomDialog(true)}};
 
 // ---------- LOBBY ----------
 let lobbyKey='';
-function renderLobby(force){if(view!=='lobby')return;const lk=JSON.stringify([room,host,cfg,Object.values(players).filter(p=>!p.bot).map(p=>[p.id,p.name,p.look])]);if(!force&&lk===lobbyKey)return;lobbyKey=lk;$('roomCode').textContent=room;const list=Object.values(players).filter(p=>!p.bot),el=$('roster');el.innerHTML='';
+function renderLobby(force){if(view!=='lobby')return;const lk=JSON.stringify([room,host,srvOwner,srvInfo,cfg,Object.values(players).filter(p=>!p.bot).map(p=>[p.id,p.name,p.look])]);if(!force&&lk===lobbyKey)return;lobbyKey=lk;$('roomCode').textContent=room;const list=Object.values(players).filter(p=>!p.bot),el=$('roster');el.innerHTML='';
   for(let i=0;i<MAX_PLAYERS;i++){const p=list[i],d=document.createElement('div');d.className='slot'+(p?'':' empty');d.style.animationDelay=(i*.04)+'s';const cv=document.createElement('canvas');cv.width=200;cv.height=230;d.appendChild(cv);
-    const isHost=p&&(p.id===(host?self:PEER_PREFIX+room));
+    const isHost=p&&(p.id===(host?self:srvMode()?srvOwner:PEER_PREFIX+room));
     if(!p&&i>=list.length+cfg.bots){d.classList.add('ghost')}
-    d.insertAdjacentHTML('beforeend',`<div class="nm">${p?escapeHtml(p.name)+(p.id===self?' (você)':''):i<list.length+cfg.bots?'bot':'vaga'}</div><div class="tag ${isHost?'host':''}">${p?(isHost?I('crown')+' ANFITRIÃO':I('check')+' PRONTO'):i<list.length+cfg.bots?I('bot'):''}</div>`);
+    d.insertAdjacentHTML('beforeend',`<div class="nm">${p?escapeHtml(p.name)+(p.id===self?' (você)':''):i<list.length+cfg.bots?'bot':'vaga'}</div><div class="tag ${isHost?'host':''}">${p?(isHost?I('crown')+(srvMode()?' DONO':' ANFITRIÃO'):I('check')+' PRONTO'):i<list.length+cfg.bots?I('bot'):''}</div>`);
     el.appendChild(d)}
-  renderSetup($('lobbyCfg'),host);$('btnStart').classList.toggle('hidden',!host);$('lobbyWait').classList.toggle('hidden',host)}
+  const own=isOwner();$('lobbyWait').firstChild.textContent=srvMode()?'Aguardando o dono da sala':'Aguardando o anfitrião';renderSetup($('lobbyCfg'),own);$('btnStart').classList.toggle('hidden',!own);$('lobbyWait').classList.toggle('hidden',own);
+  const ri=$('roomInfo');ri.classList.toggle('hidden',!(srvMode()&&srvInfo));if(srvMode()&&srvInfo){ri.classList.toggle('own',own);
+    ri.innerHTML=`<b>${escapeHtml(srvInfo.name)}</b><span>${srvInfo.vis==='public'?I('globe')+'Pública':I('eye')+'Privada'}${srvInfo.locked?' • '+I('lock')+'senha':''}</span>${own?I('gear','cog'):''}`}}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const ghostBots=[];
 function lobbyAnim(){if(view!=='lobby')return;requestAnimationFrame(lobbyAnim);const t=time(),list=Object.values(players).filter(p=>!p.bot);document.querySelectorAll('#roster .slot canvas').forEach((cv,i)=>{const c=cv.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);const p=list[i];
   c.translate(100,170);c.scale(3.1,3.1);if(p)drawChar(c,p.look,{face:i%2?-1:1,t:t+i*333,noGun:true,shout:Math.sin(t/700+i)>.85});else if(i<list.length+cfg.bots){c.globalAlpha=.7;if(!ghostBots[i])ghostBots[i]=randomLook();drawChar(c,ghostBots[i],{face:i%2?-1:1,t:t+i*333,noGun:true,bot:true})}
   else{c.globalAlpha=.5;c.setLineDash([3,3]);c.strokeStyle='#fff';c.lineWidth=1.2;capyPath(c);c.stroke()}LW=2.2})}
 $('btnCopy').onclick=()=>{const done=()=>{toast('Copiado! Manda pros amigos.','good');Sound.play('yes');celebrate(25)};try{navigator.clipboard.writeText(room).then(done,()=>toast('Código: '+room))}catch(e){toast('Código: '+room)}};
-$('btnStart').onclick=()=>{if(!host)return;Sound.play('boing');startMatch()};
-$('btnLeaveLobby').onclick=async()=>{if(await confirmBox('Sair da sala?',host?'Você é o anfitrião: a sala fecha para todos.':'Você vai sair desta sala.','SAIR','FICAR'))goHome()};
+$('btnStart').onclick=()=>{if(host){Sound.play('boing');startMatch()}else if(isOwner()){Sound.play('boing');ownerSend({type:'start'})}};
+$('btnLeaveLobby').onclick=async()=>{if(await confirmBox('Sair da sala?',host?'Você é o anfitrião: a sala fecha para todos.':isOwner()?'A sala continua: outro jogador vira o dono.':'Você vai sair desta sala.','SAIR','FICAR'))goHome()};
 
 // ---------- ARSENAL ----------
 let arsCat='all',arsTier='all';
@@ -2412,13 +2636,13 @@ function flyGem(x,y){if(document.querySelectorAll('.flyer').length>6)return;cons
   requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.left=(r.left+r.width*clamp((players[self]?.energy||0)/67,.05,.95))+'px';d.style.top=(r.top+r.height/2-9)+'px';d.style.transform='scale(.6) rotate(180deg)'}));setTimeout(()=>{d.remove();const b=$('bar67');b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')},560)}
 
 // ---------- Pause / placar ----------
-function openPause(){if(view!=='game'||over)return;$('pause').classList.remove('hidden');if(solo)paused=true;$('pauseNote').textContent=solo?'Os bots estão congelados esperando você.':'A partida continua sem você!';
+function openPause(){if(view!=='game'||over)return;$('pause').classList.remove('hidden');if(solo)paused=true;$('pauseNote').textContent=solo?'Os bots estão congelados esperando você.':'A partida continua sem você!'+(srvMode()&&rtt?` (ping ${Math.round(rtt)} ms)`:'');
   $('btnRestart').classList.toggle('hidden',!solo);$('pauseTip').textContent='Dica: '+pick(['o dash atravessa a confusão: use para fugir de granadas.','kits médicos recuperam metade da vida.','caixas com "?" trocam sua arma atual.','aperte Q (ou o botão de troca) para alternar entre as duas armas.','a Pausa Dramática congela até os tiros dentro dela.','paredes da Pá de Pedreiro bloqueiam tiros por 16 segundos.']);
   for(const k of KEYLIST)keys[k]=false;pushInputs(true);Sound.play('click')}
 function closePause(){$('pause').classList.add('hidden');paused=false;lastFrame=performance.now();Sound.play('click')}
 $('btnPause').onclick=openPause;$('btnResume').onclick=closePause;$('btnPauseSettings').onclick=openSettings;
 $('btnRestart').onclick=()=>{closePause();startBots()};
-$('btnQuitMatch').onclick=async()=>{if(await confirmBox('Sair da partida?',solo?'Seu progresso nesta partida será perdido.':host?'Você é o anfitrião: a partida acaba para todos.':'Você vai sair da sala.','SAIR','FICAR'))goHome()};
+$('btnQuitMatch').onclick=async()=>{if(await confirmBox('Sair da partida?',solo?'Seu progresso nesta partida será perdido.':host?'Você é o anfitrião: a partida acaba para todos.':isOwner()?'A partida continua: outro jogador vira o dono da sala.':'Você vai sair da sala.','SAIR','FICAR'))goHome()};
 function scoreLabel(p){switch(MODE.score){case 'hold':return Math.floor(p.hold)+'s';case 'caps':return p.caps;case 'zone':return Math.floor(p.zone);case 'gun':return (p.gunLvl+1)+'/12';case 'gems':return p.energy;default:return p.kills}}
 function renderScore(){const list=rank();$('scoreTable').innerHTML=`<tr><th>#</th><th>Capivara</th><th>${MODE.unit}</th><th>Elim.</th><th>Mortes</th><th>Nível</th></tr>`+list.map((p,i)=>`<tr class="${p.id===self?'me':''}"><td>${i+1}</td><td><span class="dotc" style="background:${p.team>=0&&isTeams()?TEAM[p.team].c:'transparent'}"></span>${escapeHtml(p.name)}${p.bot?' '+I('bot'):''}</td><td>${scoreLabel(p)}</td><td>${p.kills}</td><td>${p.deaths}</td><td>${p.level}</td></tr>`).join('')}
 function toggleScore(on){if(view!=='game')return;$('scoreOv').classList.toggle('hidden',!on);if(on)renderScore()}
@@ -2445,19 +2669,19 @@ function onMatchEnd(){$('death').classList.add('hidden');$('pause').classList.ad
   const d1=top(p=>p.deaths);if(d1&&d1.deaths>0)md.push(['magnet',`Ímã de bala: ${d1.name}`]);
   if(me&&me.kills===0)md.push(['peace','Pacifista: você não eliminou ninguém']);
   $('medals').innerHTML=md.slice(0,6).map(([i,t])=>`<div class="medal">${I(i)}${escapeHtml(t)}</div>`).join('');
-  $('btnAgain').classList.toggle('hidden',!host);$('btnResLobby').classList.toggle('hidden',!(host&&!solo));
+  $('btnAgain').classList.toggle('hidden',!isOwner());$('btnResLobby').classList.toggle('hidden',!(isOwner()&&!solo));
   $('hud').classList.add('hidden');$('touch').classList.add('hidden');$('result').classList.remove('hidden');view='result';document.body.classList.add('menu');voteKey='';renderVotes();
   if(won){Sound.play('win');celebrate(160)}else{Sound.play('level');celebrate(50)}}
 let voteKey='';
-function renderVotes(force){if(view!=='result')return;const vk=JSON.stringify([votes,myVote,cfg.map,host]);if(!force&&vk===voteKey)return;voteKey=vk;const count={};for(const v of Object.values(votes))count[v]=(count[v]||0)+1;const sel=myVote||(host?(topVote()||cfg.mode):null);
+function renderVotes(force){if(view!=='result')return;const own=isOwner();const vk=JSON.stringify([votes,myVote,cfg.map,host,own]);if(!force&&vk===voteKey)return;voteKey=vk;$('btnAgain').classList.toggle('hidden',!own);$('btnResLobby').classList.toggle('hidden',!(own&&!solo));const count={};for(const v of Object.values(votes))count[v]=(count[v]||0)+1;const sel=myVote||(own?(topVote()||cfg.mode):null);
   $('voteGrid').innerHTML=MODES.map(m=>`<button class="modecard small${m.id===sel?' on':''}" data-vote="${m.id}">${I(m.ic,'mi')}<b>${m.n}</b>${count[m.id]?`<span class="vc">${count[m.id]} ${I('thumb')}</span>`:''}</button>`).join('');
   $('voteGrid').querySelectorAll('[data-vote]').forEach(b=>b.onclick=()=>{myVote=b.dataset.vote;Sound.play('click');if(host)votes[self]=myVote;else if(conn)send(conn,{type:'vote',mode:myVote});renderVotes();if(host)sync(true)});
-  const mr=$('resMaps');if(host){mr.innerHTML=`<span class="lbl2">${I('map')} Mapa:</span>`+MAPS.map(m=>`<button class="chip${m.id===cfg.map?' on':''}" data-rmap="${m.id}">${m.n}</button>`).join('')+`<button class="chip" data-rmap="random">${I('dice')} Sortear</button>`;
-    mr.querySelectorAll('[data-rmap]').forEach(b=>b.onclick=()=>{cfg.map=b.dataset.rmap==='random'?pick(MAPS.filter(m=>m.id!==cfg.map)).id:b.dataset.rmap;Sound.play('click');renderVotes()})}
-  else mr.innerHTML=`<span class="lbl2">${myVote?'Voto enviado! ':''}Aguardando o anfitrião começar a próxima<span class="dots"></span></span>`;
+  const mr=$('resMaps');if(own){mr.innerHTML=`<span class="lbl2">${I('map')} Mapa:</span>`+MAPS.map(m=>`<button class="chip${m.id===cfg.map?' on':''}" data-rmap="${m.id}">${m.n}</button>`).join('')+`<button class="chip" data-rmap="random">${I('dice')} Sortear</button>`;
+    mr.querySelectorAll('[data-rmap]').forEach(b=>b.onclick=()=>{cfg.map=b.dataset.rmap==='random'?pick(MAPS.filter(m=>m.id!==cfg.map)).id:b.dataset.rmap;Sound.play('click');if(srvMode())ownerSend({type:'cfg',cfg:{map:cfg.map}});renderVotes()})}
+  else mr.innerHTML=`<span class="lbl2">${myVote?'Voto enviado! ':''}Aguardando ${srvMode()?'o dono da sala':'o anfitrião'} começar a próxima<span class="dots"></span></span>`;
   $('btnAgain').innerHTML=`${I('play','ic')}PRÓXIMA: ${escapeHtml(modeById(sel||cfg.mode).n.toUpperCase())}`}
-$('btnAgain').onclick=()=>{if(!host)return;Sound.play('boing');$('result').classList.add('hidden');nextMatch(myVote||topVote()||cfg.mode,cfg.map)};
-$('btnResLobby').onclick=()=>{Sound.play('click');$('result').classList.add('hidden');backToLobby();go('lobby')};
+$('btnAgain').onclick=()=>{if(!isOwner())return;Sound.play('boing');const md=myVote||topVote()||cfg.mode;if(host){$('result').classList.add('hidden');nextMatch(md,cfg.map)}else ownerSend({type:'next',mode:md,map:cfg.map})};
+$('btnResLobby').onclick=()=>{Sound.play('click');if(host){$('result').classList.add('hidden');backToLobby();go('lobby')}else ownerSend({type:'lobby'})};
 $('btnResMenu').onclick=()=>{Sound.play('click');goHome()};
 
 // ---------- Confete (tela) ----------
@@ -2515,7 +2739,8 @@ document.fonts&&document.fonts.ready.then(()=>{drawSpheres();if(view==='play')dr
 if(location.hash==='#debug')window.__67={get players(){return players},get self(){return self},get ms(){return ms},endMatch,cfg,MODES,
   harmMe:d=>harm(players[self],d,Object.keys(players).find(k=>k!==self),Math.floor(Math.random()*GUNS.length),time()),level:()=>{players[self].energy=66},view:()=>view,
   setGun:g=>{players[self].guns[players[self].slot]=g;players[self].gun=g},tpGem:()=>{const p=players[self],g=gems[0];p.x=g.x;p.y=g.y},god:()=>{players[self].shieldUntil=1e12},card:g=>showRespawnCard(g),
-  freezeMe:()=>{players[self].frozenUntil=time()+3000},grant:()=>grantCard(players[self],time()),me:()=>players[self],flashMe:()=>{players[self].flashUntil=time()+2500},bullets:()=>bullets.length,gi:n=>GUNS.findIndex(g=>g.n===n),builds:()=>builds.length,fields:()=>fields.length};
+  freezeMe:()=>{players[self].frozenUntil=time()+3000},grant:()=>grantCard(players[self],time()),me:()=>players[self],flashMe:()=>{players[self].flashUntil=time()+2500},bullets:()=>bullets.length,gi:n=>GUNS.findIndex(g=>g.n===n),builds:()=>builds.length,fields:()=>fields.length,
+  get room(){return room},rtt:()=>rtt,isOwner:()=>isOwner(),goHome:()=>goHome(),ownerEnd:()=>ownerSend({type:'end'}),dropWs:()=>{try{conn.ws.close()}catch(e){}}};
 if(location.hash==='#debug')window.__67.sweep=()=>{const out=[];const saveP=players,saveCfg={...cfg};cfg.mode='ffa';cfg.map='ilha';setupMode();host=true;solo=true;
   for(const g of GUNS){players={};bullets=[];builds=[];fields=[];effects=[];gems=[];meds=[];crates=[];
     const me=newPlayer('me','Eu',defaultLook(0));const dum=newPlayer('dum','Alvo',defaultLook(1));players={me,dum};self='me';

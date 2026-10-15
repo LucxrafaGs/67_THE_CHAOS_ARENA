@@ -21,6 +21,18 @@ ${js}
 })();
 </script></body></html>`;
 try{new Function(js)}catch(e){console.error('Erro de sintaxe no JS:',e.message);process.exit(1)}
+// Servidor: a MESMA simulação do jogo, embrulhada para rodar uma cópia isolada por sala (Durable Object)
+const simJs=['00_util.js','02_data.js','04_game.js'].map(f=>src('js/'+f)).join('\n');
+const glue=readFileSync(join(root,'server','sim_glue.js'),'utf8');
+const sim=`// GERADO por scripts/build.mjs a partir de src/js/ (00_util, 02_data, 04_game) + server/sim_glue.js. Não edite à mão.
+export function createSim(){'use strict';
+const TAU=Math.PI*2;
+${simJs}
+${glue}
+}
+`;
+try{new Function(sim.replace(/^export /m,''))}catch(e){console.error('Erro de sintaxe no servidor:',e.message);process.exit(1)}
+writeFileSync(join(root,'server','sim.gen.js'),sim);
 mkdirSync(join(root,'public'),{recursive:true});
 writeFileSync(join(root,'public','index.html'),html);
-console.log(`public/index.html gerado (${(html.length/1024).toFixed(0)} KB)`);
+console.log(`public/index.html gerado (${(html.length/1024).toFixed(0)} KB) + server/sim.gen.js`);

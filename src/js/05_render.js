@@ -148,6 +148,25 @@ function applyDistortion(t){if(!distCv)distCv=document.createElement('canvas');i
   ctx.globalCompositeOperation='screen';ctx.globalAlpha=distortT*.35;ctx.drawImage(distCv,6*pr*distortT,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
   ctx.fillStyle=`rgba(120,170,255,${distortT*.22})`;ctx.fillRect(0,0,w,h)}
 
+// ---------- Previsão local (modo servidor) ----------
+// Sua capivara anda na hora no seu aparelho; quando o estado do servidor chega, comparamos com onde
+// você estava há "ping" milissegundos e corrigimos aos poucos. Erros grandes (teleporte, respawn) encaixam direto.
+const pred={on:false,x:0,y:0,hist:[],dashT:0,dashAt:-1e9,dx:0,dy:0,snap:null,lt:0};
+function predictSelf(p){const t=time(),ht=hostNow(),dt=pred.on?clamp((t-pred.lt)/1000,0,.25):0;pred.lt=t;
+  if(!p.alive||p.picking||over||view!=='game'){pred.on=false;return false}
+  if(!pred.on){pred.on=true;pred.x=p.x;pred.y=p.y;pred.hist=[];pred.dashT=0;pred.snap=lastState}
+  const md=p.mods||defaultMods(),frozen=ht<p.frozenUntil,stun=ht<p.stunUntil||frozen,conf=ht<p.confuseUntil?-1:1;
+  let dx=((+!!keys.right)-(+!!keys.left))*conf,dy=((+!!keys.down)-(+!!keys.up))*conf;if(stun)dx=dy=0;const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+  if(keys.dash&&!stun&&pred.dashT<=0&&ht-Math.max(p.dashAt||0,pred.dashAt)>2800*md.dashcd){pred.dashAt=ht;pred.dashT=.19*md.dashlen;pred.dx=dx||Math.cos(localAim);pred.dy=dy||Math.sin(localAim)}
+  const dashing=pred.dashT>0&&!frozen;pred.dashT=Math.max(0,pred.dashT-dt);
+  let sp=dashing?900:215*md.spd*(md.adren&&p.hp<p.maxHp*.35?1.3:1);if(ht<p.slowUntil)sp*=.5;if(p.carry>=0)sp*=.88;
+  if(!frozen){const o={x:pred.x,y:pred.y},n=Math.max(1,Math.ceil(dt/.04));for(let i=0;i<n;i++){o.x+=(dashing?pred.dx:dx)*sp*dt/n;o.y+=(dashing?pred.dy:dy)*sp*dt/n;pushOut(o)}pred.x=o.x;pred.y=o.y}
+  pred.hist.push({t,x:pred.x,y:pred.y});while(pred.hist.length>2&&t-pred.hist[0].t>1500)pred.hist.shift();
+  if(lastState!==pred.snap){pred.snap=lastState;const back=t-(rtt||90)-12;let h=pred.hist[0];for(const q of pred.hist){if(q.t<=back)h=q;else break}
+    const ex=p.x-h.x,ey=p.y-h.y,e=Math.hypot(ex,ey);
+    if(e>140){pred.x=p.x;pred.y=p.y;pred.hist=[]}else if(e>3){const k=.3;pred.x+=ex*k;pred.y+=ey*k;for(const q of pred.hist){q.x+=ex*k;q.y+=ey*k}}}
+  p.rx=pred.x;p.ry=pred.y;return true}
+
 // ---------- Laço ----------
 let lastFrame=0,hudAt=0,mmAt=0,slowT=0;
 function frame(t){requestAnimationFrame(frame);
@@ -164,7 +183,7 @@ function frame(t){requestAnimationFrame(frame);
   processEffects(t);
   const sm=Math.min(1,dt*14);
   for(const p of Object.values(players)){let tr=track[p.id];if(!tr){tr=track[p.id]={shot:p.shotAt,dash:p.dashAt,slot:p.slot,shotT:-1e9,swing:0,recoil:0,alive:p.alive}}
-    if(host||demo){p.rx=p.x;p.ry=p.y}else{if(Math.hypot(p.x-p.rx,p.y-p.ry)>300||!tr.alive){p.rx=p.x;p.ry=p.y}else{p.rx+=(p.x-p.rx)*sm;p.ry+=(p.y-p.ry)*sm}}
+    if(host||demo){p.rx=p.x;p.ry=p.y}else if(p.id===self&&srvMode()&&predictSelf(p)){}else{if(Math.hypot(p.x-p.rx,p.y-p.ry)>300||!tr.alive){p.rx=p.x;p.ry=p.y}else{p.rx+=(p.x-p.rx)*sm;p.ry+=(p.y-p.ry)*sm}}
     if(p.shotAt!==tr.shot){tr.shot=p.shotAt;tr.shotT=t;onShot(p,tr)}
     if(p.slot!==tr.slot){tr.slot=p.slot;if(p.id===self){Sound.play('swap');hudGun=-1}}
     if(p.dashAt!==tr.dash){tr.dash=p.dashAt;if(p.dashAt>0&&nearCam(p.x,p.y)){if(p.id===self||!demo)Sound.play('dash');for(let i=0;i<8;i++)addP({x:p.x+rand(-10,10),y:p.y+rand(-12,18),vx:-(p.dx||0)*rand(200,420),vy:-(p.dy||0)*rand(200,420),type:'line',col:p.look.trail,size:4,life:.3,drag:4})}}

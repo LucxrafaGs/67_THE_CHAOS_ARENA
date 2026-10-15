@@ -652,3 +652,76 @@ body.mobile #weaponCard{right:calc(140px / var(--uis,1) + var(--sar))}
 #aimKnob svg{width:72%;height:72%}
 #aimStick.firing #aimKnob{background:#FF3B47;color:#fff}
 @media (orientation:portrait){body.mobile #aimStick{bottom:calc(290px / var(--uis,1) + var(--sab))}}
+
+/* v3.5 — salas no servidor: lista, criar sala, info da sala */
+.onlgrid{width:100%;display:flex;justify-content:center}
+.onlgrid.p2p .roomlist{display:none}
+.onlgrid.srv{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(250px,.75fr);gap:clamp(12px,2.2vw,26px);align-items:stretch;max-width:980px}
+#online .onl:has(.onlgrid.srv){max-width:1000px}
+.onlgrid.srv .cards{flex-direction:column;flex-wrap:nowrap;gap:14px;justify-content:flex-start}
+.onlgrid.srv .card{width:100%;padding:12px 14px 14px;gap:4px;transform:none}
+.onlgrid.srv .card h3{font-size:clamp(22px,2.6vw,30px);margin:0}
+.onlgrid.srv .card .door{display:none}
+.onlgrid.srv .card .btn{margin-top:6px!important}
+.onlgrid.srv .pins{margin:4px 0 6px}
+.roomlist{display:flex;flex-direction:column;gap:10px;padding:12px;min-height:0;transform:rotate(-.6deg)}
+.rlhead{display:flex;align-items:center;gap:10px}
+.rlhead h3{margin:0;flex:1;display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:400;font-size:clamp(20px,2.4vw,26px);color:var(--ice);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
+.rlhead h3 .i{width:24px;height:24px;color:var(--ice)}
+.rlcount{font-weight:800;font-size:13px;opacity:.75;white-space:nowrap}
+.rlhead .btn.round{width:42px;height:42px;font-size:18px;flex:none}
+.rlbody{flex:1;min-height:150px;max-height:min(46vh,360px);overflow:auto;display:flex;flex-direction:column;gap:8px;padding:2px 4px 6px 2px}
+.rlempty{margin:auto;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;opacity:.85;font-weight:700;padding:16px}
+.rlempty .i{width:46px;height:46px;opacity:.6}
+.rlempty span{font-size:14px;opacity:.8}
+.ritem{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;text-align:left;width:100%;padding:8px 10px;border-radius:16px;border:3px solid var(--ink);background:var(--plum-d);color:var(--cream);box-shadow:0 4px 0 var(--ink);cursor:pointer;transition:transform .15s,background .15s;font:inherit}
+@media (hover:hover){.ritem:hover{transform:translateY(-2px);background:var(--plum)}}
+.ritem:active{transform:translateY(2px);box-shadow:0 2px 0 var(--ink)}
+.ritem.full{opacity:.5;cursor:not-allowed}
+.rmi{width:42px;height:42px;border-radius:12px;background:var(--night);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;color:var(--gold)}
+.rmi .i{width:24px;height:24px}
+.rmain{display:flex;flex-direction:column;min-width:0}
+.rmain b{font-size:17px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.rmain b .lk{width:15px;height:15px;color:var(--gold);flex:none}
+.rmain small{font-size:12.5px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rside{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.rside .st{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.5px;padding:1px 8px;border-radius:999px;border:2px solid var(--ink);white-space:nowrap}
+.st.lobby{background:var(--lime);color:var(--ink)}.st.game{background:var(--chaos);color:var(--ink)}.st.res{background:var(--ice);color:var(--ink)}
+.rn{display:flex;align-items:center;gap:4px;font-size:15px}.rn .i{width:16px;height:16px}
+#btnQuick{width:100%}
+/* diálogo criar/configurar sala */
+.panel.create{width:min(430px,100%);text-align:left;gap:10px}
+.panel.create h2{margin-bottom:2px}
+.crl{display:flex;flex-direction:column;gap:5px;font-weight:800;font-size:13px;letter-spacing:.5px}
+.crl small{font-weight:600;font-size:13px;opacity:.75;letter-spacing:0}
+.crl .seg button{display:flex;align-items:center;justify-content:center;gap:6px;font-size:16px}
+.crl .seg .i{width:18px;height:18px}
+.crpass{display:flex;align-items:center;gap:10px}.crpass .field{flex:1}
+.crpass .field:disabled{opacity:.55}
+#mInput{width:100%;margin:8px 0 2px;text-align:center}
+/* info da sala no saguão */
+.roominfo{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 12px;border-radius:14px;border:3px solid var(--ink);background:var(--plum-d);color:var(--cream);box-shadow:0 4px 0 var(--ink);font:inherit;text-align:left;max-width:min(320px,34vw);position:relative;cursor:default}
+.roominfo b{font-size:15px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.roominfo span{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;opacity:.85}
+.roominfo span .i{width:13px;height:13px}
+.roominfo.own{cursor:pointer;padding-right:34px}
+.roominfo .cog{position:absolute;right:8px;top:50%;width:18px;height:18px;transform:translateY(-50%);color:var(--gold)}
+@media (hover:hover){.roominfo.own:hover{background:var(--plum)}}
+@media (max-height:520px){
+  .onlgrid.srv{gap:12px}
+  .roomlist{padding:8px;gap:6px}.rlbody{min-height:110px;max-height:none}
+  .onlgrid.srv .cards{gap:10px}.onlgrid.srv .card{padding:8px 10px 10px}
+  .onlgrid.srv .card p{font-size:13px}
+  .ritem{padding:6px 8px;grid-template-columns:34px minmax(0,1fr) auto;gap:8px}.rmi{width:34px;height:34px}.rmi .i{width:20px;height:20px}
+  .rmain b{font-size:15px}
+  .panel.create{gap:6px}.panel.create .field{padding:7px 12px;font-size:16px}
+}
+@media (max-width:700px){
+  .onlgrid.srv{grid-template-columns:1fr}
+  .rlbody{max-height:40vh}
+  .roominfo{max-width:46vw}
+}
+body.mobile .onlgrid.srv{max-height:calc(100dvh - 190px)}
+body.mobile .onlgrid.srv .roomlist{min-height:0}
+body.mobile .onlgrid.srv .rlbody{max-height:none;min-height:0}
+@media (orientation:portrait){body.mobile .onlgrid.srv{max-height:none}body.mobile .onlgrid.srv .rlbody{max-height:34vh;min-height:120px}}
