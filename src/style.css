@@ -1112,7 +1112,6 @@ body.bootact.g3load::after{display:none}
 body.mshort #home .m-hint,body.mshort #home .version,body.mshort .mside .m-hint{display:none}
 body.mshort #home .m-bl .m-link{display:none}
 /* celular em pé: o painel vira uma "gaveta" na metade de baixo e a capivara fica em cima */
-body.mport #home .m-right{display:none}
 body.mport #home .m-bl{display:none}
 body.mport .mside .m-cpanel{top:auto;bottom:calc(10px + var(--sab));left:auto;right:10px;transform-origin:bottom right;width:calc((100vw - 20px)/var(--ms));height:calc(56dvh/var(--ms))}
 body.mport .m-nav kbd{display:none}
@@ -1162,7 +1161,7 @@ body.mobile .m-nav kbd{display:none}
 .m-sq kbd,.m-sel kbd,.m-play kbd,.m-seahead kbd,.m-link kbd{display:none}
 /* celular em pé: abas descem para uma segunda linha (não encostam nos botões do topo) */
 body.mport .m-nav{top:calc(64px + var(--sat));border-radius:14px;clip-path:none;border-top:2.5px solid #00000060}
-body.mport #mtop .m-pill{display:none}
+body.mport #mtop .m-pill{padding:0 8px;min-width:0;height:34px;font-size:15px;gap:4px}body.mport #mtop .m-pill .i{width:16px;height:16px}
 
 /* abertura só com o nome do estúdio (sem o desenho dos mundos) */
 .em-name b{font-size:clamp(44px,9vw,96px);-webkit-text-stroke:10px #1B1033;text-shadow:0 8px 0 #1B1033}
@@ -1237,3 +1236,19 @@ body.mobile #hud .perkrow{top:calc(84px + var(--sat))}
 .m-bgpv em{position:absolute;inset:auto 6px 6px auto;display:flex;align-items:center;gap:4px;font:800 10px var(--font-ui);letter-spacing:1px;font-style:normal;background:#170A38e0;border-radius:999px;padding:3px 8px;color:var(--cream)}
 .m-bgpv em .i{width:12px;height:12px}
 .m-fur span.m-fxpv{position:relative;left:auto;top:auto;display:block;width:58%;height:auto;aspect-ratio:1;margin:14px auto 10px;border:3px solid #ffffff55;border-radius:50%}
+/* quadros: prévia na loja e tela de carregamento sem cortar obras de formato diferente */
+.m-spv.m-art{background-size:cover;background-position:center}
+.ml-img::before{content:'';position:absolute;inset:-40px;background:var(--mlbg) center/cover no-repeat;filter:blur(26px) brightness(.5) saturate(1.2);transition:background-image .6s}
+.ml-img img.fit{object-fit:contain}
+.ml-img img.fit.on{animation:kenfit 3.6s ease-out both}
+@keyframes kenfit{from{transform:scale(1.05)}to{transform:scale(1)}}
+
+/* celular em pé: cartão do modo + desafios (recolhidos) logo abaixo da barra de abas */
+body.mport #home .m-right{left:auto;right:10px;top:calc(138px + var(--sat));width:calc((100vw - 20px)/var(--ms));transform:scale(var(--ms));transform-origin:top right;gap:10px}
+body.mport .m-chal{padding:8px 12px;cursor:pointer}
+body.mport .m-chal h4{margin:0;display:flex;align-items:center;gap:8px}
+body.mport .m-chal .m-chalsum{display:inline-block;margin-left:auto;font:400 15px var(--font-display);color:#6CF06A}
+body.mport .m-chal:not(.open) #chalList,body.mport .m-chal:not(.open) .m-chalfoot{display:none}
+body.mport .m-chal.open{position:relative;z-index:5;box-shadow:0 10px 40px #000a}
+/* celular em pé: cartão da arma sobe para baixo do cartão de vida (não fica em cima do joystick) */
+@media (orientation:portrait){body.mobile #weaponCard{left:calc(10px + var(--sal,0px))!important;right:auto!important;top:calc(78px + var(--sat))!important;bottom:auto!important;transform:scale(.82)!important;transform-origin:left top!important}}

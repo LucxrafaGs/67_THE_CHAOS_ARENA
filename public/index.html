@@ -1130,7 +1130,6 @@ body.bootact.g3load::after{display:none}
 body.mshort #home .m-hint,body.mshort #home .version,body.mshort .mside .m-hint{display:none}
 body.mshort #home .m-bl .m-link{display:none}
 /* celular em pé: o painel vira uma "gaveta" na metade de baixo e a capivara fica em cima */
-body.mport #home .m-right{display:none}
 body.mport #home .m-bl{display:none}
 body.mport .mside .m-cpanel{top:auto;bottom:calc(10px + var(--sab));left:auto;right:10px;transform-origin:bottom right;width:calc((100vw - 20px)/var(--ms));height:calc(56dvh/var(--ms))}
 body.mport .m-nav kbd{display:none}
@@ -1180,7 +1179,7 @@ body.mobile .m-nav kbd{display:none}
 .m-sq kbd,.m-sel kbd,.m-play kbd,.m-seahead kbd,.m-link kbd{display:none}
 /* celular em pé: abas descem para uma segunda linha (não encostam nos botões do topo) */
 body.mport .m-nav{top:calc(64px + var(--sat));border-radius:14px;clip-path:none;border-top:2.5px solid #00000060}
-body.mport #mtop .m-pill{display:none}
+body.mport #mtop .m-pill{padding:0 8px;min-width:0;height:34px;font-size:15px;gap:4px}body.mport #mtop .m-pill .i{width:16px;height:16px}
 
 /* abertura só com o nome do estúdio (sem o desenho dos mundos) */
 .em-name b{font-size:clamp(44px,9vw,96px);-webkit-text-stroke:10px #1B1033;text-shadow:0 8px 0 #1B1033}
@@ -1255,6 +1254,22 @@ body.mobile #hud .perkrow{top:calc(84px + var(--sat))}
 .m-bgpv em{position:absolute;inset:auto 6px 6px auto;display:flex;align-items:center;gap:4px;font:800 10px var(--font-ui);letter-spacing:1px;font-style:normal;background:#170A38e0;border-radius:999px;padding:3px 8px;color:var(--cream)}
 .m-bgpv em .i{width:12px;height:12px}
 .m-fur span.m-fxpv{position:relative;left:auto;top:auto;display:block;width:58%;height:auto;aspect-ratio:1;margin:14px auto 10px;border:3px solid #ffffff55;border-radius:50%}
+/* quadros: prévia na loja e tela de carregamento sem cortar obras de formato diferente */
+.m-spv.m-art{background-size:cover;background-position:center}
+.ml-img::before{content:'';position:absolute;inset:-40px;background:var(--mlbg) center/cover no-repeat;filter:blur(26px) brightness(.5) saturate(1.2);transition:background-image .6s}
+.ml-img img.fit{object-fit:contain}
+.ml-img img.fit.on{animation:kenfit 3.6s ease-out both}
+@keyframes kenfit{from{transform:scale(1.05)}to{transform:scale(1)}}
+
+/* celular em pé: cartão do modo + desafios (recolhidos) logo abaixo da barra de abas */
+body.mport #home .m-right{left:auto;right:10px;top:calc(138px + var(--sat));width:calc((100vw - 20px)/var(--ms));transform:scale(var(--ms));transform-origin:top right;gap:10px}
+body.mport .m-chal{padding:8px 12px;cursor:pointer}
+body.mport .m-chal h4{margin:0;display:flex;align-items:center;gap:8px}
+body.mport .m-chal .m-chalsum{display:inline-block;margin-left:auto;font:400 15px var(--font-display);color:#6CF06A}
+body.mport .m-chal:not(.open) #chalList,body.mport .m-chal:not(.open) .m-chalfoot{display:none}
+body.mport .m-chal.open{position:relative;z-index:5;box-shadow:0 10px 40px #000a}
+/* celular em pé: cartão da arma sobe para baixo do cartão de vida (não fica em cima do joystick) */
+@media (orientation:portrait){body.mobile #weaponCard{left:calc(10px + var(--sal,0px))!important;right:auto!important;top:calc(78px + var(--sat))!important;bottom:auto!important;transform:scale(.82)!important;transform-origin:left top!important}}
 </style></head><body class="menu">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
  <defs>
@@ -2670,7 +2685,7 @@ if(document.fonts)document.fonts.ready.then(()=>{fontsOk=true;if(cur&&cur.repain
 
 // ---------- Qualidade (segue Configurações > Gráficos) ----------
 function Q(){const q=S.quality;return{key:q,sh:q==='low'?0:q==='medium'?(isTouch?1024:2048):q==='high'?2048:4096,tex:q==='low'?1024:q==='medium'?(isTouch?1536:2048):q==='high'?3072:4096,
-  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low',pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:!isTouch&&q!=='low'}}
+  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low',pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:q!=='low'}} // MSAA também no celular: nas GPUs de celular (tile-based) ele custa pouco e tira o serrilhado
 
 // ---------- Ruído e aleatório determinísticos ----------
 function hrand(x,y,z,s){return mulberry(Math.imul(x|0,73856093)^Math.imul(y|0,19349663)^Math.imul(z|0,83492791)^Math.imul(s|0,40503))}
@@ -3233,10 +3248,10 @@ let lastT=0;
 // O 3D é desenhado num tamanho limitado de pixels (o navegador estica na tela) e, se o jogo ficar lento, a resolução
 // cai sozinha e as sombras passam a atualizar menos vezes (sem recompilar nada).
 // no celular o 3D desenha bem menos pixels (o navegador estica) e as sombras atualizam a cada 2 quadros
-const PXB=isTouch?{low:.4e6,medium:.7e6,high:1e6,chaos:1.3e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?2:1,frameN=0,skipNext=true;
+const PXB=isTouch?{low:.45e6,medium:.95e6,high:1.3e6,chaos:1.6e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=isTouch&&((navigator.deviceMemory||4)<=3||(navigator.hardwareConcurrency||8)<=4)?.7:1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?2:1,frameN=0,skipNext=true;
 document.addEventListener('visibilitychange',()=>{skipNext=true});
 function watch(rawDt){if(skipNext){skipNext=false;return}emaDt+=(Math.min(rawDt,250)-emaDt)*.08;
-  if(emaDt>36){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;if(autoS>.45)autoS=Math.max(.45,autoS*.8);else shadowEvery=Math.min(4,shadowEvery+1)}}
+  if(emaDt>(isTouch?26:36)){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;if(autoS>.45)autoS=Math.max(.45,autoS*.8);else shadowEvery=Math.min(4,shadowEvery+1)}}
   else if(emaDt<20){fastFor+=rawDt;slowFor=Math.max(0,slowFor-rawDt);if(fastFor>6000){fastFor=0;if(shadowEvery>1)shadowEvery--;else if(autoS<1)autoS=Math.min(1,autoS*1.12)}}else{slowFor=Math.max(0,slowFor-rawDt*.5)}}
 let failN=0;function fail(e){if(failN++<3)console.error('Erro no 3D:',e)}
 // libera a placa de vídeo na hora ao recarregar/fechar (o Live Server recarrega a página a cada arquivo salvo)
@@ -3507,7 +3522,7 @@ function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!
     const done=()=>{compiling=false;loading(false);MN.warm=1};(R.compileAsync&&R.extensions.has('KHR_parallel_shader_compile')?R.compileAsync(MN.sc,MN.cam):new Promise(r=>setTimeout(()=>{R.compile(MN.sc,MN.cam);r()},30))).then(done,done)}
   if(MN.warm!==1)return false;
   const dt=clamp((t-(menuT||t))/1000,0,.1);menuT=t;
-  const dpr=Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5),bud=(isTouch?(S.quality==='low'?.4e6:.7e6):(S.quality==='low'?.9e6:2.2e6))*autoS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
+  const dpr=Math.min(window.devicePixelRatio||1,1.5),bud=(isTouch?(S.quality==='low'?.45e6:.95e6):(S.quality==='low'?.9e6:2.2e6))*autoS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
   if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false)}
   document.body.classList.add('g3don','g3menu');sharedCapyMats();OU.uRes.value.set(w,h);OU.uOW.value=Math.max(1.8,h*.0052);
   const V=MVIEW[o.view]||MVIEW.home,v=MN.v,k=Math.min(1,dt*5);for(const key of ['ty','d','el','off'])v[key]+=(V[key]-v[key])*k;
@@ -3994,7 +4009,7 @@ let VW=960,VH=540,zoom=1,pr=1,resScale=1,SQ=Map3D.SQ,CAP3=false;
 const acts3=[];const cam={x:W/2-480,y:H/2-270};let shakeA=0;
 // Atrás dos menus a arena é só decoração: meia resolução e 30 fps (bem mais leve em telas retina)
 const menuBg=()=>document.body.classList.contains('menu')&&!started;
-function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:1.25)*(menuBg()?.5:resScale);pr=Math.min(pr,Math.sqrt(4.2e6/(innerWidth*innerHeight)));if(isTouch)pr=Math.min(pr,1.1); // celular: o canvas de cima só tem textos e efeitos 2D, não precisa de resolução alta // teto de pixels: telas retina grandes não sobrecarregam a placa
+function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:isTouch?1.5:1.25)*(menuBg()?.5:resScale);pr=Math.min(pr,Math.sqrt(4.2e6/(innerWidth*innerHeight)));if(isTouch)pr=Math.min(pr,S.quality==='low'?1:1.5); // celular: o canvas de cima só tem textos e efeitos 2D, não precisa de resolução alta // teto de pixels: telas retina grandes não sobrecarregam a placa
   canvas.width=Math.round(innerWidth*pr);canvas.height=Math.round(innerHeight*pr);zoom=clamp(Math.min(innerWidth,innerHeight)/(isTouch?470:560),.6,1.4);VW=innerWidth/zoom;VH=innerHeight/zoom/SQ}
 addEventListener('resize',resize);resize();
 
@@ -4324,11 +4339,11 @@ function rewardFor(ch){const r=mulberry([...(ch.id+daily().d)].reduce((a,c)=>a*3
   if(r<.68)return{t:'item',id:'rc:'+Math.floor(r*977)%RFURS.length};
   if(r<.78)return{t:'item',id:'rw:'+Math.floor(r*631)%RWATERS.length};
   if(r<.90)return{t:'item',id:'tt:'+Math.floor(r*997)%TITLES.length};
-  return{t:'item',id:pick(['cores','fundos','pelos','roupas','estilos'])+':'+Math.floor(r*1000)%6}}
+  {const cats=['cores','fundos','pelos','roupas','estilos','quadros'],c=cats[Math.floor(r*7919)%cats.length];return{t:'item',id:c+':'+Math.floor(r*1000)%SHOP.find(s=>s[0]===c)[3].length}}}
 function itemName(id){const [k,i]=id.split(':');const n=+i;
   if(k==='rc')return'Cor '+RFURS[n][1];if(k==='rw')return RWATERS[n][0];if(k==='tt')return'Título "'+TITLES[n]+'"';const c=SHOP.find(s=>s[0]===k);return c?c[3][n][0]:id}
 function rewardText(rw){return rw.t==='or'?`+${rw.n} laranjas`:rw.t==='xp'?`+${rw.n} XP`:rw.t==='tr'?`+${rw.n} troféus`:itemName(rw.id)}
-function rewardIcon(rw){return rw.t==='or'?'orange':rw.t==='xp'?'star':rw.t==='tr'?'trophy':rw.id.startsWith('tt')?'crown':rw.id.startsWith('rw')||rw.id.startsWith('fundos')?'image':rw.id.startsWith('roupas')?'shirt':'palette'}
+function rewardIcon(rw){return rw.t==='or'?'orange':rw.t==='xp'?'star':rw.t==='tr'?'trophy':rw.id.startsWith('tt')?'crown':rw.id.startsWith('rw')||rw.id.startsWith('fundos')||rw.id.startsWith('quadros')?'image':rw.id.startsWith('roupas')?'shirt':'palette'}
 function grant(rw){if(rw.t==='or')store.set('bonusOr',store.get('bonusOr',0)+rw.n);else if(rw.t==='xp')store.set('bonusXp',store.get('bonusXp',0)+rw.n);else if(rw.t==='tr')store.set('trophies',trophies()+rw.n);
   else if(has(rw.id)){store.set('bonusOr',store.get('bonusOr',0)+50);rw={t:'or',n:50}}else give(rw.id);return rw}
 function todays(){const d=daily(),R=mulberry([...d.d].reduce((a,c)=>a*33+c.charCodeAt(0)|0,5));const idx=new Set();while(idx.size<3)idx.add(Math.floor(R()*CHALS.length));return [...idx].map(i=>CHALS[i])}
@@ -4442,13 +4457,15 @@ const wallet=()=>Math.max(0,store.get('totalGems',0)-store.get('spent',0)+store.
 const RAR={comum:['Comum','#9AA3B3'],raro:['Raro','#45D4FF'],epico:['Épico','#B777FF'],lend:['Lendário','#FFC531']};
 const SHOP=[['roupas','shirt','Roupas',[['Camiseta Listrada','#FF4F9A','comum',60],['Moletom de Capuz','#45D4FF','raro',150],['Jaqueta de Couro','#3A3048','epico',320],['Regata de Praia','#FFC531','comum',50],['Terno Chique','#2A2440','lend',600],['Macacão de Mecânico','#3D6BFF','raro',180]]],
   ['fundos','image','Fundos e temas',[['Praia ao Pôr do Sol','linear-gradient(#FF9A5A,#FF5F8F 55%,#3A1C80)','raro',200],['Floresta Encantada','linear-gradient(#1F5E3A,#3DBE6C 60%,#C9F0A0)','raro',200],['Cidade Neon','linear-gradient(#0B0730,#4A1A8A 50%,#FF4FB0)','epico',350],['Aurora Boreal','linear-gradient(#0A1A3A,#2FA88A 45%,#B777FF)','lend',700],['Doce Chiclete','linear-gradient(#FFD1E8,#FF8FC8)','comum',90],['Deserto','linear-gradient(#FFE0A0,#E8A050 60%,#8A4A20)','comum',90]]],
+  ['quadros','image','Quadros',[['A Última Ceia das Capivaras','ceia','lend',800],['O Repouso de Capybarus','deusa','epico',450],['O Vaso Grego das Capivaras','vaso','epico',450],['Capivaras em Festa','pop','raro',300],
+    ['Capivárias Operárias','operarios','epico',500],['O Lamento das Capivaras','lamento','raro',350],['Capivara no Sertão','sertao','raro',300]]],
   ['cores','palette','Cores de pelo',[['Verde Musgo','#6E8B4A','comum',80],['Azul Royal','#3B5BD8','raro',160],['Roxo Uva','#7A3FA8','raro',160],['Dourado Brilhante','#F2C14E','epico',300],['Vermelho Fogo','#E23B2E','raro',160],['Prata','#BFC5CF','epico',300]]],
   ['pelos','sparkle','Pelagens e texturas',[['Listras de Tigre','repeating-linear-gradient(60deg,#E8913A 0 10px,#2A1A12 10px 16px)','epico',380],['Pintinhas','radial-gradient(#5A3A20 22%,transparent 24%) 0 0/16px 16px,#D9A066','raro',200],['Estrelinhas','radial-gradient(#FFF4B0 18%,transparent 20%) 0 0/14px 14px,#3A1C80','raro',220],['Camuflagem','radial-gradient(circle at 30% 30%,#4E6B2E 30%,transparent 32%) 0 0/24px 24px,radial-gradient(circle at 70% 60%,#2E3A1E 25%,transparent 27%) 0 0/20px 20px,#8A9A5A','epico',340],['Pelúcia Macia','radial-gradient(circle,#FFE8D6,#E8B890)','comum',100],['Galáxia','radial-gradient(circle at 30% 30%,#FF8FC8,transparent 40%),radial-gradient(circle at 70% 70%,#45D4FF,transparent 40%),#1B1033','lend',800]]],
   ['estilos','bolt','Estilos e efeitos',[['Contorno Neon','#45D4FF','raro',240],['Rastro de Arco-íris','linear-gradient(90deg,#FF4F4F,#FFC531,#6CF06A,#45D4FF,#B777FF)','epico',360],['Pegadas de Coração','#FF4F9A','comum',120],['Aura Dourada','#FFC531','lend',650],['Faíscas no Dash','#FFF066','raro',220],['Bolhas ao Andar','#C9F0FF','comum',110]]]];
 let shopTab='roupas';
-const isEq=id=>{const [k,i]=id.split(':'),e=equip(),n=+i;return k==='roupas'?e.out===n:k==='pelos'?e.pat===n:k==='estilos'?e.fx===n:k==='cores'?myLook.body.toLowerCase()===SHOP.find(s=>s[0]==='cores')[3][n][1].toLowerCase():k==='fundos'?curBg==='shop_f'+n:false};
+const isEq=id=>{const [k,i]=id.split(':'),e=equip(),n=+i;return k==='roupas'?e.out===n:k==='pelos'?e.pat===n:k==='estilos'?e.fx===n:k==='cores'?myLook.body.toLowerCase()===SHOP.find(s=>s[0]==='cores')[3][n][1].toLowerCase():k==='fundos'?curBg==='shop_f'+n:k==='quadros'?curBg===SHOP.find(s=>s[0]==='quadros')[3][n][1]:false};
 function equipItem(id){const [k,i]=id.split(':'),n=+i;if(k==='roupas')setEquip('out',n);else if(k==='pelos')setEquip('pat',n);else if(k==='estilos')setEquip('fx',n);
-  else if(k==='cores')setFur(SHOP.find(s=>s[0]==='cores')[3][n][1]);else if(k==='fundos'){curBg='shop_f'+n;store.set('menubg',curBg);applyMenuBg()}Sound.play('pop')}
+  else if(k==='cores')setFur(SHOP.find(s=>s[0]==='cores')[3][n][1]);else if(k==='fundos'||k==='quadros'){curBg=k==='fundos'?'shop_f'+n:SHOP.find(s=>s[0]==='quadros')[3][n][1];store.set('menubg',curBg);applyMenuBg()}Sound.play('pop')}
 function renderShop(){$('shopBal').textContent=wallet();
   $('shopTabs').innerHTML=SHOP.map(([k,ic,n])=>`<button class="m-tab${k===shopTab?' on':''}" data-st="${k}">${I(ic)}<span>${n}</span></button>`).join('');
   $('shopTabs').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{shopTab=b.dataset.st;Sound.play('click');renderShop()});
@@ -4456,6 +4473,7 @@ function renderShop(){$('shopBal').textContent=wallet();
   $('shopGrid').innerHTML=cat[3].map(([n,v,r,price],i)=>{const id=shopTab+':'+i,own=has(id),[rn,rc]=RAR[r],eqd=own&&isEq(id);
     const pv=(shopTab==='roupas'||shopTab==='pelos'||shopTab==='cores')?`<span class="m-spv" style="background:radial-gradient(circle at 50% 40%,#5A34B0,#24104F)"><canvas width="112" height="112" data-pv="${id}"></canvas></span>`
       :shopTab==='estilos'?`<span class="m-spv" style="background:radial-gradient(circle at 50% 40%,#3A1C80,#170A38)"><i class="m-sglow" style="background:${v}"></i></span>`
+      :shopTab==='quadros'?`<span class="m-spv m-art" style="background-image:url(loading/${v}_p.jpg?v=${ASSETV})"></span>`
       :`<span class="m-spv" style="background:radial-gradient(ellipse at 50% 60%,${SHOPWATERS[i][0]},${SHOPWATERS[i][1]} 70%,${SHOPWATERS[i][3]})"><i class="m-wv"></i></span>`;
     return `<div class="m-sitem${own?' owned':''}" style="--rc:${rc}">${pv}<em>${rn}</em><b>${escapeHtml(n)}</b>${own?(eqd?`<span class="m-sown">${I('check')}EQUIPADO</span>`:`<button class="m-buy eq" data-eq="${id}">EQUIPAR</button>`):`<button class="m-buy${bal<price?' poor':''}" data-buy="${id}" data-price="${price}">${I('orange')}${price}</button>`}</div>`}).join('');
   const e=equip();
@@ -4466,7 +4484,7 @@ function renderShop(){$('shopBal').textContent=wallet();
   $('shopGrid').querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>{equipItem(b.dataset.eq);renderShop()})}
 async function buy(id,price){if(wallet()<price){Sound.play('no');toast(`Faltam ${price-wallet()} laranjas. Jogue partidas e complete desafios para juntar mais!`,'bad');return}
   if(!await confirmBox('Comprar item?',`${itemName(id)} — ${price} laranjas.`,'COMPRAR','CANCELAR'))return;
-  store.set('spent',store.get('spent',0)+price);give(id);Sound.play('level');celebrate(30);equipItem(id);toast('Comprado e equipado! Troque quando quiser no Visual'+(id.startsWith('fundos')?' / Fundo':'')+'.','good');renderShop();renderTop()}
+  store.set('spent',store.get('spent',0)+price);give(id);Sound.play('level');celebrate(30);equipItem(id);toast('Comprado e equipado! Troque quando quiser no Visual'+(id.startsWith('fundos')||id.startsWith('quadros')?' / Fundo':'')+'.','good');renderShop();renderTop()}
 
 $('btnRandom').onclick=()=>{let h;do{h=pick(FURS)[0]}while(h===draftFur);vtab='cor';setFur(h);renderVis()};
 $('btnSaveLook').onclick=()=>{Sound.play('level');toast('Visual salvo: '+furName(myLook.body)+'!','good');celebrate(40);go('home')};
@@ -4474,14 +4492,16 @@ $('btnSaveLook').onclick=()=>{Sound.play('level');toast('Visual salvo: '+furName
 // ---------- FUNDO do menu ----------
 const BGS=[['lagoa','Lagoa Roxa','water'],['azul','Lagoa Azul','water'],['rosa','Lagoa Rosa','water'],['esmeralda','Lagoa Esmeralda','water'],['noite','Lagoa da Noite','water'],['sol','Pôr do Sol','water'],
   ['vangogh','A Capivara Estrelada','img'],['criacao','A Criação da Capivara','img'],['perola','Capivara com Brinco de Pérola','img'],['monalisa','Mona Capy','img']];
-const ART={vangogh:'A Capivara Estrelada',criacao:'A Criação da Capivara',perola:'Capivara com Brinco de Pérola',monalisa:'Mona Capy'};
-function applyMenuBg(){const k=menuBgKey(),b=BGS.find(x=>x[0]===k);const el=$('menuBg');if(b&&b[2]==='img'){el.style.backgroundImage=`url(loading/${k}.jpg?v=${ASSETV})`;el.classList.add('on')}else{el.classList.remove('on')}}
+const ART={vangogh:'A Capivara Estrelada',criacao:'A Criação da Capivara',perola:'Capivara com Brinco de Pérola',monalisa:'Mona Capy',
+  ceia:'A Última Ceia das Capivaras',deusa:'O Repouso de Capybarus',vaso:'O Vaso Grego das Capivaras',pop:'Capivaras em Festa',operarios:'Capivárias Operárias',lamento:'O Lamento das Capivaras',sertao:'Capivara no Sertão'};
+function applyMenuBg(){const k=menuBgKey();const el=$('menuBg');if(ART[k]){el.style.backgroundImage=`url(loading/${k}.jpg?v=${ASSETV})`;el.classList.add('on')}else{el.classList.remove('on')}}
 function allBgs(){const L=BGS.map(([id,n,t])=>({id,n,t,lock:null}));SHOP.find(s=>s[0]==='fundos')[3].forEach(([n],i)=>L.push({id:'shop_f'+i,n,t:'water',lock:has('fundos:'+i)?null:'fundos:'+i}));
+  SHOP.find(s=>s[0]==='quadros')[3].forEach(([n,id],i)=>L.push({id,n,t:'img',lock:has('quadros:'+i)?null:'quadros:'+i}));
   RWATERS.forEach(([n],i)=>L.push({id:'rw'+i,n,t:'water',lock:has('rw:'+i)?null:'rw:'+i}));return L}
 function renderBgs(){const k=menuBgKey(),g=$('bgGrid'),L=allBgs();g.innerHTML=L.map(({id,n,t,lock})=>{const c=Map3D.MBG[id];const st=t==='img'?`background-image:url(loading/${id}_p.jpg?v=${ASSETV})`:`background:radial-gradient(ellipse at 50% 60%,${c[0]},${c[1]} 70%,${c[3]})`;
-    return `<button class="m-bg${id===k?' on':''}${lock?' lock':''}" ${lock?`data-lock="${lock}"`:`data-bg="${id}"`}><span class="m-bgpv" style="${st}">${t==='water'?'<i></i>':''}${lock?`<em>${I('lock')}${lock.startsWith('rw')?'DESAFIOS':'LOJA'}</em>`:''}</span><b>${escapeHtml(n)}</b><small>${t==='img'?'Quadro':c&&c[4]?'Com vitórias-régias':'Água'}</small></button>`}).join('');
+    return `<button class="m-bg${id===k?' on':''}${lock?' lock':''}" ${lock?`data-lock="${lock}"`:`data-bg="${id}"`}><span class="m-bgpv" style="${st}">${t==='water'?'<i></i>':''}${lock?`<em>${I('lock')}${lock.startsWith('rw')?'DESAFIOS':'LOJA'+(lock.startsWith('quadros')?' · '+SHOP.find(s=>s[0]==='quadros')[3][+lock.split(':')[1]][3]:'')}</em>`:''}</span><b>${escapeHtml(n)}</b><small>${t==='img'?'Quadro':c&&c[4]?'Com vitórias-régias':'Água'}</small></button>`}).join('');
   g.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{curBg=b.dataset.bg;store.set('menubg',curBg);Sound.play('pop');applyMenuBg();renderBgs();Map3D.menuPoke()});
-  g.querySelectorAll('[data-lock]').forEach(b=>b.onclick=()=>{if(b.dataset.lock.startsWith('fundos'))shopGo('fundos');else{Sound.play('no');toast('Essa lagoa é prêmio dos Desafios Diários!','bad')}});
+  g.querySelectorAll('[data-lock]').forEach(b=>b.onclick=()=>{const c=b.dataset.lock.split(':')[0];if(c==='fundos'||c==='quadros')shopGo(c);else{Sound.play('no');toast('Essa lagoa é prêmio dos Desafios Diários!','bad')}});
   $('bgName').textContent=(L.find(x=>x.id===k)||L[0]).n}
 applyMenuBg();applyEquip();
 
@@ -4834,10 +4854,10 @@ const TIPS=['O dash atravessa a confusão: use para fugir de granadas.','Kits m�
   'A Pausa Dramática congela até os tiros dentro dela.','Paredes da Pá de Pedreiro bloqueiam tiros por 16 segundos.','Junte 67 laranjinhas para subir de nível e escolher um poder.','Quem está atrás de parede aparece como silhueta colorida.',
   'Na Lagoa da Noite, as laranjinhas e os tiros iluminam o caminho.','A Calculadora 67: acerte um 6 e depois um 7 no mesmo alvo.','Capivara parada também é capivara feliz. Mas capivara que desvia vive mais.',
   'No Rei da Lagoa, fique sozinho dentro da água para pontuar.','Explosões empurram: cuidado perto das bordas do mapa.','Clique na sua capivara no menu para ver uma gracinha.','Troque a cor da sua capivara na aba Visual (o cabide).'];
-const LOADART=['vangogh','criacao','perola','monalisa'];
+const LOADART=Object.keys(ART); // todos os quadros entram no sorteio da tela de carregamento (mesmo os que ainda não foram comprados)
 let mlBusy=false,mlIdx=-1,mlFront=0,mlTimer=0,mlTipT=0;
 function mlNextImg(){let i;do{i=Math.floor(Math.random()*LOADART.length)}while(i===mlIdx&&LOADART.length>1);mlIdx=i;const k=LOADART[i],a=$('mlA'),b=$('mlB'),on=mlFront?a:b,off=mlFront?b:a;mlFront^=1;
-  on.onload=()=>{on.classList.remove('on');void on.offsetWidth;on.classList.add('on');off.classList.remove('on')};const url=`loading/${k}.jpg?v=${ASSETV}`;if(on.getAttribute('src')===url&&on.complete)on.onload();else on.src=url;$('mlArt').textContent=ART[k]}
+  on.onload=()=>{const ra=(on.naturalWidth/on.naturalHeight)/(innerWidth/innerHeight);on.classList.toggle('fit',ra<.72||ra>1.4);$('mload').querySelector('.ml-img').style.setProperty('--mlbg',`url(${url})`);on.classList.remove('on');void on.offsetWidth;on.classList.add('on');off.classList.remove('on')};const url=`loading/${k}.jpg?v=${ASSETV}`;if(on.getAttribute('src')===url&&on.complete)on.onload();else on.src=url;$('mlArt').textContent=ART[k]}
 function mlTip(){const p=$('mlTip');p.classList.remove('in');void p.offsetWidth;p.textContent=pick(TIPS);p.classList.add('in')}
 function setLoadPct(p){p=clamp(p,0,1);$('mlPct').textContent=Math.round(p*100)+'%';$('mlFillRect').setAttribute('y',String(100-100*p))}
 function showLoad(kind){const md=modeById(cfg.mode),mp=mapById(cfg.map);$('mlKind').textContent=kind==='online'?'ONLINE':'CONTRA BOTS';$('mlTitle').textContent=md.n.toUpperCase();$('mlMap').textContent=mp.n+(kind==='online'?'':' • '+cfg.bots+' bots');
@@ -4858,7 +4878,7 @@ let bootOn=true;
 // escala dos menus: em telas pequenas (celular) cartões e botões encolhem juntos para nada ficar um por cima do outro
 function menuScale(){const w=innerWidth,h=innerHeight,port=h>w&&w<820,ms=port?clamp(w/640,.5,1):clamp(Math.min(h/640,w/1180),.52,1);
   document.documentElement.style.setProperty('--ms',ms.toFixed(3));document.body.classList.toggle('mport',port);document.body.classList.toggle('mshort',!port&&h<720)}
-$('chalBox').onclick=()=>{if(document.body.classList.contains('mshort')){$('chalBox').classList.toggle('open');Sound.play('click')}};
+$('chalBox').onclick=()=>{if(document.body.classList.contains('mshort')||document.body.classList.contains('mport')){$('chalBox').classList.toggle('open');Sound.play('click')}};
 addEventListener('resize',menuScale);menuScale();
 
 // abate seu: uma etiqueta pequena no alto do centro (no lugar do aviso grande)

@@ -5,7 +5,7 @@ let VW=960,VH=540,zoom=1,pr=1,resScale=1,SQ=Map3D.SQ,CAP3=false;
 const acts3=[];const cam={x:W/2-480,y:H/2-270};let shakeA=0;
 // Atrás dos menus a arena é só decoração: meia resolução e 30 fps (bem mais leve em telas retina)
 const menuBg=()=>document.body.classList.contains('menu')&&!started;
-function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:1.25)*(menuBg()?.5:resScale);pr=Math.min(pr,Math.sqrt(4.2e6/(innerWidth*innerHeight)));if(isTouch)pr=Math.min(pr,1.1); // celular: o canvas de cima só tem textos e efeitos 2D, não precisa de resolução alta // teto de pixels: telas retina grandes não sobrecarregam a placa
+function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:isTouch?1.5:1.25)*(menuBg()?.5:resScale);pr=Math.min(pr,Math.sqrt(4.2e6/(innerWidth*innerHeight)));if(isTouch)pr=Math.min(pr,S.quality==='low'?1:1.5); // celular: o canvas de cima só tem textos e efeitos 2D, não precisa de resolução alta // teto de pixels: telas retina grandes não sobrecarregam a placa
   canvas.width=Math.round(innerWidth*pr);canvas.height=Math.round(innerHeight*pr);zoom=clamp(Math.min(innerWidth,innerHeight)/(isTouch?470:560),.6,1.4);VW=innerWidth/zoom;VH=innerHeight/zoom/SQ}
 addEventListener('resize',resize);resize();
 

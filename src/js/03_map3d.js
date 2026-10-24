@@ -23,7 +23,7 @@ if(document.fonts)document.fonts.ready.then(()=>{fontsOk=true;if(cur&&cur.repain
 
 // ---------- Qualidade (segue Configurações > Gráficos) ----------
 function Q(){const q=S.quality;return{key:q,sh:q==='low'?0:q==='medium'?(isTouch?1024:2048):q==='high'?2048:4096,tex:q==='low'?1024:q==='medium'?(isTouch?1536:2048):q==='high'?3072:4096,
-  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low',pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:!isTouch&&q!=='low'}}
+  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low',pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:q!=='low'}} // MSAA também no celular: nas GPUs de celular (tile-based) ele custa pouco e tira o serrilhado
 
 // ---------- Ruído e aleatório determinísticos ----------
 function hrand(x,y,z,s){return mulberry(Math.imul(x|0,73856093)^Math.imul(y|0,19349663)^Math.imul(z|0,83492791)^Math.imul(s|0,40503))}
@@ -586,10 +586,10 @@ let lastT=0;
 // O 3D é desenhado num tamanho limitado de pixels (o navegador estica na tela) e, se o jogo ficar lento, a resolução
 // cai sozinha e as sombras passam a atualizar menos vezes (sem recompilar nada).
 // no celular o 3D desenha bem menos pixels (o navegador estica) e as sombras atualizam a cada 2 quadros
-const PXB=isTouch?{low:.4e6,medium:.7e6,high:1e6,chaos:1.3e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?2:1,frameN=0,skipNext=true;
+const PXB=isTouch?{low:.45e6,medium:.95e6,high:1.3e6,chaos:1.6e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=isTouch&&((navigator.deviceMemory||4)<=3||(navigator.hardwareConcurrency||8)<=4)?.7:1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?2:1,frameN=0,skipNext=true;
 document.addEventListener('visibilitychange',()=>{skipNext=true});
 function watch(rawDt){if(skipNext){skipNext=false;return}emaDt+=(Math.min(rawDt,250)-emaDt)*.08;
-  if(emaDt>36){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;if(autoS>.45)autoS=Math.max(.45,autoS*.8);else shadowEvery=Math.min(4,shadowEvery+1)}}
+  if(emaDt>(isTouch?26:36)){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;if(autoS>.45)autoS=Math.max(.45,autoS*.8);else shadowEvery=Math.min(4,shadowEvery+1)}}
   else if(emaDt<20){fastFor+=rawDt;slowFor=Math.max(0,slowFor-rawDt);if(fastFor>6000){fastFor=0;if(shadowEvery>1)shadowEvery--;else if(autoS<1)autoS=Math.min(1,autoS*1.12)}}else{slowFor=Math.max(0,slowFor-rawDt*.5)}}
 let failN=0;function fail(e){if(failN++<3)console.error('Erro no 3D:',e)}
 // libera a placa de vídeo na hora ao recarregar/fechar (o Live Server recarrega a página a cada arquivo salvo)
@@ -860,7 +860,7 @@ function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!
     const done=()=>{compiling=false;loading(false);MN.warm=1};(R.compileAsync&&R.extensions.has('KHR_parallel_shader_compile')?R.compileAsync(MN.sc,MN.cam):new Promise(r=>setTimeout(()=>{R.compile(MN.sc,MN.cam);r()},30))).then(done,done)}
   if(MN.warm!==1)return false;
   const dt=clamp((t-(menuT||t))/1000,0,.1);menuT=t;
-  const dpr=Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5),bud=(isTouch?(S.quality==='low'?.4e6:.7e6):(S.quality==='low'?.9e6:2.2e6))*autoS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
+  const dpr=Math.min(window.devicePixelRatio||1,1.5),bud=(isTouch?(S.quality==='low'?.45e6:.95e6):(S.quality==='low'?.9e6:2.2e6))*autoS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
   if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false)}
   document.body.classList.add('g3don','g3menu');sharedCapyMats();OU.uRes.value.set(w,h);OU.uOW.value=Math.max(1.8,h*.0052);
   const V=MVIEW[o.view]||MVIEW.home,v=MN.v,k=Math.min(1,dt*5);for(const key of ['ty','d','el','off'])v[key]+=(V[key]-v[key])*k;
