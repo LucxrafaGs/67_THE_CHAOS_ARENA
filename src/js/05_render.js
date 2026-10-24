@@ -1,20 +1,23 @@
 // ===== Render, partículas, efeitos e laço principal =====
 const canvas=$('game'),ctx=canvas.getContext('2d');
-let VW=960,VH=540,zoom=1,pr=1,resScale=1;const cam={x:W/2-480,y:H/2-270};let shakeA=0;
+// SQ: achatamento vertical do chão pela câmera inclinada (fixo, estilo Brawl Stars); CAP3: modelo da capivara 3D já carregado
+let VW=960,VH=540,zoom=1,pr=1,resScale=1,SQ=Map3D.SQ,CAP3=false;
+const acts3=[];const cam={x:W/2-480,y:H/2-270};let shakeA=0;
 // Atrás dos menus a arena é só decoração: meia resolução e 30 fps (bem mais leve em telas retina)
 const menuBg=()=>document.body.classList.contains('menu')&&!started;
-function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:1.25)*(menuBg()?.5:resScale);
-  canvas.width=Math.round(innerWidth*pr);canvas.height=Math.round(innerHeight*pr);zoom=clamp(Math.min(innerWidth,innerHeight)/(isTouch?470:560),.6,1.4);VW=innerWidth/zoom;VH=innerHeight/zoom;floorFor=''}
+function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:1.25)*(menuBg()?.5:resScale);pr=Math.min(pr,Math.sqrt(4.2e6/(innerWidth*innerHeight))); // teto de pixels: telas retina grandes não sobrecarregam a placa
+  canvas.width=Math.round(innerWidth*pr);canvas.height=Math.round(innerHeight*pr);zoom=clamp(Math.min(innerWidth,innerHeight)/(isTouch?470:560),.6,1.4);VW=innerWidth/zoom;VH=innerHeight/zoom/SQ}
 addEventListener('resize',resize);resize();
 
 // ---------- Partículas ----------
 let parts=[];
 const partMax=()=>S.particles==='low'?120:S.particles==='mid'?300:600;
-function addP(o){if(parts.length>=partMax())return;parts.push(Object.assign({vx:0,vy:0,g:0,life:.6,size:6,rot:0,vr:0,type:'dot',col:'#fff',drag:0},o,{max:o.life||.6}))}
+// só os textos (BUM!, -20, KO!) ficam no canvas; o resto (faíscas, fumaça, fogo, anéis…) vira 3D em 03_fx3d.js
+function addP(o){if(o.type!=='word'){FX3D.from2D(o);return}if(parts.length>=partMax())return;parts.push(Object.assign({vx:0,vy:0,g:0,life:.6,size:6,rot:0,vr:0,type:'dot',col:'#fff',drag:0},o,{max:o.life||.6}))}
 function burst(x,y,n,col,type='star',spd=180,size=6,life=.55){if(S.particles==='low')n=Math.ceil(n/3);for(let i=0;i<n;i++){const a=Math.random()*TAU,s=spd*rand(.4,1);addP({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,type,col:Array.isArray(col)?pick(col):col,size:size*rand(.6,1.2),life:life*rand(.7,1.2),vr:rand(-8,8),drag:3})}}
 function word(x,y,txt,col,size=26){addP({x,y,vy:-60,type:'word',txt,col,size,life:.7,rot:rand(-.25,.25),drag:2})}
 function updateParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;if(p.life<=0){parts.splice(i,1);continue}const d=Math.exp(-p.drag*dt);p.vx*=d;p.vy=p.vy*d+p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt}}
-function drawParts(c){for(const p of parts){const k=p.life/p.max;c.save();c.translate(p.x,p.y);c.rotate(p.rot);c.globalAlpha=Math.min(1,k*2);c.fillStyle=p.col;c.strokeStyle=INK;
+function drawParts(c){for(const p of parts){const k=p.life/p.max;c.save();c.translate(p.x,p.y);if(SQ!==1&&p.type!=='ring'&&p.type!=='line'&&p.type!=='bolt')c.scale(1,1/SQ);c.rotate(p.rot);c.globalAlpha=Math.min(1,k*2);c.fillStyle=p.col;c.strokeStyle=INK;
   switch(p.type){
     case 'star':star(c,0,0,p.size,p.size*.45,5);c.fill();c.lineWidth=1.5;c.stroke();break;
     case 'dot':c.beginPath();c.arc(0,0,p.size*k,0,TAU);c.fill();break;
@@ -37,20 +40,18 @@ const aimStick={on:false,a:0,mag:0};
 const track={};let demoFocus='d0',demoSwap=0,hurtFlash=0,distortT=0;
 function nearCam(x,y,m=200){return x>cam.x-m&&x<cam.x+VW+m&&y>cam.y-m&&y<cam.y+VH+m}
 function onShot(p,tr){const g=GUNS[p.gun];if(!g)return;const me=p.id===self;
-  if(g.melee){tr.swing=1}else if(!g.instant){tr.recoil=1;addP({x:p.x+Math.cos(p.aim)*30,y:p.y+5+Math.sin(p.aim)*30,type:'flash',col:g.col||'#fff',size:g.cat==='heavy'?24:12,life:.09})}
+  if(g.melee){tr.swing=1}else if(!g.instant){tr.recoil=1;const mx=p.x+Math.cos(p.aim)*34,my=p.y+Math.sin(p.aim)*34+8;FX3D.flash(mx,my,FX3D.FLY,g.cat==='heavy'?16:9,g.col||'#fff',.09);if(g.cat==='heavy'&&S.particles!=='low')FX3D.smoke(mx,my,FX3D.FLY,5,2,'#E9E2F7',.5,20)}
   if(me||(!demo&&nearCam(p.x,p.y,-40)&&Math.random()<.5))Sound.play(g.sfx||'pew');if(me&&(g.cat==='heavy'||g.txt==='NÃO')){vibe(25);shakeA=Math.max(shakeA,g.m==='megabazooka'?9:3)}}
 const seenFx=new Map();
 function processEffects(t){const now=time();for(const e of effects){if(seenFx.has(e.id))continue;seenFx.set(e.id,now);onEffect(e)}if(seenFx.size>1500)for(const [k,v] of seenFx)if(now-v>12000)seenFx.delete(k)}
 function camShake(x,y,a){if(!S.shake)return;const d=Math.hypot(x-(cam.x+VW/2),y-(cam.y+VH/2));shakeA=Math.max(shakeA,clamp(a-d/90,0,a))}
 function onEffect(e){const near=nearCam(e.x||0,e.y||0),snd=!demo&&near,mine=e.pid===self&&!demo;
   switch(e.kind){
-    case 'hit':if(!near)break;burst(e.x,e.y,5,[e.c||'#fff','#fff'],'star',200,6);if(e.w)word(e.x+rand(-10,10),e.y-14,e.w,e.c==='#FFFFFF'?'#FFC531':e.c,e.s?32:24);if(snd)Sound.play('hit');break;
-    case 'spark':if(near)burst(e.x,e.y,3,[e.c||'#fff','#fff'],'dot',140,3,.25);break;
+    case 'hit':if(!near)break;FX3D.burst(e.x,e.y,FX3D.FLY,5,[e.c||'#fff','#fff'],'star',200,5);FX3D.flash(e.x,e.y,FX3D.FLY,8,e.c||'#fff',.08);if(e.w)word(e.x+rand(-10,10),e.y-14,e.w,e.c==='#FFFFFF'?'#FFC531':e.c,e.s?32:24);if(snd)Sound.play('hit');break;
+    case 'spark':if(near)FX3D.burst(e.x,e.y,FX3D.FLY,3,[e.c||'#fff','#fff'],'dot',140,3,.25);break;
     case 'dmg':if(near)addP({x:e.x+rand(-8,8),y:e.y,vy:-90,type:'word',txt:'-'+e.v,col:e.v>=40?'#FF3B47':'#FFF4E0',size:e.v>=40?24:17,life:.7,drag:2});
       if(mine){Sound.play('hurt');hurtFlash=1;vibe(30);if(S.shake)shakeA=Math.max(shakeA,4)}break;
-    case 'boom':if(!near)break;addP({x:e.x,y:e.y,type:'boom',col:e.gold?'#FFC531':'#FF7A1A',size:e.r*.9,life:.38});addP({x:e.x,y:e.y,type:'ring',col:'#fff',size:e.r*1.3,life:.4});
-      for(let i=0;i<(S.particles==='low'?3:8);i++){const a=Math.random()*TAU;addP({x:e.x+Math.cos(a)*e.r*.4,y:e.y+Math.sin(a)*e.r*.4,vx:Math.cos(a)*60,vy:Math.sin(a)*60-30,type:'smoke',col:'#E9E2F7',size:rand(10,18)*(e.r>150?2:1),life:rand(.6,1),drag:1.5})}
-      burst(e.x,e.y,8,['#FFC531','#FF7A1A','#FF4F9A'],'star',320,7);word(e.x,e.y-e.r*.6,e.gold?'67!':e.r>150?'KA-BUUUM':'KABUM',e.gold?'#FFC531':'#FF7A1A',e.r>150?48:36);
+    case 'boom':if(!near)break;FX3D.boom(e.x,e.y,e.r,e.gold);word(e.x,e.y-e.r*.6,e.gold?'67!':e.r>150?'KA-BUUUM':'KABUM',e.gold?'#FFC531':'#FF7A1A',e.r>150?48:36);
       if(snd){Sound.play('boom');camShake(e.x,e.y,e.r>150?14:9)}break;
     case 'meteor':if(!near)break;addP({x:e.x,y:e.y,type:'boom',col:'#FF3B47',size:e.r*1.1,life:.5});for(let i=0;i<10;i++)addP({x:e.x+rand(-40,40),y:e.y+rand(-40,40),vx:rand(-200,200),vy:rand(-200,200),type:'brick',col:'#8E5A3A',size:rand(6,12),life:.8,vr:rand(-9,9),drag:2});camShake(e.x,e.y,16);if(snd)Sound.play('boom');break;
     case 'stamp':if(!near)break;addP({x:e.x,y:e.y,type:'ring',col:'#E8443A',size:e.r*1.6,life:.5});word(e.x,e.y,'VETADO!','#E8443A',44);camShake(e.x,e.y,10);if(snd)Sound.play('slap');break;
@@ -69,8 +70,8 @@ function onEffect(e){const near=nearCam(e.x||0,e.y||0),snd=!demo&&near,mine=e.pi
       if(mine){Sound.play('spawn');if(!e.first)showRespawnCard(e.g,'NOVAS ARMAS',e.g2)}break;
     case 'ko':if(!near)break;burst(e.x,e.y,12,[e.c,'#FFF4E0','#FFC531'],'star',260,8,.8);for(let i=0;i<5;i++)addP({x:e.x+rand(-10,10),y:e.y+rand(-10,10),vy:-40,type:'smoke',col:'#cfc6e6',size:14,life:.8,drag:1});word(e.x,e.y-20,'KO!','#FF4F9A',34);if(snd)Sound.play('ko');break;
     case '67':if(mine){stamp67(e.lv);Sound.play('level');vibe([40,40,80]);celebrate(80)}else if(near){word(e.x,e.y-50,'67!','#FFC531',40);burst(e.x,e.y,14,'#FFC531','star',260,8)}break;
-    case 'kill':addFeed(e);if(e.ki===self&&e.vi!==self&&!demo)toast('Você eliminou '+e.v+'!','good');break;
-    case 'gem':if(near&&S.particles!=='low')burst(e.x,e.y,4,['#FF8A1F','#FFC07A','#fff'],'star',120,4,.4);if(mine){Sound.play('gem',(e.n%8));flyGem(e.x,e.y);const tg=store.get('totalGems',0)+1;store.set('totalGems',tg);$('totalGems').textContent=tg}break;
+    case 'kill':addFeed(e);if(e.ki===self&&e.vi!==self&&!demo){toast('Você eliminou '+e.v+'!','good');bump('kills')}break;
+    case 'gem':if(near&&S.particles!=='low')burst(e.x,e.y,4,['#FF8A1F','#FFC07A','#fff'],'star',120,4,.4);if(mine){Sound.play('gem',(e.n%8));flyGem(e.x,e.y);const tg=store.get('totalGems',0)+1;store.set('totalGems',tg);$('totalGems').textContent=tg;bump('gems')}break;
     case 'flagtake':if(!demo){toast(e.name+' pegou a bandeira!',e.pid===self?'good':'');Sound.play('pickup')}break;
     case 'flagret':if(!demo&&MODE.id==='ctf')toast('Bandeira '+(TEAM[e.team]?TEAM[e.team].n:'')+' voltou pra base');break;
     case 'capture':if(!demo){bigBanner('CAPTURA!',`${e.name} pontuou para o time ${TEAM[e.team].n}`,TEAM[e.team].c);Sound.play('capture');celebrate(60)}break;
@@ -81,8 +82,8 @@ function onEffect(e){const near=nearCam(e.x||0,e.y||0),snd=!demo&&near,mine=e.pi
   }}
 
 // ---------- Desenho do mundo ----------
-function worldToScreen(x,y){return[(x-cam.x)*zoom,(y-cam.y)*zoom]}
-function drawNameTag(c,p,x,y){if(!S.names&&p.id!==self)return;c.save();c.translate(x,y-52);c.font='800 12px "Baloo 2",sans-serif';c.textAlign='center';c.textBaseline='middle';
+function worldToScreen(x,y){return[(x-cam.x)*zoom,(y-cam.y)*zoom*SQ]}
+function drawNameTag(c,p,x,y){if(!S.names&&p.id!==self)return;c.save();c.translate(x,y-(Map3D.NAMEOFF-Map3D.FEET));c.scale(1,1/SQ);c.font='800 12px "Baloo 2",sans-serif';c.textAlign='center';c.textBaseline='middle';
   const w=Math.max(44,c.measureText(p.name).width+30),tc=p.team>=0?TEAM[p.team].c:null;c.fillStyle=p.id===self?'#FFC531':tc?shade(tc,-.35):'#12082bcc';rr(c,-w/2,-9,w,18,9);c.fill();c.strokeStyle=INK;c.lineWidth=2;c.stroke();
   hexgon(c,-w/2+2,0,10);c.fillStyle=tc||'#FFC531';c.fill();c.stroke();c.fillStyle=INK;c.font='13px "Lilita One",sans-serif';c.fillText(MODE.id==='gun'?p.gunLvl+1:p.level,-w/2+2,1);
   c.fillStyle=p.id===self?INK:'#FFF4E0';c.font='800 12px "Baloo 2",sans-serif';c.fillText(p.name,7,1);
@@ -90,7 +91,7 @@ function drawNameTag(c,p,x,y){if(!S.names&&p.id!==self)return;c.save();c.transla
 function drawStatus(c,p,ht,t){
   if(ht<p.frozenUntil){c.save();c.globalAlpha=.55;const gr=c.createLinearGradient(-22,-40,22,26);gr.addColorStop(0,'#E9F9FF');gr.addColorStop(1,'#7FD8FF');c.fillStyle=gr;rr(c,-24,-40,48,66,10);c.fill();c.globalAlpha=1;c.strokeStyle='#BFF1FF';c.lineWidth=2.5;c.stroke();
     c.strokeStyle='#ffffffcc';c.lineWidth=3;c.beginPath();c.moveTo(-14,-30);c.lineTo(-6,-36);c.moveTo(-16,-20);c.lineTo(-8,-26);c.stroke();c.restore()}
-  if(ht<p.burnUntil){c.save();c.globalCompositeOperation='lighter';for(let i=0;i<3;i++){const fx2=Math.sin(t/90+i*2)*10,fy=-Math.abs(Math.sin(t/120+i))*16;c.fillStyle=i%2?'#FF922E':'#FFE066';c.globalAlpha=.8;c.beginPath();c.ellipse(fx2,-10+fy,5,9,0,0,TAU);c.fill()}c.restore()}
+  // fogo: partículas 3D (FX3D.burning, em drawPlayer)
   if(ht<p.slowUntil){c.fillStyle='#F5B014aa';for(const x of [-12,4,14]){c.beginPath();c.ellipse(x,20,6,3,0,0,TAU);c.fill()}}
   if(ht<p.stunUntil&&ht>=p.frozenUntil){for(let i=0;i<3;i++){const a=t/200+i*2.1;c.fillStyle='#FFC531';star(c,Math.cos(a)*16,-40+Math.sin(a)*4,6,2.6,5);c.fill();c.strokeStyle=INK;c.lineWidth=1.2;c.stroke()}}
   if(ht<p.confuseUntil){c.font='22px "Lilita One"';c.fillStyle='#45D4FF';c.strokeStyle=INK;c.lineWidth=4;c.textAlign='center';c.strokeText('?!',0,-42);c.fillText('?!',0,-42)}
@@ -98,27 +99,27 @@ function drawStatus(c,p,ht,t){
 function drawWorld(dt,t){const ht=hostNow();
   ctx.setTransform(1,0,0,1,0,0);
   const k=canvas.width/VW;let sx=0,sy=0;if(shakeA>.1&&S.shake){sx=rand(-shakeA,shakeA);sy=rand(-shakeA,shakeA)}shakeA*=Math.exp(-10*dt);
-  ctx.setTransform(k,0,0,k,(-cam.x+sx)*k,(-cam.y+sy)*k);
-  drawArena(ctx,cam,VW,VH,M,t);
+  // O jogo é 3D (03_map3d.js): cenário, capivaras e armas vão para o WebGL; este canvas transparente fica só com tiros, efeitos e textos
+  ctx.clearRect(0,0,canvas.width,canvas.height);const g3=Map3D.on(M);CAP3=g3&&Map3D.capysOn(M);acts3.length=0;
+  ctx.setTransform(k,0,0,k*SQ,(-cam.x+sx)*k,(-cam.y+sy)*k*SQ);
   if(MODE.id==='koth'&&ms.zone&&!demo){const z=ms.zone,o=players[z.owner];drawZone(ctx,z,t,z.contested?'#FF3B47':o?(o.id===self?'#FFC531':'#FF4F9A'):'#FFF4E0')}
   if(MODE.id==='ctf'&&!demo)for(const [i,[bx,by]] of M.bases.entries()){ctx.save();ctx.strokeStyle=TEAM[i].c;ctx.lineWidth=6;ctx.setLineDash([16,12]);ctx.beginPath();ctx.arc(bx,by,80,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=TEAM[i].c+'22';ctx.fill();ctx.restore()}
   for(const f of fields)if(f.k==='time'||f.k==='hole')drawField(ctx,f,t,ht);
-  for(const g of gems)if(nearCam(g.x,g.y,30))drawOrange(ctx,g.x,g.y,t);
-  for(const m of meds)if(nearCam(m.x,m.y,30))drawMedkit(ctx,m.x,m.y,t);
-  for(const c of crates)if(nearCam(c.x,c.y,30))drawCrate(ctx,c.x,c.y,t);
+  // laranjinhas, kits e caixas: 3D (03_fx3d.js)
   const fancy=S.particles!=='low';
-  for(const b of bullets){if(!nearCam(b.x,b.y,80))continue;const g=GUNS[b.g];if(fancy&&g&&(g.p==='rocket'||g.p==='rpg'||g.p==='bigrocket'||g.p==='chicken')&&Math.random()<.5)addP({x:b.x,y:b.y,type:'smoke',col:'#E9E2F7',size:g.p==='bigrocket'?12:6,life:.4,drag:2});
-    else if(fancy&&g&&g.cat!=='laser'&&g.p!=='flame'&&g.p!=='tracer'&&Math.random()<.3)addP({x:b.x,y:b.y,type:'dot',col:g.col||'#fff',size:3,life:.18});drawProj(ctx,b,t)}
+  // tiros: desenhados em 3D (03_fx3d.js); aqui só os rastros de fumaça/brilho
+  for(const b of bullets){if(!nearCam(b.x,b.y,80))continue;const g=GUNS[b.g];if(fancy&&g&&(g.p==='rocket'||g.p==='rpg'||g.p==='bigrocket'||g.p==='chicken')&&Math.random()<.5)addP({x:b.x,y:b.y,h:FX3D.FLY,type:'smoke',col:'#E9E2F7',size:g.p==='bigrocket'?12:6,life:.5,drag:2});
+    else if(fancy&&g&&g.cat!=='laser'&&g.p!=='flame'&&g.p!=='tracer'&&g.p!=='text'&&Math.random()<.3)addP({x:b.x,y:b.y,h:FX3D.FLY,type:'dot',col:g.col||'#fff',size:3,life:.18})}
   // paredes + construções + capivaras ordenadas por y
   const draws=[];for(const b of builds)if(nearCam(b.x,b.y,120))draws.push([b.y+(b.h||0)/2,()=>drawBuild(ctx,b,t)]);
   for(const p of Object.values(players)){const tr=track[p.id];if(!p.alive||p.picking||!tr)continue;if(!nearCam(p.rx,p.ry,90))continue;draws.push([p.ry+20,()=>drawPlayer(p,tr,t,ht,fancy)])}
   draws.sort((a,b)=>a[0]-b[0]);
-  drawWalls(ctx,M,cam,VW,VH,t);
   for(const [,f] of draws)f();
   for(const f of ms.flags||[]){if(!nearCam(f.x,f.y,60))continue;const col=f.team>=0?TEAM[f.team].c:'#FFC531';if(f.carrier){const c=players[f.carrier];if(c&&c.alive){drawFlag(ctx,c.rx+14,c.ry-22,col,t,true);continue}}drawFlag(ctx,f.x,f.y,col,t,false)}
   for(const f of fields)if(f.k==='meteor'||f.k==='stamp')drawField(ctx,f,t,ht);
   updateParts(dt);drawParts(ctx);
-  if(M.theme==='dark'){const L=[];for(const p of Object.values(players))if(p.alive)L.push([p.rx,p.ry,p.id===self?420:260]);for(const b of bullets)L.push([b.x,b.y,70]);for(const g of gems)L.push([g.x,g.y,50]);for(const m of meds)L.push([m.x,m.y,70]);for(const f of ms.flags||[])L.push([f.x,f.y,140]);if(ms.zone)L.push([ms.zone.x,ms.zone.y,340]);for(const p of parts)if(p.type==='boom'||p.type==='flash')L.push([p.x,p.y,p.size*3]);drawDarkness(ctx,M,cam,VW,VH,L)}
+  let L=null;if(M.theme==='dark'){L=[];for(const p of Object.values(players))if(p.alive)L.push([p.rx,p.ry,p.id===self?420:260]);for(const b of bullets)L.push([b.x,b.y,70]);for(const g of gems)L.push([g.x,g.y,50]);for(const m of meds)L.push([m.x,m.y,70]);for(const f of ms.flags||[])L.push([f.x,f.y,140]);if(ms.zone)L.push([ms.zone.x,ms.zone.y,340]);for(const p of parts)if(p.type==='boom'||p.type==='flash')L.push([p.x,p.y,p.size*3]);drawDarkness(ctx,M,cam,VW,VH,L)}
+  if(g3){try{Map3D.render(M,cam.x-sx,cam.y-sy,VW,VH,t,L,CAP3?acts3:null)}catch(e){Map3D.fail(e)}} // um erro num quadro só é registrado; o próximo quadro tenta de novo
   drawCrosshair(t);
   // setas de borda
   ctx.setTransform(pr,0,0,pr,0,0);const me=players[self];
@@ -132,12 +133,15 @@ function drawWorld(dt,t){const ht=hostNow();
   if(me&&!demo){const inField=fields.some(f=>f.k==='time'&&Math.hypot(me.rx-f.x,me.ry-f.y)<f.r+80);distortT=lerp(distortT,(ht<me.frozenUntil||inField)?1:0,Math.min(1,dt*6))}else distortT=0;
   if(distortT>.03)applyDistortion(t)}
 function drawPlayer(p,tr,t,ht,fancy){const x=p.rx,y=p.ry;
-  if(p.team>=0&&isTeams()){ctx.save();ctx.strokeStyle=TEAM[p.team].c;ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(x,y+22,22,7,0,0,TAU);ctx.stroke();ctx.restore()}
-  if(p.id===self){ctx.save();ctx.strokeStyle='#FFC531';ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.lineDashOffset=-t/40;ctx.beginPath();ctx.ellipse(x,y+22,27,9,0,0,TAU);ctx.stroke();ctx.restore()}
-  if(p.dashTime>0&&fancy)addP({x:x+rand(-6,6),y:y+rand(-14,14),vx:-Math.cos(p.aim)*10,type:'dot',col:p.look.trail,size:9,life:.25});
-  ctx.save();ctx.translate(x,y);const hurt=ht-p.hurtAt<140,frozen=ht<p.frozenUntil;if(hurt&&!frozen)ctx.translate(rand(-2,2),0);
-  if(ht<p.shieldUntil&&Math.floor(t/90)%2)ctx.globalAlpha=.55;
-  drawChar(ctx,p.look,{face:p.face,aim:p.aim,t:frozen?0:t+(p.id.charCodeAt(0)||0)*97,mv:frozen?0:p.mv,gun:p.gun,hurt,bot:p.bot,shout:t-tr.shotT<160,swing:tr.swing||0});
+  // a capivara e a arma são 3D (03_capy3d.js / 03_guns3d.js): aqui só mandamos o estado; o desenho acontece no WebGL.
+  // Os anéis do time e o seu anel tracejado também são 3D, no chão embaixo dela.
+  if(p.dashTime>0&&fancy)addP({x:x+rand(-6,6),y:y+rand(-14,14),h:rand(6,30),vx:-Math.cos(p.aim)*10,type:'dot',col:p.look.trail,size:9,life:.25});
+  if(ht<p.burnUntil)FX3D.burning(x,y+8,1/60);
+  const hurt=ht-p.hurtAt<140,frozen=ht<p.frozenUntil,g=GUNS[p.gun],me=players[self];
+  acts3.push({id:p.id,x,y,aim:p.aim,bot:p.bot,look:p.look,gun:p.gun,melee:!!(g&&g.melee),swing:tr.swing||0,recoil:t-tr.shotT<90?1:0,hurt:hurt?1-(ht-p.hurtAt)/140:0,
+    frozen,dash:p.dashTime>0,shield:ht<p.shieldUntil,self:p.id===self,ring:p.team>=0&&isTeams()?TEAM[p.team].c:null,xc:p.id===self?'#FFC531':(p.team>=0&&isTeams())?TEAM[p.team].c:(me&&sameTeam(me,p)?'#6CF06A':'#FF4F9A')});
+  if(!CAP3)return;
+  ctx.save();ctx.translate(x,y);ctx.translate(0,Map3D.FEET-Map3D.K*30);ctx.scale(1,1/SQ);
   ctx.globalAlpha=1;
   if(p.mods&&p.mods.bubble&&ht-p.bubbleAt>12000){ctx.strokeStyle='#9FD8FF88';ctx.lineWidth=2;ctx.setLineDash([6,5]);ctx.beginPath();ctx.arc(0,-4,30,0,TAU);ctx.stroke();ctx.setLineDash([])}
   if(ht<p.shieldUntil){ctx.strokeStyle='#45D4FFaa';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,-4,34,0,TAU);ctx.stroke();ctx.fillStyle='#45D4FF22';ctx.fill()}
@@ -181,8 +185,11 @@ function frame(t){requestAnimationFrame(frame);
   else if(host&&started&&!(paused&&solo)){pushInputs();step(dt,time());sync()}
   else if(!host&&started){pushInputs()}
   if(started&&!isTouch&&mouseOn&&view==='game'&&players[self])aimAt(mouseSX,mouseSY);
-  if(started&&isTouch&&aimStick.on&&view==='game'&&players[self]){const me=players[self],g=GUNS[me.gun],R=g?Math.max(90,gunReach(g,me.mods||defaultMods())):300,d=g&&g.instant?R*.8:R*.92;mouseSX=((me.rx??me.x)+Math.cos(aimStick.a)*d-cam.x)*zoom;mouseSY=((me.ry??me.y)+Math.sin(aimStick.a)*d-cam.y)*zoom;aimAt(mouseSX,mouseSY)}
-  if(!active){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#20164a';ctx.fillRect(0,0,canvas.width,canvas.height);return}
+  if(started&&isTouch&&aimStick.on&&view==='game'&&players[self]){const me=players[self],g=GUNS[me.gun],R=g?Math.max(90,gunReach(g,me.mods||defaultMods())):300,d=g&&g.instant?R*.8:R*.92;mouseSX=((me.rx??me.x)+Math.cos(aimStick.a)*d-cam.x)*zoom;mouseSY=((me.ry??me.y)+Math.sin(aimStick.a)*d-cam.y)*zoom*SQ;aimAt(mouseSX,mouseSY)}
+  // menus: a capivara 3D no deque da lagoa (03_map3d.js > menu)
+  if(!active){ctx.setTransform(1,0,0,1,0,0);let ok3=false;try{ok3=Map3D.menu(t,{view:menuView(),fur:menuFur(),drag:menuDrag,gun:menuGun(),bg:menuBgKey()})}catch(e){Map3D.fail(e)}
+    if(ok3)ctx.clearRect(0,0,canvas.width,canvas.height);else{Map3D.idle();ctx.fillStyle='#2A1366';ctx.fillRect(0,0,canvas.width,canvas.height)}return}
+  // câmera inclinada só quando o 3D está ligado neste mapa (senão fica a visão de cima do 2D)
   processEffects(t);
   const sm=Math.min(1,dt*14);
   for(const p of Object.values(players)){let tr=track[p.id];if(!tr){tr=track[p.id]={shot:p.shotAt,dash:p.dashAt,slot:p.slot,shotT:-1e9,swing:0,recoil:0,alive:p.alive}}
@@ -210,7 +217,7 @@ function drawMinimap(){const c=$('minimap').getContext('2d'),w=340,h=226,sx=w/W,
 // ---------- Mira personalizada (PC) ----------
 function gunReach(g,md){if(g.melee)return g.range*md.range;if(g.instant)return (g.range2||g.build&&g.build.dist||300)*md.range;const L=g.life*md.range/md.bspd,v=g.sp*md.bspd;if(g.fric){const k=g.fric*1.6;return v/k*(1-Math.exp(-k*L))}return v*L}
 function drawCrosshair(t){const me=players[self];if((isTouch?!aimStick.on:!mouseOn)||!me||!me.alive||me.picking||demo||!started||over)return;const g=GUNS[me.gun];if(!g)return;const md=me.mods||defaultMods();
-  const k=canvas.width/VW;ctx.setTransform(k,0,0,k,-cam.x*k,-cam.y*k);const c=ctx;const px=me.rx,py=me.ry,a=localAim,wx=mouseSX/zoom+cam.x,wy=mouseSY/zoom+cam.y,d=Math.hypot(wx-px,wy-py);
+  const k=canvas.width/VW;ctx.setTransform(k,0,0,k*SQ,-cam.x*k,-cam.y*k*SQ);const c=ctx;const px=me.rx,py=me.ry,a=localAim,wx=mouseSX/zoom+cam.x,wy=mouseSY/(zoom*SQ)+cam.y,d=Math.hypot(wx-px,wy-py);
   const col=CATS[g.cat][1],reach=gunReach(g,md),ht=hostNow(),cdp=clamp((ht-me.shotAt)/(g.cd*md.cd),0,1);const ca=Math.cos(a),sa=Math.sin(a);
   c.save();c.lineCap='round';c.lineJoin='round';
   const zone=(x,y,r,cc,dash)=>{c.fillStyle=cc+'22';c.strokeStyle=cc;c.lineWidth=3;if(dash)c.setLineDash([10,8]);c.beginPath();c.arc(x,y,r,0,TAU);c.fill();c.stroke();c.setLineDash([])};

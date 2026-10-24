@@ -1,0 +1,4 @@
+{
+  "liveServer.settings.ignoreFiles": [".wrangler/**", "node_modules/**", "server/**", "src/**", "scripts/**", "modelos/**", "versoes-antigas/**", "**/*.md"],
+  "liveServer.settings.root": "/public"
+}
