@@ -115,7 +115,11 @@ function drawWeaponIcon(cv,gi,bg=true){const c=cv.getContext('2d'),W0=cv.width,H
     c.strokeStyle='#ffffff10';c.lineWidth=W0/40;for(let i=-H0;i<W0;i+=W0/8){c.beginPath();c.moveTo(i,H0);c.lineTo(i+H0,0);c.stroke()}}
   c.fillStyle='#0004';c.beginPath();c.ellipse(W0/2,H0*.84,W0*.34,H0*.06,0,0,TAU);c.fill();
   const im=Map3D.gunIcon(gi,W0,H0);if(im)c.drawImage(im,0,0,W0,H0);else if(!cv._iconWait){cv._iconWait=1;setTimeout(()=>{cv._iconWait=0;drawWeaponIcon(cv,gi,bg)},120)}}
+// endereço da imagem do ícone (para <img>): gerado em segundo plano nos menus (toBlob não trava); se ainda não existir, gera na hora
 function iconURL(gi,w=132,h=84){const k=gi+'_'+w;if(iconCache.has(k))return iconCache.get(k);const im=Map3D.gunIcon(gi,w,h);if(!im)return'';const u=im.toDataURL();iconCache.set(k,u);return u}
+let icI=0,icBusy=false;
+function iconPrewarm(){if(icBusy||icI>=GUNS.length)return;const gi=icI,k=gi+'_132';if(iconCache.has(k)){icI++;return}const im=Map3D.gunIcon(gi,132,84);if(!im)return;icBusy=true;
+  im.toBlob(b=>{if(b&&!iconCache.has(k))iconCache.set(k,URL.createObjectURL(b));icI++;icBusy=false},'image/png')}
 
 // ---------- Objetos do chão (bandeira, zona) — tiros, itens e coletáveis agora são 3D (03_fx3d.js) ----------
 function drawFlag(c,x,y,col,t,carried){c.save();c.translate(x,y);if(SQ!==1)c.scale(1,1/SQ);LW=2.4;if(!carried){c.fillStyle='#0003';c.beginPath();c.ellipse(0,24,12,4,0,0,TAU);c.fill();c.globalCompositeOperation='lighter';c.fillStyle=col+'44';c.beginPath();c.arc(0,4,30+Math.sin(t/200)*3,0,TAU);c.fill();c.globalCompositeOperation='source-over'}
@@ -149,6 +153,6 @@ function drawDarkness(c,M,cam,VW,VH,lights){if(M.theme!=='dark')return;if(!darkC
 // miniatura do mapa = foto do mapa 3D (public/thumbs/<id>.jpg) + as bases dos times
 const thumbImg={};
 function drawMapThumb(cv,M){const c=cv.getContext('2d'),w=cv.width,h=cv.height;c.setTransform(1,0,0,1,0,0);let im=thumbImg[M.id];
-  if(!im){im=thumbImg[M.id]=new Image();im.src='thumbs/'+M.id+'.jpg'}
+  if(!im){im=thumbImg[M.id]=new Image();im.src='thumbs/'+M.id+'.jpg?v=52'}
   if(!im.complete||!im.naturalWidth){c.fillStyle=M.pal.a;c.fillRect(0,0,w,h);im.addEventListener('load',()=>drawMapThumb(cv,M),{once:true});return}
   const s=Math.max(w/im.naturalWidth,h/im.naturalHeight),dw=im.naturalWidth*s,dh=im.naturalHeight*s;c.drawImage(im,(w-dw)/2,(h-dh)/2,dw,dh)}

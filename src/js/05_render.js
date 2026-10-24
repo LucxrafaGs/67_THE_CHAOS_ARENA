@@ -188,7 +188,7 @@ function frame(t){requestAnimationFrame(frame);
   if(started&&isTouch&&aimStick.on&&view==='game'&&players[self]){const me=players[self],g=GUNS[me.gun],R=g?Math.max(90,gunReach(g,me.mods||defaultMods())):300,d=g&&g.instant?R*.8:R*.92;mouseSX=((me.rx??me.x)+Math.cos(aimStick.a)*d-cam.x)*zoom;mouseSY=((me.ry??me.y)+Math.sin(aimStick.a)*d-cam.y)*zoom*SQ;aimAt(mouseSX,mouseSY)}
   // menus: a capivara 3D no deque da lagoa (03_map3d.js > menu)
   if(!active){ctx.setTransform(1,0,0,1,0,0);let ok3=false;try{ok3=Map3D.menu(t,{view:menuView(),fur:menuFur(),drag:menuDrag,gun:menuGun(),bg:menuBgKey(),hat:menuHat()})}catch(e){Map3D.fail(e)}
-    if(ok3)ctx.clearRect(0,0,canvas.width,canvas.height);else{Map3D.idle();ctx.fillStyle='#2A1366';ctx.fillRect(0,0,canvas.width,canvas.height)}return}
+    if(ok3){ctx.clearRect(0,0,canvas.width,canvas.height);if(Map3D.prewarm(isTouch?3:5))iconPrewarm()}else{Map3D.idle();ctx.fillStyle='#2A1366';ctx.fillRect(0,0,canvas.width,canvas.height)}return}
   // câmera inclinada só quando o 3D está ligado neste mapa (senão fica a visão de cima do 2D)
   processEffects(t);
   const sm=Math.min(1,dt*14);

@@ -119,6 +119,7 @@ function textProto(txt){const cv=document.createElement('canvas');cv.width=160;c
   const t=new T.CanvasTexture(cv);t.colorSpace=T.SRGBColorSpace;const mat=K.patch(new T.MeshBasicMaterial({map:t,transparent:true,alphaTest:.3,side:T.DoubleSide}),{key:'fxT',dm:.2});
   return{parts:[{geo:new T.PlaneGeometry(32,19.2),mat}],tint:false}}
 function put(key,x,h,z,ry,rx,rz,sx,sy,sz,col){const P0=protos.get(key)||mk(key);if(!P0||P0.n>=P0.cap)return;
+  if(sx==null)sx=1; // sem escala a matriz vira NaN e o modelo some (a sombra, desenhada à parte, continua)
   _e.set(rx||0,ry||0,rz||0,'YXZ');_q.setFromEuler(_e);_m.compose(_p.set(x,h,z),_q,_s.set(sx,sy==null?sx:sy,sz==null?sx:sz));
   for(const im of P0.im){im.setMatrixAt(P0.n,_m);if(P0.tint)im.setColorAt(P0.n,col||_W)}P0.n++}
 function begin(){for(const P0 of protos.values())P0.n=0}
@@ -128,7 +129,9 @@ function end(){for(const P0 of protos.values())for(const im of P0.im){im.count=P
 const parts=[];const cap=()=>(S.particles==='low'?220:S.particles==='mid'?500:900)*(isTouch?.5:1);
 const FIRE=['#FFF7C2','#FFD23A','#FF8A1F','#E8443A','#9A8CA8','#C9C0D6'].map(h=>[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255]);
 function part(o){if(parts.length>=cap())return null;const p=Object.assign({k:'star',x:0,y:0,h:12,vx:0,vy:0,vh:0,g:0,drag:2,life:.6,size:6,bounce:0,rx:Math.random()*6,ry:Math.random()*6,rz:0,vrx:0,vry:0,vrz:0,col:'#ffffff',grow:0},o);
-  p.max=p.life;p.c=new (T||window.THREE).Color(p.col);parts.push(p);return p}
+  p.max=p.life;p.c=colOf(p.col);parts.push(p);return p}
+// cores reaproveitadas (sem criar um objeto novo por partícula: menos coleta de lixo = menos engasgos)
+const colC=new Map();function colOf(h){let c=colC.get(h);if(!c){c=new (T||window.THREE).Color(h);if(colC.size<400)colC.set(h,c)}return c}
 const rnd=(a,b)=>a+Math.random()*(b-a);
 // estrelinhas/bolinhas que pulam do chão e quicam
 function burst(x,y,h,n,cols,k='star',spd=180,size=6,life=.6){if(S.particles==='low')n=Math.ceil(n/3);for(let i=0;i<n;i++){const a=Math.random()*P*2,s=spd*rnd(.4,1);
@@ -220,7 +223,7 @@ function drawBullets(list,t){const ts=t/1000;
     if(pk==='rocket'||pk==='rpg'||pk==='bigrocket'){const bx=b.x-Math.cos(-yaw)*14*s,by=b.y+Math.sin(yaw)*14*s;if(Math.random()<.7)fire(bx,by,h,3.5*s,8,.25)}
     if(g.fuse&&b.life<.5&&Math.floor(t/70)%2)put('glow',b.x,hh,b.y,0,0,0,14,14,14,_c.set('#FF3B47'))}}
 function drawItems(t){const ts=t/1000;
-  for(const g of gems){const bob=Math.sin(t/380+g.x*.01)*3;put('shadow',g.x,.5,g.y,0,0,0,8);put('orange',g.x,11+bob,g.y,ts*1.6+g.x,0,.15)}
+  for(const g of gems){const bob=Math.sin(t/380+g.x*.01)*3;put('shadow',g.x,.5,g.y,0,0,0,8);put('orange',g.x,11+bob,g.y,ts*1.6+g.x,0,.15,1)}
   for(const m of meds){const bob=Math.sin(t/300+m.x)*2;put('shadow',m.x,.5,m.y,0,0,0,13);put('medkit',m.x,11+bob,m.y,Math.sin(ts+m.x)*.4,0,0,.9)}
   for(const c of crates){const bob=Math.sin(t/340+c.y)*2;put('shadow',c.x,.5,c.y,0,0,0,15);put('crate',c.x,13+bob,c.y,Math.sin(ts*.8+c.y)*.5,0,0,.9)}
   const ht=hostNow();for(const f of fields){const age=(ht-f.start)/1000;
@@ -234,5 +237,6 @@ function burning(x,y,dt){if(Math.random()<dt*28)fire(x,y,rnd(14,40),rnd(4,7),70,
 function frame(scene,dt,t){if(!init())return;if(grp.parent!==scene)scene.add(grp);tickParts(dt);begin();
   try{drawItems(t);drawBullets(bullets,t);drawParts()}catch(e){console.warn('efeitos 3D',e)}end()}
 // para compilar os shaders antes da partida: uma cópia de cada tipo de material
-function warm(){if(!init())return null;const g=new T.Group();for(const k of ['star','glow','fire','smoke','shadow','bullet','orange','bubble','txt:PEW'])mk(k)&&protos.get(k).im.forEach(im=>{const c=new T.InstancedMesh(im.geometry,im.material,1);if(im.instanceColor){c.instanceColor=new T.InstancedBufferAttribute(new Float32Array(3).fill(1),3)}g.add(c)});return g}
+function warm(){if(!init())return null;const g=new T.Group();const keys=[...Object.keys(SIMPLE),...Object.keys(MODELS),'txt:NÃO','txt:SIM','txt:PEW','txt:6','txt:7'];
+  for(const k of keys){const P0=protos.get(k)||mk(k);if(!P0)continue;for(const im of P0.im){const c=new T.InstancedMesh(im.geometry,im.material,1);if(im.instanceColor)c.instanceColor=new T.InstancedBufferAttribute(new Float32Array(3).fill(1),3);c.frustumCulled=false;g.add(c)}}return g}
 return{frame,part,burst,boom,ring,flash,smoke,fire,bolt,from2D,clear,burning,warm,FLY,get ok(){return ok}}})();

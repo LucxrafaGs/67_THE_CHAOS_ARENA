@@ -553,9 +553,10 @@ function noGL(msg){let el=$('no3d');if(!el){el=document.createElement('div');el.
 function initR(){try{const game=$('game');bCv=document.createElement('canvas');bCv.className='g3d g3d-b';glCv=document.createElement('canvas');glCv.className='g3d g3d-f';
     game.parentNode.insertBefore(bCv,game);game.parentNode.insertBefore(glCv,game.nextSibling);bctx=bCv.getContext('2d');
     R=new T.WebGLRenderer({canvas:glCv,antialias:Q().aa,alpha:true,powerPreference:'high-performance',stencil:false});R.setPixelRatio(1);R.shadowMap.enabled=true;R.shadowMap.type=T.PCFShadowMap;R.shadowMap.autoUpdate=false;
-    R.outputColorSpace=T.SRGBColorSpace;R.toneMapping=T.NoToneMapping;R.info.autoReset=false;
+    R.outputColorSpace=T.SRGBColorSpace;R.debug.checkShaderErrors=false; // não força o navegador a esperar a compilação dos shaders
+    R.toneMapping=T.NoToneMapping;R.info.autoReset=false;
     glCv.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;noGL('A placa de vídeo reiniciou. Espere um instante…')});
-    glCv.addEventListener('webglcontextrestored',()=>{lost=false;const n=$('no3d');if(n)n.remove();if(actG){for(const id of [...actors.keys()])dropActor(id)}disposeScene(cur);cur=null;curKey='';capyWarm=0;iconCache.clear();MN=null;ICN=null;capyIcons.clear()});
+    glCv.addEventListener('webglcontextrestored',()=>{lost=false;const n=$('no3d');if(n)n.remove();if(actG){for(const id of [...actors.keys()])dropActor(id)}disposeScene(cur);cur=null;curKey='';capyWarm=0;iconCache.clear();iconBig.clear();pwJ=0;MN=null;ICN=null;capyIcons.clear()});
     if(!U)U={uTime:{value:0},uClipOn:{value:0},uDark:{value:0},uDarkCol:{value:new T.Vector3()},uNL:{value:0},uL:{value:Array.from({length:NL},()=>new T.Vector4(0,0,1,0))}};
     SH=new T.Matrix4().set(1,0,0,0, 0,1,K,K*CH, 0,0,1,0, 0,0,0,1);camera=new T.OrthographicCamera(-1,1,1,-1,1,CH*2);camera.up.set(0,0,-1);return true}
   catch(e){console.error('WebGL indisponível:',e);st='failed';if(bCv)bCv.remove();if(glCv)glCv.remove();R=null;noGL('Seu navegador não liberou o WebGL. Ative a aceleração de hardware nas configurações do navegador e recarregue.');return false}}
@@ -567,7 +568,7 @@ let buildMs=0,compiling=false;
 function loading(on){document.body.classList.toggle('g3load',!!on)}
 function warmCompile(c){compiling=true;loading(true);const warm=new T.Group();warm.position.set(-9999,0,-9999);
   try{if(capyReady()){const m=sharedCapyMats(),A=CapyRig.make({body:capyBodyMat({}),outline:m.out,xray:xray('#FFC531'),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},CAPY_H/CapyRig.MH);warm.add(A.g)}
-    const g=Guns3D.instance(0);if(g)warm.add(g);const fw=FX3D.warm();if(fw)warm.add(fw);if(!dust)dustInit();warm.add(dust.im);if(!bldMat)syncBuilds();const bm=new T.Mesh(new T.BoxGeometry(1,1,1),bldMat.wall);warm.add(bm)}catch(e){console.warn('aquecimento',e)}
+    for(let i=0;i<GUNS.length;i++){const g=Guns3D.instance(i);if(g)warm.add(g)}const fw=FX3D.warm();if(fw)warm.add(fw);if(!dust)dustInit();warm.add(dust.im);if(!bldMat)syncBuilds();const bm=new T.Mesh(new T.BoxGeometry(1,1,1),bldMat.wall);warm.add(bm)}catch(e){console.warn('aquecimento',e)}
   c.scene.add(warm);setCam(camera,W/2,H/2,1200,800);camera.layers.enableAll();
   const done=()=>{if(dust&&dust.im.parent===warm)warm.remove(dust.im);c.scene.remove(warm);compiling=false;loading(false);c.warm=1;capyWarm=capyReady()?1:capyWarm};
   (R.compileAsync&&R.extensions.has('KHR_parallel_shader_compile')?R.compileAsync(c.scene,camera):new Promise(r=>setTimeout(()=>{R.compile(c.scene,camera);r()},30))).then(done,e=>{console.warn('compileAsync',e);done()})}
@@ -598,7 +599,8 @@ function render(M,camX,camY,VW,VH,t,lights,acts){if(!ensure(M))return false;cons
   if(compiling){skipNext=true;return false}watch(rawDt);
   gameCv=gameCv||$('game');const W0=gameCv.width,H0=gameCv.height,sc=Math.min(1,Math.sqrt((PXB[c.q.key]||1.2e6)*autoS/(W0*H0))),w=Math.max(2,Math.round(W0*sc)),h=Math.max(2,Math.round(H0*sc));
   // modo "duas camadas" (paredes altas meio transparentes por cima dos textos 2D) só no PC em Alta/Caótica; no resto, uma camada só (bem mais leve)
-  const split=!isTouch&&(c.q.key==='high'||c.q.key==='chaos');document.body.classList.toggle('g3single',!split);const gm=gameCv;if(split?glCv.nextSibling===gm:glCv.nextSibling!==gm)gm.parentNode.insertBefore(glCv,split?gm.nextSibling:gm);
+  const split=false; // camada única sempre: copiar o WebGL para um canvas 2D a cada quadro custava caro (era a causa de engasgos no Mac)
+  document.body.classList.toggle('g3single',!split);const gm=gameCv;if(split?glCv.nextSibling===gm:glCv.nextSibling!==gm)gm.parentNode.insertBefore(glCv,split?gm.nextSibling:gm);
   if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false);if(split){bCv.width=w;bCv.height=h}}
   if(split&&bCv.width!==w){bCv.width=w;bCv.height=h}
   sharedCapyMats();OU.uRes.value.set(w,h);OU.uOW.value=Math.max(1.2,h*.0026);
@@ -627,17 +629,25 @@ function render(M,camX,camY,VW,VH,t,lights,acts){if(!ensure(M))return false;cons
   // 2) só o que fica na frente de quem está atrás (camada de cima, levemente transparente)
     camera.layers.set(1);U.uClipOn.value=1;R.setClearColor(0x000000,0);R.render(c.scene,camera)}
   // 3) silhueta de quem está escondido atrás de parede (estilo Brawl Stars): só onde a parede da frente cobre
-  if(actG&&actG.parent&&c.q.key!=='low'){camera.layers.set(2);R.autoClear=false;R.render(c.scene,camera);R.autoClear=true}
+  //    (o buffer de profundidade é refeito só com as paredes: assim a capivara não fica com "manchas" quando um pedaço dela tapa outro)
+  if(actG&&actG.parent&&c.q.key!=='low'){R.autoClear=false;R.clearDepth();camera.layers.set(1);U.uClipOn.value=0;if(!depthOnly)depthOnly=new T.MeshBasicMaterial({colorWrite:false});
+    c.scene.overrideMaterial=depthOnly;R.render(c.scene,camera);c.scene.overrideMaterial=null;camera.layers.set(2);R.render(c.scene,camera);R.autoClear=true}
   U.uClipOn.value=0;return true}
 function idle(){document.body.classList.remove('g3don','g3menu')}
 
 // ---------- Ícones 3D das armas (Arsenal, HUD, cartas): renderizados uma vez e guardados ----------
 const iconCache=new Map();let iconRT=null,iconScene=null,iconCam=null;
-function gunIcon(gi,w,h){const key=gi+'_'+w+'x'+h;if(iconCache.has(key))return iconCache.get(key);if(st==='idle')load();if(st!=='ready')return null;if(!R&&!initR())return null;
+// cada arma é renderizada UMA vez em tamanho grande (GI_W x GI_H); os outros tamanhos são só cópias reduzidas (barato).
+// Isso tira do meio da partida o render + leitura de pixels que travava um quadro ao trocar de arma.
+const GI_W=440,GI_H=280,iconBig=new Map();
+function gunIcon(gi,w,h){const key=gi+'_'+w+'x'+h;if(iconCache.has(key))return iconCache.get(key);const big=gunIconBig(gi);if(!big)return null;
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;const s=Math.min(w/GI_W,h/GI_H),dw=GI_W*s,dh=GI_H*s;const x=cv.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(big,(w-dw)/2,(h-dh)/2,dw,dh);iconCache.set(key,cv);return cv}
+function gunIconBig(gi){if(iconBig.has(gi))return iconBig.get(gi);const cv=gunIconRender(gi,GI_W,GI_H);if(cv)iconBig.set(gi,cv);return cv}
+function gunIconRender(gi,w,h){if(st==='idle')load();if(st!=='ready')return null;if(!R&&!initR())return null;
   const src=Guns3D.instance(gi);if(!src)return null;
   if(!iconScene){iconScene=new T.Scene();iconScene.add(new T.HemisphereLight('#FFFFFF','#6A5A9A',1.35));const d=new T.DirectionalLight('#FFFFFF',2.3);d.position.set(.35,1,.9);iconScene.add(d);const f=new T.DirectionalLight('#C9D8FF',.6);f.position.set(-1,.2,-.4);iconScene.add(f);
     iconCam=new T.OrthographicCamera(-1,1,1,-1,-1000,1000)}
-  const S2=2,W2=w*S2,H2=h*S2;if(!iconRT||iconRT.width!==W2||iconRT.height!==H2){if(iconRT)iconRT.dispose();iconRT=new T.WebGLRenderTarget(W2,H2,{samples:4})}
+  const S2=1,W2=w*S2,H2=h*S2;if(!iconRT||iconRT.width!==W2||iconRT.height!==H2){if(iconRT)iconRT.dispose();iconRT=new T.WebGLRenderTarget(W2,H2,{samples:4})}
   const holder=new T.Group();holder.add(src);holder.rotation.set(.18,-.42,0);iconScene.add(holder);holder.updateMatrixWorld(true);
   const bb=new T.Box3().setFromObject(holder),c=bb.getCenter(new T.Vector3()),sz=bb.getSize(new T.Vector3()),asp=w/h,m=Math.max(sz.x/asp,sz.y)*.58;
   iconCam.left=-m*asp;iconCam.right=m*asp;iconCam.top=m;iconCam.bottom=-m;iconCam.position.set(c.x,c.y,c.z+500);iconCam.lookAt(c);iconCam.updateProjectionMatrix();
@@ -645,7 +655,7 @@ function gunIcon(gi,w,h){const key=gi+'_'+w+'x'+h;if(iconCache.has(key))return i
   R.setRenderTarget(iconRT);R.setClearColor(0x000000,0);R.clear();R.render(iconScene,iconCam);
   const out=readRT(iconRT,W2,H2);
   R.setRenderTarget(ort);R.setClearColor(oc,oa);[U.uClipOn.value,U.uDark.value]=keep;iconScene.remove(holder);
-  const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(out,0,0,w,h);iconCache.set(key,cv);return cv}
+  return out}
 let LUT=null;
 function readRT(rt,w,h){const px=new Uint8Array(w*h*4);R.readRenderTargetPixels(rt,0,0,w,h,px);const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d'),im=c.createImageData(w,h);
   for(let y=0;y<h;y++){const src=(h-1-y)*w*4;for(let x=0;x<w*4;x++){im.data[y*w*4+x]=px[src+x]}}
@@ -687,7 +697,7 @@ function capyBodyMat(a,hex){const m=new T.MeshStandardMaterial({map:CapyRig.map,
   m.userData.fur={value:furVec(hex||capyFurHex(a.look,a.bot))};
   if(!FLATC){const fa=(CapyRig.extras&&CapyRig.extras.furAvg)||'#c3835c';FLATC={value:new T.Color(fa)}}
   return patch(m,{key:'capy',uni:mm=>({uFur:mm.userData.fur,uFlat:FLATC}),vd:'attribute float aFlat;varying float vFlat;\n',v:'vFlat=aFlat;',fd:'uniform vec3 uFur;uniform vec3 uFlat;varying float vFlat;\nvec3 furC(vec3 t){return mix(t,uFlat,clamp(vFlat,0.,1.))*(1.-.68*clamp(vFlat-1.,0.,1.))*uFur;}',fr:[FURF,FURE]})}
-let FLATC=null;
+let FLATC=null,depthOnly=null;
 function newActor(a){const m=sharedCapyMats(),body=capyBodyMat(a);
   const q=Q(),A=CapyRig.make({body,outline:q.key==='low'?null:m.out,xray:q.key==='low'?null:xray(a.xc),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},CAPY_H/CapyRig.MH);
   A.body.castShadow=q.key==='high'||q.key==='chaos'||(!isTouch&&q.key==='medium'); A.bot=a.bot;A.lookKey=a.bot?'bot':(a.look&&a.look.body);A.xc=a.xc;A.mat=body; // no celular em Média a sombra 3D da capivara sai (fica a sombrinha redonda)
@@ -835,6 +845,10 @@ function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!
   const m4=new T.Matrix4();MN.spD.forEach((p,i)=>{const hh=(p.h+ts*12)%170;m4.makeScale(p.s*(.6+.4*Math.sin(ts*2+p.ph)),p.s,p.s).setPosition(p.x+Math.sin(ts*.5+p.ph)*20,hh,p.z);MN.sp.setMatrixAt(i,m4)});MN.sp.instanceMatrix.needsUpdate=true;
   camera&&camera.layers.set(0);cam.layers.set(0);if(MN.clear)R.setClearColor(MN.clear,1);else R.setClearColor(0x000000,0);R.shadowMap.needsUpdate=!isTouch||(++frameN%3===0);R.render(MN.sc,cam);menuOk=true;return true}
 function preload(M){try{return ensure(M)&&!compiling&&!!(cur&&cur.warm)&&(!capyReady()||capyWarm)}catch(e){return false}}
+// aquecimento em segundo plano (menus e tela de carregamento): monta as 67 armas e os ícones aos poucos, sem travar
+let pwI=0,pwJ=0;
+function prewarm(ms){if(st!=='ready'||!R||lost||compiling)return true;const t0=performance.now();
+  while(performance.now()-t0<ms){if(pwI<GUNS.length){Guns3D.build(pwI++);continue}if(pwJ<GUNS.length){gunIconBig(pwJ++);continue}return true}return false}
 function menuSpin(dx){if(MN)MN.spin+=dx*.012}
 function menuPoke(){if(MN&&MN.A)CapyRig.poke(MN.A)}
 // retrato 3D da capivara (cabeça ou corpo todo), guardado por cor e tamanho — usado no HUD, nos menus e no pódio
@@ -857,5 +871,5 @@ function kit(){if(!T)T=window.THREE;if(!U)U={uTime:{value:0},uClipOn:{value:0},u
   return{makeBuilder,lib,patch,U,mats(){if(!gunMats){const q={lam:false};gunMats={std:stdMat(q,{std:{roughness:.55,metalness:.12}},{key:'gun'}),emit:basicMat({},{dm:.1,key:'gunE'}),
     glass:stdMat(q,{std:{roughness:.15,metalness:.1,transparent:true,opacity:.7}},{key:'gunG'})};gunMats.emit.userData.nocast=true;gunMats.glass.userData.nocast=true}return gunMats}}}
 function stats(){if(!R||!cur)return null;let tris=0,meshes=0;cur.scene.traverse(o=>{if(o.isMesh){meshes++;const g=o.geometry;tris+=(g.index?g.index.count:g.attributes.position.count)/3}});
-  return{map:curKey,buildMs,meshes,tris:Math.round(tris),calls:R.info.render.calls,frameTris:R.info.render.triangles,textures:R.info.memory.textures,geometries:R.info.memory.geometries,dust:dust?dust.list.length:0,dustMax:dustMax}}
-return{on,render,idle,stats,capysOn,fail,kit,gunIcon,menu,menuSpin,menuPoke,capyIcon,preload,FUR0,MBG,get menuOk(){return menuOk},get perf(){return{autoS,shadowEvery,emaDt:Math.round(emaDt)}},get compiling(){return compiling},get ok(){return st==='ready'&&!lost},K,SQ:SQ3,FEET,NAMEOFF:K*CAPY_H+22}})();
+  return{progs:(R.info.programs||[]).map(p=>p.name+':'+p.cacheKey.slice(0,40)),map:curKey,buildMs,meshes,tris:Math.round(tris),calls:R.info.render.calls,frameTris:R.info.render.triangles,textures:R.info.memory.textures,geometries:R.info.memory.geometries,dust:dust?dust.list.length:0,dustMax:dustMax}}
+return{on,render,idle,stats,capysOn,fail,kit,gunIcon,prewarm,menu,menuSpin,menuPoke,capyIcon,preload,FUR0,MBG,get menuOk(){return menuOk},get perf(){return{autoS,shadowEvery,emaDt:Math.round(emaDt)}},get compiling(){return compiling},get ok(){return st==='ready'&&!lost},K,SQ:SQ3,FEET,NAMEOFF:K*CAPY_H+22}})();

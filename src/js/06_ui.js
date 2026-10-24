@@ -1,4 +1,5 @@
 // ===== Interface: telas, personalização, HUD, overlays e controles =====
+const ASSETV='52'; // muda a cada versão: força o navegador a baixar as imagens de novo (evita cópia antiga quebrada no cache)
 const I=(n,c='')=>`<svg class="i ${c}"><use href="#i-${n}"/></svg>`;
 let myLook=cleanLook(store.get('look',defaultLook(1)));
 const myNick=()=>safe($('nick').value||store.get('nick','')||pick(NICKS));
@@ -136,8 +137,8 @@ $('btnSaveLook').onclick=()=>{Sound.play('level');toast('Visual salvo: '+furName
 const BGS=[['lagoa','Lagoa Roxa','water'],['azul','Lagoa Azul','water'],['rosa','Lagoa Rosa','water'],['esmeralda','Lagoa Esmeralda','water'],['noite','Lagoa da Noite','water'],['sol','Pôr do Sol','water'],
   ['vangogh','A Capivara Estrelada','img'],['criacao','A Criação da Capivara','img'],['perola','Capivara com Brinco de Pérola','img'],['monalisa','Mona Capy','img']];
 const ART={vangogh:'A Capivara Estrelada',criacao:'A Criação da Capivara',perola:'Capivara com Brinco de Pérola',monalisa:'Mona Capy'};
-function applyMenuBg(){const k=menuBgKey(),b=BGS.find(x=>x[0]===k);const el=$('menuBg');if(b&&b[2]==='img'){el.style.backgroundImage=`url(loading/${k}.jpg)`;el.classList.add('on')}else{el.classList.remove('on')}}
-function renderBgs(){const k=menuBgKey(),g=$('bgGrid');g.innerHTML=BGS.map(([id,n,t])=>{const c=Map3D.MBG[id];const st=t==='img'?`background-image:url(loading/${id}_p.jpg)`:`background:radial-gradient(ellipse at 50% 60%,${c[0]},${c[1]} 70%,${c[3]})`;
+function applyMenuBg(){const k=menuBgKey(),b=BGS.find(x=>x[0]===k);const el=$('menuBg');if(b&&b[2]==='img'){el.style.backgroundImage=`url(loading/${k}.jpg?v=${ASSETV})`;el.classList.add('on')}else{el.classList.remove('on')}}
+function renderBgs(){const k=menuBgKey(),g=$('bgGrid');g.innerHTML=BGS.map(([id,n,t])=>{const c=Map3D.MBG[id];const st=t==='img'?`background-image:url(loading/${id}_p.jpg?v=${ASSETV})`:`background:radial-gradient(ellipse at 50% 60%,${c[0]},${c[1]} 70%,${c[3]})`;
     return `<button class="m-bg${id===k?' on':''}" data-bg="${id}"><span class="m-bgpv" style="${st}">${t==='water'?'<i></i>':''}</span><b>${n}</b><small>${t==='img'?'Quadro':id==='lagoa'?'Com vitórias-régias':'Água'}</small></button>`}).join('');
   g.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{curBg=b.dataset.bg;store.set('menubg',curBg);Sound.play('pop');applyMenuBg();renderBgs();Map3D.menuPoke()});$('bgName').textContent=(BGS.find(x=>x[0]===k)||BGS[0])[1]}
 applyMenuBg();
@@ -492,7 +493,7 @@ const TIPS=['O dash atravessa a confusão: use para fugir de granadas.','Kits m�
 const LOADART=['vangogh','criacao','perola','monalisa'];
 let mlBusy=false,mlIdx=-1,mlFront=0,mlTimer=0,mlTipT=0;
 function mlNextImg(){let i;do{i=Math.floor(Math.random()*LOADART.length)}while(i===mlIdx&&LOADART.length>1);mlIdx=i;const k=LOADART[i],a=$('mlA'),b=$('mlB'),on=mlFront?a:b,off=mlFront?b:a;mlFront^=1;
-  on.onload=()=>{on.classList.remove('on');void on.offsetWidth;on.classList.add('on');off.classList.remove('on')};const url=`loading/${k}.jpg`;if(on.getAttribute('src')===url&&on.complete)on.onload();else on.src=url;$('mlArt').textContent=ART[k]}
+  on.onload=()=>{on.classList.remove('on');void on.offsetWidth;on.classList.add('on');off.classList.remove('on')};const url=`loading/${k}.jpg?v=${ASSETV}`;if(on.getAttribute('src')===url&&on.complete)on.onload();else on.src=url;$('mlArt').textContent=ART[k]}
 function mlTip(){const p=$('mlTip');p.classList.remove('in');void p.offsetWidth;p.textContent=pick(TIPS);p.classList.add('in')}
 function setLoadPct(p){p=clamp(p,0,1);$('mlPct').textContent=Math.round(p*100)+'%';$('mlFillRect').setAttribute('y',String(100-100*p))}
 function showLoad(kind){const md=modeById(cfg.mode),mp=mapById(cfg.map);$('mlKind').textContent=kind==='online'?'ONLINE':'CONTRA BOTS';$('mlTitle').textContent=md.n.toUpperCase();$('mlMap').textContent=mp.n+(kind==='online'?'':' • '+cfg.bots+' bots');
@@ -501,7 +502,7 @@ function showLoad(kind){const md=modeById(cfg.mode),mp=mapById(cfg.map);$('mlKin
 function hideLoad(){const el=$('mload');if(el.classList.contains('hidden'))return;setLoadPct(1);el.classList.add('out');clearInterval(mlTimer);clearInterval(mlTipT);setTimeout(()=>{el.classList.add('hidden');el.classList.remove('out');if(!bootOn)document.body.classList.remove('bootact')},450)}
 // partida contra bots: pelo menos 5 s de carregamento; o mapa 3D é montado e os shaders compilados por trás
 function matchLoad(kind){if(mlBusy)return;mlBusy=true;showLoad(kind);const t0=performance.now(),M0=mapById(cfg.map);let started0=false;
-  const step=()=>{const el=performance.now()-t0;let ready=false;try{ready=Map3D.preload(M0)}catch(e){}setLoadPct(Math.min(el/5000,ready?1:.95));
+  const step=()=>{const el=performance.now()-t0;let ready=false;try{const pw=Map3D.prewarm(12);if(pw)iconPrewarm();ready=Map3D.preload(M0)&&pw}catch(e){}setLoadPct(Math.min(el/5000,ready?1:.95));
     if(!started0&&((el>=5000&&ready)||el>25000)){started0=true;stopDemo();startBots();setTimeout(()=>{hideLoad();mlBusy=false},500);return}
     requestAnimationFrame(step)};requestAnimationFrame(step)}
 // abertura: tela roxa, logo do estúdio com animação cômica e o jogo carregando por trás
