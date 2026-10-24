@@ -30,17 +30,19 @@ TAIL,TA=find_tail(P,IDX.reshape(-1,3))
 # o rabo sai de verdade (os triângulos dele são apagados) e o chapéu vira uma peça separada (item equipável)
 F=IDX.reshape(-1,3);F=F[~TAIL[F].any(1)]
 HATY=.855
-hatF=F[(P[F][:,:,1]>HATY).all(1)];F=F[~(P[F][:,:,1]>HATY).all(1)]
+hatF=F[(P[F][:,:,1]>HATY).all(1)];hatF=hatF[P[hatF][:,:,1].min(1)>.863]   # sem as franjas soltas penduradas embaixo da aba
+F=F[~(P[F][:,:,1]>HATY).all(1)]
 hv=np.unique(hatF.reshape(-1));remap=np.full(len(P),-1);remap[hv]=np.arange(len(hv))+len(P)
-P=np.vstack([P,P[hv]+np.array([0,.048,-.004],np.float32)]);N=np.vstack([N,N[hv]]);UV=np.vstack([UV,UV[hv]]);TAIL=np.append(TAIL,np.zeros(len(hv),bool));hatF=remap[hatF]
-print('chapéu separado:',len(hatF),'triângulos (erguido para assentar na cabeça redonda)')
+LIFT=float(os.environ.get('LIFT','.012'));CUT=float(os.environ.get('CUT','.83'));BUL=float(os.environ.get('BUL','.62'))
+P=np.vstack([P,P[hv]+np.array([0,LIFT,0],np.float32)]);N=np.vstack([N,N[hv]]);UV=np.vstack([UV,UV[hv]]);TAIL=np.append(TAIL,np.zeros(len(hv),bool));hatF=remap[hatF]
+print('chapéu separado:',len(hatF),'triângulos')
 # o alto da cabeça tinha sido moldado para caber no chapéu (paredes retas): sai tudo acima de y=.80 e entra uma cúpula redonda
-F=F[~(P[F][:,:,1]>.80).all(1)]
+F=F[~(P[F][:,:,1]>CUT).all(1)]
 def wkey(P):
   k=np.round(P*3000).astype(np.int64);_,w=np.unique(k,axis=0,return_inverse=True);return w.reshape(-1)
 # tampa buracos com uma cúpula arredondada (anéis que fecham em direção ao centro, estufando para fora)
 CAPS=[]
-def cap_loops(F,P,N,UV,want,bulge,uvfix):
+def cap_loops(F,P,N,UV,want,bulge,uvfix,R=4):
   W_=wkey(P);ec={};
   for f in F:
     for a_,b_ in ((f[0],f[1]),(f[1],f[2]),(f[2],f[0])):
@@ -62,7 +64,6 @@ def cap_loops(F,P,N,UV,want,bulge,uvfix):
     # cópias da borda com a UV do pelo (senão a textura "rasga" atravessando o atlas inteiro)
     prev=[]
     for i in ring:prev.append(len(P));P.append(P[i].copy());N.append(N[i].copy());UV.append(uvfix)
-    R=4
     for j in range(1,R+1):
       f=j/(R+1);cur=[]
       for i in ring:
@@ -79,28 +80,10 @@ def cap_loops(F,P,N,UV,want,bulge,uvfix):
 FURUV=UV[np.argmin(np.linalg.norm(P-np.array([0,.6,-.21]),axis=1))].copy()   # meio das costas: pelo liso, longe das bordas da textura
 n0=len(P)
 F,P,N,UV=cap_loops(F,P,N,UV,lambda c,pts:c[1]<.4,.55,FURUV)                     # bumbum (onde era o rabo): bem redondinho
-F,P,N,UV=cap_loops(F,P,N,UV,lambda c,pts:c[1]>.7,.62,FURUV)                     # topo da cabeça: cúpula redondinha
+F,P,N,UV=cap_loops(F,P,N,UV,lambda c,pts:c[1]>.7,BUL,FURUV,R=9)                 # topo da cabeça: cúpula redondinha
 # a faixa logo abaixo do corte tinha a sombra da aba pintada na textura: vira pelo liso
-bv=np.unique(F.reshape(-1));top=bv[P[bv,1]>.805];UV[top]=FURUV
-# orelhinhas novas (as antigas ficavam escondidas no chapéu): elipsoides pequenos no alto da cabeça
-def ear(cx,cy,cz,rx,ry,rz,tilt):
-  global P,N,UV,F
-  g=[];n=[];nlat,nlon=6,10;base=len(P)
-  for i in range(nlat+1):
-    th=np.pi*i/nlat
-    for j in range(nlon):
-      ph=2*np.pi*j/nlon;v=np.array([np.sin(th)*np.cos(ph),np.cos(th),np.sin(th)*np.sin(ph)])
-      q=v*np.array([rx,ry,rz]);c_,s_=np.cos(tilt),np.sin(tilt);q=np.array([q[0]*c_-q[1]*s_,q[0]*s_+q[1]*c_,q[2]])
-      nn=v/np.array([rx,ry,rz]);nn=np.array([nn[0]*c_-nn[1]*s_,nn[0]*s_+nn[1]*c_,nn[2]]);nn/=np.linalg.norm(nn)
-      g.append(q+np.array([cx,cy,cz]));n.append(nn)
-  f=[]
-  for i in range(nlat):
-    for j in range(nlon):
-      a0=base+i*nlon+j;b0=base+i*nlon+(j+1)%nlon;a1=a0+nlon;b1=b0+nlon;f+=[(a0,a1,b0),(b0,a1,b1)]
-  P=np.vstack([P,np.array(g,np.float32)]);N=np.vstack([N,np.array(n,np.float32)]);UV=np.vstack([UV,np.tile(FURUV,(len(g),1)).astype(np.float32)]);F=np.vstack([F,np.array(f)])
-topy=P[np.unique(F.reshape(-1)),1].max()
-for sgn in (1,-1):ear(sgn*.168,topy-.075,-.04,.04,.048,.027,sgn*-.6)
-TAIL=np.append(TAIL,np.zeros(len(P)-len(TAIL),bool));IDX=F.reshape(-1).astype(np.uint32)
+bv=np.unique(F.reshape(-1));top=bv[P[bv,1]>CUT-.025];UV[top]=FURUV
+topy=P[np.unique(F.reshape(-1)),1].max();TAIL=np.append(TAIL,np.zeros(len(P)-len(TAIL),bool));IDX=F.reshape(-1).astype(np.uint32)
 print('topo da cabeça em y=',round(float(topy),3))
 capC,capR=CAPS[0] if CAPS else (np.array([0,9,9]),.01)
 TAIL=np.append(TAIL,np.zeros(len(P)-len(TAIL),bool))
@@ -115,18 +98,45 @@ free=(used&~hatw)[:,None]*1.0
 for it in range(12):
   for lam in (.5,-.53):
     acc=np.zeros_like(Wp);np.add.at(acc,E[:,0],Wp[E[:,1]]);Wp=Wp+lam*free*(acc/np.maximum(deg,1)-Wp)
+# orelhinhas que nascem da própria cabeça (a malha é puxada para fora: o contorno passa por elas) e o popozinho (duas bochechas no bumbum)
+def vnorm(Wp):
+  a_,b_,c_=Wp[T3[:,0]],Wp[T3[:,1]],Wp[T3[:,2]];fn=np.cross(b_-a_,c_-a_);vn=np.zeros((nw,3))
+  for k in range(3):np.add.at(vn,T3[:,k],fn)
+  return vn/(np.linalg.norm(vn,axis=1,keepdims=True)+1e-12)
+VN=vnorm(Wp);EARW=np.zeros(nw)
+body=used&~hatw
+for sgn in (1,-1):
+  tgt=np.array([sgn*.15,topy,-.035]);cand=np.where(body&(Wp[:,1]>CUT-.02))[0];B0=Wp[cand[np.argmin(np.linalg.norm(Wp[cand]-tgt*np.array([1,1,1])-np.array([0,0,0]),axis=1)+np.abs(Wp[cand,0]-sgn*.15)*2)]]
+  D=VN[cand[np.argmin(np.linalg.norm(Wp[cand]-B0,axis=1))]]+np.array([sgn*.35,1.1,-.15]);D/=np.linalg.norm(D)
+  dd=np.linalg.norm(Wp-B0,axis=1);r=.046;k=np.clip(1-(dd/r)**2,0,1)*body
+  prof=np.sqrt(k);Wp=Wp+(prof*.052)[:,None]*D[None,:];EARW=np.maximum(EARW,prof)
+for sgn in (1,-1):
+  C=capC+np.array([sgn*.075,-.005,.0]);dd=np.linalg.norm((Wp-C)*np.array([1,.85,1.6]),axis=1);k=np.exp(-(dd/.075)**2)*body*(VN[:,2]<0)
+  Wp=Wp+(k*.055)[:,None]*VN
+crease=np.exp(-(Wp[:,0]/.012)**2)*np.exp(-((Wp[:,1]-capC[1]+.01)/.06)**2)*body*(VN[:,2]<-.3)
+Wp=Wp-(crease*.012)[:,None]*VN
 P=Wp[WID].astype(np.float32)
+# o chapéu assenta na cabeça: sobe só o necessário para a aba encostar no ombro da cúpula (sem afundar e sem flutuar)
+hv=np.unique(hatF.reshape(-1));HP=P[hv];ctr=HP[HP[:,1]>HP[:,1].max()-.02][:,[0,2]].mean(0)
+rad=np.linalg.norm(HP[:,[0,2]]-ctr,axis=1);brim=HP[rad>.16]
+bw=np.unique(T3.reshape(-1));bw=bw[body[bw]&(Wp[bw,1]>CUT-.05)&(EARW[bw]<.01)];need=0.
+for q in brim:
+  dxz=np.linalg.norm(Wp[bw][:,[0,2]]-q[[0,2]],axis=1);m=dxz<.012
+  if m.any():need=max(need,Wp[bw][m,1].max()+.006-q[1])
+P[hv,1]+=need;print('chapéu assentado: +%.3f'%need)
 # normais lisas recalculadas no corpo (o chapéu mantém as dele, com as quinas da aba)
 a_,b_,c_=Wp[T3[:,0]],Wp[T3[:,1]],Wp[T3[:,2]];fn=np.cross(b_-a_,c_-a_);vn=np.zeros((nw,3))
 for k in range(3):np.add.at(vn,T3[:,k],fn)
 vn/=np.linalg.norm(vn,axis=1,keepdims=True)+1e-12;isHat=np.zeros(len(P),bool);isHat[HIDX]=True
-N=np.where(isHat[:,None],N,vn[WID]).astype(np.float32)
+N=np.where(isHat[:,None],N,vnorm(Wp)[WID]).astype(np.float32)
 # "pelo liso" no alto da cabeça e no bumbum (onde não há textura): a cor média do pelo, misturada aos poucos com a textura (sem emenda)
 FLAT=np.zeros(len(P),np.float32);FLAT[n0:]=1;FLAT[isHat]=0
 def ss_(a,b,v):t=np.clip((v-a)/(b-a),0,1);return t*t*(3-2*t)
-band=ss_(.772,.8,P[:,1])*(1-((P[:,2]>.1)&(np.abs(P[:,0])>.12)&(np.abs(P[:,0])<.23)&(P[:,1]<.798)))
+band=ss_(CUT-.058,CUT-.03,P[:,1])*(1-((P[:,2]>.1)&(np.abs(P[:,0])>.12)&(np.abs(P[:,0])<.23)&(P[:,1]<CUT-.032)))
 tb=np.linalg.norm(P-capC,axis=1);band2=ss_(capR*1.9,capR*1.05,tb)
 FLAT[:n0]=np.maximum(band[:n0],band2[:n0])
+# parte de dentro da orelha (virada para a frente) mais escurinha: valores acima de 1 escurecem no shader
+EV=EARW[WID];inner=ss_(.3,.7,EV)*ss_(-.15,.35,N[:,2]);FLAT=np.where(EV>.02,np.maximum(FLAT,1+inner*.9),FLAT)
 print('rabo removido:',int(TAIL.sum()),'vértices')
 x,y,z=P[:,0],P[:,1],P[:,2];ax=np.abs(x);sx=np.where(x>=0,1,-1)
 def ss(a,b,v):t=np.clip((v-a)/(b-a),0,1);return t*t*(3-2*t)

@@ -686,7 +686,7 @@ const FURF=['#include <map_fragment>','#include <map_fragment>\ndiffuseColor.rgb
 function capyBodyMat(a,hex){const m=new T.MeshStandardMaterial({map:CapyRig.map,normalMap:CapyRig.nrm,normalScale:new T.Vector2(.8,.8),roughness:.78,metalness:0,emissiveMap:CapyRig.map,emissive:new T.Color(.5,.5,.5)});
   m.userData.fur={value:furVec(hex||capyFurHex(a.look,a.bot))};
   if(!FLATC){const fa=(CapyRig.extras&&CapyRig.extras.furAvg)||'#c3835c';FLATC={value:new T.Color(fa)}}
-  return patch(m,{key:'capy',uni:mm=>({uFur:mm.userData.fur,uFlat:FLATC}),vd:'attribute float aFlat;varying float vFlat;\n',v:'vFlat=aFlat;',fd:'uniform vec3 uFur;uniform vec3 uFlat;varying float vFlat;\nvec3 furC(vec3 t){return mix(t,uFlat,clamp(vFlat,0.,1.))*uFur;}',fr:[FURF,FURE]})}
+  return patch(m,{key:'capy',uni:mm=>({uFur:mm.userData.fur,uFlat:FLATC}),vd:'attribute float aFlat;varying float vFlat;\n',v:'vFlat=aFlat;',fd:'uniform vec3 uFur;uniform vec3 uFlat;varying float vFlat;\nvec3 furC(vec3 t){return mix(t,uFlat,clamp(vFlat,0.,1.))*(1.-.68*clamp(vFlat-1.,0.,1.))*uFur;}',fr:[FURF,FURE]})}
 let FLATC=null;
 function newActor(a){const m=sharedCapyMats(),body=capyBodyMat(a);
   const q=Q(),A=CapyRig.make({body,outline:q.key==='low'?null:m.out,xray:q.key==='low'?null:xray(a.xc),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},CAPY_H/CapyRig.MH);
