@@ -47,7 +47,56 @@ function make(mats,scale){const d=data,g=new T.Group(),bs=d.bones.map(b=>{const 
     const sh=new T.Mesh(new T.SphereGeometry(.011,8,6),mats.shine);sh.position.set(e.x+s*.004,e.y+.012,e.z+.02);head.add(sh);eyes.push(sh);
     const lid=new T.Mesh(new T.SphereGeometry(.03,10,8),mats.lid);lid.position.set(e.x+s*.004,e.y+.004,e.z+.008);lid.visible=false;head.add(lid);lids.push(lid);
     const ck=new T.Mesh(new T.CircleGeometry(.03,12),mats.blush);ck.position.set(s*.135,.125,.175);ck.rotation.set(-.1,s*.7,0);head.add(ck)}}
-  return{sc:scale,g,inner,B,skel,body,outline,xray,hat,setHat(on){for(const m of hat)m.visible=!!on},eyes,lids,ev:[],st:{ph:0,mv:0,dash:0,yaw:0,look:0,lookT:0,lookAt:0,tilt:0,gag:0,gagK:'',gagT:1.5+Math.random()*2.5,blink:3,bl:0,rec:0,hurt:0,lx:null,ly:null,idle:0,spd:0,lean:0,lastS:0,hatLag:0,hatV:0,wasDash:0,air:0}}}
+  // olhos 3D (modelo de chapéu): por cima dos olhinhos fechados pintados na textura. Abrem, piscam, mudam de expressão e podem ser personalizados.
+  let E3=null;if(d.extras.eyes===false&&B.head&&mats.eye)E3=makeEyes(B.head,mats.eye,mats.brow);
+  return{sc:scale,g,inner,B,skel,body,outline,xray,hat,setHat(on){for(const m of hat)m.visible=!!on},eyes,lids,E3,ev:[],st:{ph:0,mv:0,dash:0,yaw:0,look:0,lookT:0,lookAt:0,tilt:0,gag:0,gagK:'',gagT:1.5+Math.random()*2.5,blink:3,bl:0,rec:0,hurt:0,lx:null,ly:null,idle:0,spd:0,lean:0,lastS:0,hatLag:0,hatV:0,wasDash:0,air:0}}}
+
+// ---------- Olhos 3D ----------
+// cada olho = meia-esfera achatada encaixada na cabeça; o shader (03_map3d.js, eyeMat) desenha esclera, íris, pupila, brilhos, pálpebras e contorno.
+// Sistema local do olho: x = para a frente (focinho), y = para cima, z = para fora da cabeça. O olho direito é espelhado (scale.x = -1), então x é "frente" nos dois.
+const EYEPOS=[[.136,.784,.212,.8,.36,.4],[-.138,.785,.214,-.8,.36,.4]],HEAD0=[0,.53,.06],ER=[.05,.041,.028];
+// tipos: [escala, íris, pupila, abertura base, nome]
+const EYET=[[1,.6,.55,1,'Redondo'],[1.22,.62,.5,1,'Grandão'],[1,.6,.55,.55,'Sonolento'],[1.1,.78,.42,1,'Brilhante'],[.62,.9,0,1,'Pontinho'],[1.05,.72,.9,1,'Gatinho']];
+const BROWT=['Nenhuma','Fina','Grossa','Arqueada','Brava'];
+// expressões: [abre, pálpebra de baixo, inclinação (raiva+ / triste-), sorriso, pupila, escala, sobrancelha sobe, sobrancelha gira, olhar p/ baixo, tonto, tremor]
+const EXPR={normal:[1,0,0,0,1,1,0,0,0,0,0],feliz:[.9,.15,0,.85,1,1,.12,.14,0,0,0],raiva:[.72,.18,.9,0,.8,1,-.16,-.5,0,0,0],medo:[1.15,0,-.45,0,.55,1.12,.3,.42,0,0,1],
+  surpreso:[1.2,0,0,0,.6,1.16,.4,0,0,0,0],triste:[.72,0,-.75,0,1,1,.05,.5,-.3,0,0],dor:[.1,.55,.6,0,1,.95,-.1,-.35,0,0,0],tonto:[1,0,0,0,1,1.05,.18,0,0,1,0],sono:[.28,0,0,0,1,1,-.04,0,-.2,0,0]};
+let BROWG=null,EYEG=null;
+function browGeos(){if(BROWG)return BROWG;const cap=(r,l)=>new T.CapsuleGeometry(r,l,3,8).rotateZ(Math.PI/2);
+  const arc=1.15,tor=new T.TorusGeometry(.05,.0055,5,14,arc).rotateZ(Math.PI/2-arc/2).translate(0,-.05,0);
+  return BROWG=[null,cap(.0042,.042),cap(.0085,.04),tor,cap(.008,.044)]}
+function makeEyes(head,mat,bmat){const up=new T.Vector3(0,1,0),fw=new T.Vector3(0,0,1),out=[];
+  for(const e of EYEPOS){const n=new T.Vector3(e[3],e[4],e[5]).normalize().add(new T.Vector3(0,.1,.45)).normalize();
+    const Y=up.clone().sub(n.clone().multiplyScalar(up.dot(n))).normalize(),X=new T.Vector3().crossVectors(Y,n);
+    const g=new T.Group();g.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(X,Y,n));if(X.dot(fw)<0)g.scale.x=-1;
+    g.position.set(e[0]-HEAD0[0],e[1]-HEAD0[1],e[2]-HEAD0[2]).addScaledVector(n,-ER[2]*.3);
+    const eye=new T.Mesh(EYEG||(EYEG=new T.SphereGeometry(1,20,12)),mat);eye.scale.set(ER[0],ER[1],ER[2]);g.add(eye);
+    const brow=new T.Mesh(browGeos()[1],bmat);brow.position.set(0,ER[1]*1.45,ER[2]*.05);brow.rotation.x=-.35;g.add(brow);
+    head.add(g);out.push({g,eye,brow})}
+  return{list:out,mat,cfg:null,ex:EXPR.normal.slice(),exK:'',exT:0,blink:2,bl:0,gx:0,gy:0,gT:0,gtx:0,gty:0,fireT:9}}
+// personalização: {t: tipo, b: sobrancelha, c: cor da íris}
+function setEyes(A,cfg){const E=A.E3;if(!E)return;cfg=cfg||{};const k=(cfg.t|0)+'|'+(cfg.b==null?1:cfg.b)+'|'+(cfg.c||'#6B3A1E');if(E.key===k)return;E.key=k;E.cfg=cfg;
+  const ty=EYET[cfg.t|0]||EYET[0],u=E.mat.userData.eu,bi=cfg.b==null?1:cfg.b;u.uE2.value.set(ty[1],ty[2],cfg.t|0,0);u.uIrisC.value.set(cfg.c||'#6B3A1E');
+  for(const o of E.list){o.eye.scale.set(ER[0]*ty[0],ER[1]*ty[0],ER[2]*ty[0]);const gg=browGeos()[bi];o.brow.visible=!!gg;if(gg)o.brow.geometry=gg;o.brow.userData.base=bi===4?-.4:0;o.brow.userData.lift=ER[1]*ty[0]*1.45}}
+function expr(A,k,dur){const E=A.E3;if(!E||!EXPR[k])return;E.exK=k;E.exT=dur||1.4}
+function eyesTick(A,s,dt,t){const E=A.E3,S=A.st;if(!E)return;const ty=EYET[(E.cfg&&E.cfg.t)|0]||EYET[0];
+  if(s.recoil)E.fireT=0;else E.fireT+=dt;
+  let k='normal';
+  if(s.icon){k=E.exT>0?E.exK:'normal'}
+  else if(E.exT>0){E.exT-=dt;k=E.exK}
+  else if(S.hurt>.25)k='dor';else if(s.frozen||s.dashing)k='surpreso';else if(s.kill)k='feliz';else if(s.low)k='medo';else if(E.fireT<.7&&!s.calm)k='raiva';
+  else if(S.gagK==='dance'||S.gagK==='hop')k='feliz';else if(S.gagK==='double')k='surpreso';else if(S.gagK==='stretch')k='sono';else if(S.gagK==='spin')k='tonto';
+  const tg=EXPR[k],ex=E.ex,kk=s.icon?1:Math.min(1,dt*14);for(let i=0;i<ex.length;i++)ex[i]+=(tg[i]-ex[i])*kk;
+  // piscar (também em dobro, de vez em quando) — não pisca de olho fechado
+  if(s.icon){E.bl=0;E.gtx=E.gty=0;E.gT=9}else if(!s.frozen){E.blink-=dt;if(E.blink<=0){E.bl=.15;E.blink=2.2+Math.random()*3.2;if(Math.random()<.18)E.blink=.22}}E.bl=Math.max(0,E.bl-dt);const bl=E.bl>0?Math.sin(E.bl/.15*Math.PI):0;
+  // olhar: acompanha a cabeça e dá umas olhadinhas rápidas para os lados
+  E.gT-=dt;if(E.gT<=0){E.gT=.6+Math.random()*1.8;E.gtx=(Math.random()-.5)*.5;E.gty=(Math.random()-.5)*.3}
+  const gx=E.gtx+(s.icon?0:S.lookAt*.35),gy=E.gty*.6+ex[8];const gk=s.icon?1:Math.min(1,dt*18);E.gx+=(gx-E.gx)*gk;E.gy+=(gy-E.gy)*gk;
+  const sh=ex[10]*Math.sin(t*70)*.035,u=E.mat.userData.eu;
+  u.uE1.value.set(Math.max(0,ex[0]*ty[3]+(ty[3]<1?Math.max(0,ex[0]-1)*.6:0))*(1-bl),ex[1],ex[2],ex[3]);
+  u.uE2.value.y=ty[2]*ex[4];u.uE2.value.w=ex[9];u.uGaze.value.set(E.gx*.5+sh,E.gy*.45);
+  for(const o of E.list){const sc=ex[5]*ty[0];o.eye.scale.set(ER[0]*sc,ER[1]*sc,ER[2]*sc);
+    o.brow.position.y=(o.brow.userData.lift||ER[1]*1.45)*(ex[5]>1?ex[5]:1)+ex[6]*.025+bl*-.004+(ex[9]?Math.sin(t*6)*.006:0);o.brow.rotation.z=(o.brow.userData.base||0)+ex[7]+(ex[9]?Math.sin(t*6)*.25:0)}}
 
 // ---------- Animação ----------
 // s: {dt,t, x,y (mundo), aim, frozen, recoil(0..1), swing(0..1), hurt(0..1), dashing, melee}
@@ -64,6 +113,7 @@ function animate(A,s){const S=A.st,B=A.B,dt=Math.min(s.dt,.05),t=s.t;
   if(dashing&&!S.wasDash)A.ev.push({k:'dash',f:1});S.wasDash=dashing;
   // vira para onde está mirando (rápido, com um pouquinho de atraso fofo)
   const want=Math.atan2(Math.cos(s.aim),Math.sin(s.aim));S.yaw=dampA(S.yaw,want,Math.min(1,dt*(fz?16:0)));A.g.rotation.y=S.yaw;
+  eyesTick(A,s,dt,t);
   if(!fz)return;
   const mv=S.mv,ds=S.dash,id=1-mv;
   // passada: cada passo é um pulinho (o corpo sobe entre os passos e amassa quando o pé bate no chão)
@@ -119,5 +169,6 @@ function animate(A,s){const S=A.st,B=A.B,dt=Math.min(s.dt,.05),t=s.t;
   let sy=1-contact*.1+air*.05-S.hurt*.14+(gHop?Math.sin(gHop/.9*Math.PI*2)*.07:0),sxz=1+contact*.07-air*.03+S.hurt*.08,st=1+ds*.08;
   A.inner.scale.set(A.sc*sxz/Math.sqrt(st),A.sc*sy,A.sc*sxz*st);
   A.inner.rotation.set(0,gSpin?gSpin*Math.PI*2:0,wad*.12)}
-function poke(A){const S=A.st;if(S.calmT!=null){if(S.calmK==null)S.calmK=0;return}S.idle=Math.max(S.idle,2);S.gagK='';S.gagT=0}
-return{load,make,animate,poke,get ready(){return st==='ready'},get state(){return st},get map(){return data&&data.map},get extras(){return data&&data.extras},get nrm(){return data&&data.nrm},MH}})();
+const POKEX=['feliz','surpreso','raiva','medo','tonto','triste'];let pokeI=0;
+function poke(A){const S=A.st;expr(A,POKEX[pokeI++%POKEX.length],1.8);if(S.calmT!=null){if(S.calmK==null)S.calmK=0;return}S.idle=Math.max(S.idle,2);S.gagK='';S.gagT=0}
+return{load,make,animate,poke,setEyes,expr,EYET,BROWT,EXPR,get ready(){return st==='ready'},get state(){return st},get map(){return data&&data.map},get extras(){return data&&data.extras},get nrm(){return data&&data.nrm},MH}})();

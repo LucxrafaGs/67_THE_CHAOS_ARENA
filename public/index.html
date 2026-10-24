@@ -1,7 +1,7 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest?v=2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=2">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1270,6 +1270,34 @@ body.mport .m-chal:not(.open) #chalList,body.mport .m-chal:not(.open) .m-chalfoo
 body.mport .m-chal.open{position:relative;z-index:5;box-shadow:0 10px 40px #000a}
 /* celular em pé: cartão da arma sobe para baixo do cartão de vida (não fica em cima do joystick) */
 @media (orientation:portrait){body.mobile #weaponCard{left:calc(10px + var(--sal,0px))!important;right:auto!important;top:calc(78px + var(--sat))!important;bottom:auto!important;transform:scale(.82)!important;transform-origin:left top!important}}
+/* abas com setinhas (PC) */
+.m-tabwrap{position:relative;flex:none;min-width:0;display:flex}.m-phead>.m-tabwrap{flex:1}
+.m-tabwrap>.m-tabs{flex:1}
+.m-tabarr{position:absolute;top:50%;z-index:3;width:30px;height:40px;margin-top:-20px;display:grid;place-items:center;border-radius:10px;border:2.5px solid var(--mdark);background:linear-gradient(#FFE15A,#F2B21C);color:#3A1A6A;cursor:pointer;box-shadow:0 3px 0 var(--mdark),0 0 14px 6px #24104Fcc;transition:opacity .15s,transform .1s}
+.m-tabarr .i{width:16px;height:16px}.m-tabarr.l{left:-2px}.m-tabarr.r{right:-2px}.m-tabarr.r .i{transform:rotate(180deg)}
+.m-tabarr:hover{filter:brightness(1.06)}.m-tabarr:active{transform:translateY(2px)}
+.m-tabarr.off{opacity:0;pointer-events:none}
+.m-tabwrap:not(.scr) .m-tabarr{display:none}
+body.mobile .m-tabarr{display:none}
+.m-tabwrap.drag .m-tabs{cursor:grabbing}.m-tabwrap.drag .m-tab{pointer-events:none}
+/* loja: experimentar */
+.m-sitem{cursor:pointer;transition:transform .1s,box-shadow .15s}.m-sitem:hover{transform:translateY(-2px)}
+.m-sitem.trying{border-color:#45D4FF;box-shadow:0 0 0 3px #45D4FF66,0 0 22px #45D4FF55}
+.m-tryb{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;background:#45D4FF;color:#0B1A3A;font:800 10px var(--font-ui);letter-spacing:1px;white-space:nowrap;z-index:2;box-shadow:0 2px 0 #0B1A3A}
+.m-tryb .i{width:13px;height:13px}
+/* olhos no Visual */
+#furGrid.eyes{display:block}
+.m-sech{font:400 16px var(--font-display);margin:10px 2px 6px;color:#FFC531;letter-spacing:.3px}.m-sech:first-child{margin-top:2px}
+.m-sech small{font:700 11px var(--font-ui);color:var(--cream);opacity:.7;letter-spacing:0}
+.m-subgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.m-swatches{display:flex;flex-wrap:wrap;gap:9px;padding:2px}
+.m-sw{width:40px;height:40px;border-radius:50%;border:3px solid #ffffff30;background:radial-gradient(circle at 50% 50%,#111 0 24%,var(--c) 26% 62%,#fff 64%);cursor:pointer;position:relative;transition:transform .1s}
+.m-sw:hover{transform:scale(1.08)}.m-sw.on{border-color:#FFC531;box-shadow:0 0 0 3px #FFC53166}
+.m-sw i{position:absolute;left:30%;top:24%;width:7px;height:7px;border-radius:50%;background:#fff}
+.m-exprs{display:flex;flex-wrap:wrap;gap:7px}.m-exprs .m-chip{font-size:13px;padding:6px 13px}
+.m-exprs .m-chip:hover{border-color:#FFC531}
+/* menu 3D: o canvas 2D do jogo fica vazio — esconder evita compor uma camada transparente a mais em cada quadro */
+body.g3menu.menu #game{visibility:hidden}
 </style></head><body class="menu">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
  <defs>
@@ -1409,7 +1437,7 @@ body.mport .m-chal.open{position:relative;z-index:5;box-shadow:0 10px 40px #000a
     <div class="m-phead"><button class="m-back" data-back aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button><h3><svg class="i"><use href="#i-shop"/></svg>LOJA</h3><span class="m-count m-wallet"><svg class="i"><use href="#i-orange"/></svg><b id="shopBal">0</b></span></div>
     <div class="m-tabs m-tabs2" id="shopTabs"></div>
     <div class="m-shopgrid" id="shopGrid"></div>
-    <p class="m-sub m-shopnote">Compre com laranjas: o item vai para o seu Visual (ou Fundo) e já sai equipado. Ganhe laranjas jogando e nos Desafios Diários.</p>
+    <p class="m-sub m-shopnote">Toque num item para experimentar. Para comprar, toque no preço: o item vai para o seu Visual (ou Fundo) e já sai equipado.</p>
   </div>
   <div class="m-hint">arraste para girar a capivara</div>
 </section>
@@ -2214,7 +2242,56 @@ function make(mats,scale){const d=data,g=new T.Group(),bs=d.bones.map(b=>{const 
     const sh=new T.Mesh(new T.SphereGeometry(.011,8,6),mats.shine);sh.position.set(e.x+s*.004,e.y+.012,e.z+.02);head.add(sh);eyes.push(sh);
     const lid=new T.Mesh(new T.SphereGeometry(.03,10,8),mats.lid);lid.position.set(e.x+s*.004,e.y+.004,e.z+.008);lid.visible=false;head.add(lid);lids.push(lid);
     const ck=new T.Mesh(new T.CircleGeometry(.03,12),mats.blush);ck.position.set(s*.135,.125,.175);ck.rotation.set(-.1,s*.7,0);head.add(ck)}}
-  return{sc:scale,g,inner,B,skel,body,outline,xray,hat,setHat(on){for(const m of hat)m.visible=!!on},eyes,lids,ev:[],st:{ph:0,mv:0,dash:0,yaw:0,look:0,lookT:0,lookAt:0,tilt:0,gag:0,gagK:'',gagT:1.5+Math.random()*2.5,blink:3,bl:0,rec:0,hurt:0,lx:null,ly:null,idle:0,spd:0,lean:0,lastS:0,hatLag:0,hatV:0,wasDash:0,air:0}}}
+  // olhos 3D (modelo de chapéu): por cima dos olhinhos fechados pintados na textura. Abrem, piscam, mudam de expressão e podem ser personalizados.
+  let E3=null;if(d.extras.eyes===false&&B.head&&mats.eye)E3=makeEyes(B.head,mats.eye,mats.brow);
+  return{sc:scale,g,inner,B,skel,body,outline,xray,hat,setHat(on){for(const m of hat)m.visible=!!on},eyes,lids,E3,ev:[],st:{ph:0,mv:0,dash:0,yaw:0,look:0,lookT:0,lookAt:0,tilt:0,gag:0,gagK:'',gagT:1.5+Math.random()*2.5,blink:3,bl:0,rec:0,hurt:0,lx:null,ly:null,idle:0,spd:0,lean:0,lastS:0,hatLag:0,hatV:0,wasDash:0,air:0}}}
+
+// ---------- Olhos 3D ----------
+// cada olho = meia-esfera achatada encaixada na cabeça; o shader (03_map3d.js, eyeMat) desenha esclera, íris, pupila, brilhos, pálpebras e contorno.
+// Sistema local do olho: x = para a frente (focinho), y = para cima, z = para fora da cabeça. O olho direito é espelhado (scale.x = -1), então x é "frente" nos dois.
+const EYEPOS=[[.136,.784,.212,.8,.36,.4],[-.138,.785,.214,-.8,.36,.4]],HEAD0=[0,.53,.06],ER=[.05,.041,.028];
+// tipos: [escala, íris, pupila, abertura base, nome]
+const EYET=[[1,.6,.55,1,'Redondo'],[1.22,.62,.5,1,'Grandão'],[1,.6,.55,.55,'Sonolento'],[1.1,.78,.42,1,'Brilhante'],[.62,.9,0,1,'Pontinho'],[1.05,.72,.9,1,'Gatinho']];
+const BROWT=['Nenhuma','Fina','Grossa','Arqueada','Brava'];
+// expressões: [abre, pálpebra de baixo, inclinação (raiva+ / triste-), sorriso, pupila, escala, sobrancelha sobe, sobrancelha gira, olhar p/ baixo, tonto, tremor]
+const EXPR={normal:[1,0,0,0,1,1,0,0,0,0,0],feliz:[.9,.15,0,.85,1,1,.12,.14,0,0,0],raiva:[.72,.18,.9,0,.8,1,-.16,-.5,0,0,0],medo:[1.15,0,-.45,0,.55,1.12,.3,.42,0,0,1],
+  surpreso:[1.2,0,0,0,.6,1.16,.4,0,0,0,0],triste:[.72,0,-.75,0,1,1,.05,.5,-.3,0,0],dor:[.1,.55,.6,0,1,.95,-.1,-.35,0,0,0],tonto:[1,0,0,0,1,1.05,.18,0,0,1,0],sono:[.28,0,0,0,1,1,-.04,0,-.2,0,0]};
+let BROWG=null,EYEG=null;
+function browGeos(){if(BROWG)return BROWG;const cap=(r,l)=>new T.CapsuleGeometry(r,l,3,8).rotateZ(Math.PI/2);
+  const arc=1.15,tor=new T.TorusGeometry(.05,.0055,5,14,arc).rotateZ(Math.PI/2-arc/2).translate(0,-.05,0);
+  return BROWG=[null,cap(.0042,.042),cap(.0085,.04),tor,cap(.008,.044)]}
+function makeEyes(head,mat,bmat){const up=new T.Vector3(0,1,0),fw=new T.Vector3(0,0,1),out=[];
+  for(const e of EYEPOS){const n=new T.Vector3(e[3],e[4],e[5]).normalize().add(new T.Vector3(0,.1,.45)).normalize();
+    const Y=up.clone().sub(n.clone().multiplyScalar(up.dot(n))).normalize(),X=new T.Vector3().crossVectors(Y,n);
+    const g=new T.Group();g.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(X,Y,n));if(X.dot(fw)<0)g.scale.x=-1;
+    g.position.set(e[0]-HEAD0[0],e[1]-HEAD0[1],e[2]-HEAD0[2]).addScaledVector(n,-ER[2]*.3);
+    const eye=new T.Mesh(EYEG||(EYEG=new T.SphereGeometry(1,20,12)),mat);eye.scale.set(ER[0],ER[1],ER[2]);g.add(eye);
+    const brow=new T.Mesh(browGeos()[1],bmat);brow.position.set(0,ER[1]*1.45,ER[2]*.05);brow.rotation.x=-.35;g.add(brow);
+    head.add(g);out.push({g,eye,brow})}
+  return{list:out,mat,cfg:null,ex:EXPR.normal.slice(),exK:'',exT:0,blink:2,bl:0,gx:0,gy:0,gT:0,gtx:0,gty:0,fireT:9}}
+// personalização: {t: tipo, b: sobrancelha, c: cor da íris}
+function setEyes(A,cfg){const E=A.E3;if(!E)return;cfg=cfg||{};const k=(cfg.t|0)+'|'+(cfg.b==null?1:cfg.b)+'|'+(cfg.c||'#6B3A1E');if(E.key===k)return;E.key=k;E.cfg=cfg;
+  const ty=EYET[cfg.t|0]||EYET[0],u=E.mat.userData.eu,bi=cfg.b==null?1:cfg.b;u.uE2.value.set(ty[1],ty[2],cfg.t|0,0);u.uIrisC.value.set(cfg.c||'#6B3A1E');
+  for(const o of E.list){o.eye.scale.set(ER[0]*ty[0],ER[1]*ty[0],ER[2]*ty[0]);const gg=browGeos()[bi];o.brow.visible=!!gg;if(gg)o.brow.geometry=gg;o.brow.userData.base=bi===4?-.4:0;o.brow.userData.lift=ER[1]*ty[0]*1.45}}
+function expr(A,k,dur){const E=A.E3;if(!E||!EXPR[k])return;E.exK=k;E.exT=dur||1.4}
+function eyesTick(A,s,dt,t){const E=A.E3,S=A.st;if(!E)return;const ty=EYET[(E.cfg&&E.cfg.t)|0]||EYET[0];
+  if(s.recoil)E.fireT=0;else E.fireT+=dt;
+  let k='normal';
+  if(s.icon){k=E.exT>0?E.exK:'normal'}
+  else if(E.exT>0){E.exT-=dt;k=E.exK}
+  else if(S.hurt>.25)k='dor';else if(s.frozen||s.dashing)k='surpreso';else if(s.kill)k='feliz';else if(s.low)k='medo';else if(E.fireT<.7&&!s.calm)k='raiva';
+  else if(S.gagK==='dance'||S.gagK==='hop')k='feliz';else if(S.gagK==='double')k='surpreso';else if(S.gagK==='stretch')k='sono';else if(S.gagK==='spin')k='tonto';
+  const tg=EXPR[k],ex=E.ex,kk=s.icon?1:Math.min(1,dt*14);for(let i=0;i<ex.length;i++)ex[i]+=(tg[i]-ex[i])*kk;
+  // piscar (também em dobro, de vez em quando) — não pisca de olho fechado
+  if(s.icon){E.bl=0;E.gtx=E.gty=0;E.gT=9}else if(!s.frozen){E.blink-=dt;if(E.blink<=0){E.bl=.15;E.blink=2.2+Math.random()*3.2;if(Math.random()<.18)E.blink=.22}}E.bl=Math.max(0,E.bl-dt);const bl=E.bl>0?Math.sin(E.bl/.15*Math.PI):0;
+  // olhar: acompanha a cabeça e dá umas olhadinhas rápidas para os lados
+  E.gT-=dt;if(E.gT<=0){E.gT=.6+Math.random()*1.8;E.gtx=(Math.random()-.5)*.5;E.gty=(Math.random()-.5)*.3}
+  const gx=E.gtx+(s.icon?0:S.lookAt*.35),gy=E.gty*.6+ex[8];const gk=s.icon?1:Math.min(1,dt*18);E.gx+=(gx-E.gx)*gk;E.gy+=(gy-E.gy)*gk;
+  const sh=ex[10]*Math.sin(t*70)*.035,u=E.mat.userData.eu;
+  u.uE1.value.set(Math.max(0,ex[0]*ty[3]+(ty[3]<1?Math.max(0,ex[0]-1)*.6:0))*(1-bl),ex[1],ex[2],ex[3]);
+  u.uE2.value.y=ty[2]*ex[4];u.uE2.value.w=ex[9];u.uGaze.value.set(E.gx*.5+sh,E.gy*.45);
+  for(const o of E.list){const sc=ex[5]*ty[0];o.eye.scale.set(ER[0]*sc,ER[1]*sc,ER[2]*sc);
+    o.brow.position.y=(o.brow.userData.lift||ER[1]*1.45)*(ex[5]>1?ex[5]:1)+ex[6]*.025+bl*-.004+(ex[9]?Math.sin(t*6)*.006:0);o.brow.rotation.z=(o.brow.userData.base||0)+ex[7]+(ex[9]?Math.sin(t*6)*.25:0)}}
 
 // ---------- Animação ----------
 // s: {dt,t, x,y (mundo), aim, frozen, recoil(0..1), swing(0..1), hurt(0..1), dashing, melee}
@@ -2231,6 +2308,7 @@ function animate(A,s){const S=A.st,B=A.B,dt=Math.min(s.dt,.05),t=s.t;
   if(dashing&&!S.wasDash)A.ev.push({k:'dash',f:1});S.wasDash=dashing;
   // vira para onde está mirando (rápido, com um pouquinho de atraso fofo)
   const want=Math.atan2(Math.cos(s.aim),Math.sin(s.aim));S.yaw=dampA(S.yaw,want,Math.min(1,dt*(fz?16:0)));A.g.rotation.y=S.yaw;
+  eyesTick(A,s,dt,t);
   if(!fz)return;
   const mv=S.mv,ds=S.dash,id=1-mv;
   // passada: cada passo é um pulinho (o corpo sobe entre os passos e amassa quando o pé bate no chão)
@@ -2286,8 +2364,9 @@ function animate(A,s){const S=A.st,B=A.B,dt=Math.min(s.dt,.05),t=s.t;
   let sy=1-contact*.1+air*.05-S.hurt*.14+(gHop?Math.sin(gHop/.9*Math.PI*2)*.07:0),sxz=1+contact*.07-air*.03+S.hurt*.08,st=1+ds*.08;
   A.inner.scale.set(A.sc*sxz/Math.sqrt(st),A.sc*sy,A.sc*sxz*st);
   A.inner.rotation.set(0,gSpin?gSpin*Math.PI*2:0,wad*.12)}
-function poke(A){const S=A.st;if(S.calmT!=null){if(S.calmK==null)S.calmK=0;return}S.idle=Math.max(S.idle,2);S.gagK='';S.gagT=0}
-return{load,make,animate,poke,get ready(){return st==='ready'},get state(){return st},get map(){return data&&data.map},get extras(){return data&&data.extras},get nrm(){return data&&data.nrm},MH}})();
+const POKEX=['feliz','surpreso','raiva','medo','tonto','triste'];let pokeI=0;
+function poke(A){const S=A.st;expr(A,POKEX[pokeI++%POKEX.length],1.8);if(S.calmT!=null){if(S.calmK==null)S.calmK=0;return}S.idle=Math.max(S.idle,2);S.gagK='';S.gagT=0}
+return{load,make,animate,poke,setEyes,expr,EYET,BROWT,EXPR,get ready(){return st==='ready'},get state(){return st},get map(){return data&&data.map},get extras(){return data&&data.extras},get nrm(){return data&&data.nrm},MH}})();
 
 // ===== Efeitos 3D: projéteis, explosões, fogo, partículas e itens do chão (laranjinhas, kits, caixas) =====
 // Tudo é desenhado com InstancedMesh (um "molde" por tipo, centenas de cópias por quadro numa chamada só).
@@ -2685,7 +2764,7 @@ if(document.fonts)document.fonts.ready.then(()=>{fontsOk=true;if(cur&&cur.repain
 
 // ---------- Qualidade (segue Configurações > Gráficos) ----------
 function Q(){const q=S.quality;return{key:q,sh:q==='low'?0:q==='medium'?(isTouch?1024:2048):q==='high'?2048:4096,tex:q==='low'?1024:q==='medium'?(isTouch?1536:2048):q==='high'?3072:4096,
-  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low',pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:q!=='low'}} // MSAA também no celular: nas GPUs de celular (tile-based) ele custa pouco e tira o serrilhado
+  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low'||(isTouch&&q==='medium'),pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:q!=='low'}} // MSAA também no celular: nas GPUs de celular (tile-based) ele custa pouco e tira o serrilhado
 
 // ---------- Ruído e aleatório determinísticos ----------
 function hrand(x,y,z,s){return mulberry(Math.imul(x|0,73856093)^Math.imul(y|0,19349663)^Math.imul(z|0,83492791)^Math.imul(s|0,40503))}
@@ -3229,7 +3308,7 @@ function setCam(c,cx,cz,vw,vh){c.position.set(cx,CH,cz);c.lookAt(cx,0,cz);c.upda
 let buildMs=0,compiling=false;
 function loading(on){document.body.classList.toggle('g3load',!!on)}
 function warmCompile(c){compiling=true;loading(true);const warm=new T.Group();warm.position.set(-9999,0,-9999);
-  try{if(capyReady()){const m=sharedCapyMats(),A=CapyRig.make({body:capyBodyMat({}),outline:m.out,xray:xray('#FFC531'),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},CAPY_H/CapyRig.MH);warm.add(A.g)}
+  try{if(capyReady()){const m=sharedCapyMats(),bm=capyBodyMat({}),A=CapyRig.make(Object.assign({body:bm,outline:m.out,xray:xray('#FFC531'),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},eyeMats(bm)),CAPY_H/CapyRig.MH);CapyRig.setEyes(A,EYE);warm.add(A.g)}
     for(let i=0;i<GUNS.length;i++){const g=Guns3D.instance(i);if(g)warm.add(g)}const fw=FX3D.warm();if(fw)warm.add(fw);warm.add(gfxMesh({}));if(!dust)dustInit();warm.add(dust.im);if(!bldMat)syncBuilds();const bm=new T.Mesh(new T.BoxGeometry(1,1,1),bldMat.wall);warm.add(bm)}catch(e){console.warn('aquecimento',e)}
   c.scene.add(warm);setCam(camera,W/2,H/2,1200,800);camera.layers.enableAll();
   const done=()=>{if(dust&&dust.im.parent===warm)warm.remove(dust.im);c.scene.remove(warm);compiling=false;loading(false);c.warm=1;capyWarm=capyReady()?1:capyWarm};
@@ -3248,18 +3327,18 @@ let lastT=0;
 // O 3D é desenhado num tamanho limitado de pixels (o navegador estica na tela) e, se o jogo ficar lento, a resolução
 // cai sozinha e as sombras passam a atualizar menos vezes (sem recompilar nada).
 // no celular o 3D desenha bem menos pixels (o navegador estica) e as sombras atualizam a cada 2 quadros
-const PXB=isTouch?{low:.45e6,medium:.95e6,high:1.3e6,chaos:1.6e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=isTouch&&((navigator.deviceMemory||4)<=3||(navigator.hardwareConcurrency||8)<=4)?.7:1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?2:1,frameN=0,skipNext=true;
+const PXB=isTouch?{low:.7e6,medium:1.35e6,high:1.8e6,chaos:2.2e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=isTouch&&(navigator.deviceMemory||4)<=3?.75:1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?6:1,frameN=0,skipNext=true;
 document.addEventListener('visibilitychange',()=>{skipNext=true});
 function watch(rawDt){if(skipNext){skipNext=false;return}emaDt+=(Math.min(rawDt,250)-emaDt)*.08;
-  if(emaDt>(isTouch?26:36)){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;if(autoS>.45)autoS=Math.max(.45,autoS*.8);else shadowEvery=Math.min(4,shadowEvery+1)}}
-  else if(emaDt<20){fastFor+=rawDt;slowFor=Math.max(0,slowFor-rawDt);if(fastFor>6000){fastFor=0;if(shadowEvery>1)shadowEvery--;else if(autoS<1)autoS=Math.min(1,autoS*1.12)}}else{slowFor=Math.max(0,slowFor-rawDt*.5)}}
+  if(emaDt>(isTouch?26:36)){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;const fl=isTouch?.62:.45;if(isTouch&&shadowEvery<16)shadowEvery=Math.min(16,shadowEvery*2);else if(autoS>fl)autoS=Math.max(fl,autoS*.85);else shadowEvery=Math.min(16,shadowEvery+1)}}
+  else if(emaDt<20){fastFor+=rawDt;slowFor=Math.max(0,slowFor-rawDt);if(fastFor>6000){fastFor=0;if(autoS<1)autoS=Math.min(1,autoS*1.1);else if(shadowEvery>(isTouch?6:1))shadowEvery--}}else{slowFor=Math.max(0,slowFor-rawDt*.5)}}
 let failN=0;function fail(e){if(failN++<3)console.error('Erro no 3D:',e)}
 // libera a placa de vídeo na hora ao recarregar/fechar (o Live Server recarrega a página a cada arquivo salvo)
 function freeGPU(){try{if(R){R.dispose();R.forceContextLoss()}}catch(e){}}
 addEventListener('pagehide',freeGPU);
 function render(M,camX,camY,VW,VH,t,lights,acts){if(!ensure(M))return false;const c=cur;const rawDt=lastT?t-lastT:16;const dt=clamp(rawDt/1000,0,.1);lastT=t;
   if(compiling){skipNext=true;return false}watch(rawDt);
-  gameCv=gameCv||$('game');const W0=gameCv.width,H0=gameCv.height,sc=Math.min(1,Math.sqrt((PXB[c.q.key]||1.2e6)*autoS/(W0*H0))),w=Math.max(2,Math.round(W0*sc)),h=Math.max(2,Math.round(H0*sc));
+  gameCv=gameCv||$('game');const gdp=Math.min(window.devicePixelRatio||1,isTouch?2:(S.quality==='high'||S.quality==='chaos'?2:1.25)),W0=isTouch?Math.round(innerWidth*gdp):gameCv.width,H0=isTouch?Math.round(innerHeight*gdp):gameCv.height,sc=Math.min(1,Math.sqrt((PXB[c.q.key]||1.2e6)*autoS/(W0*H0))),w=Math.max(2,Math.round(W0*sc)),h=Math.max(2,Math.round(H0*sc));
   // modo "duas camadas" (paredes altas meio transparentes por cima dos textos 2D) só no PC em Alta/Caótica; no resto, uma camada só (bem mais leve)
   const split=false; // camada única sempre: copiar o WebGL para um canvas 2D a cada quadro custava caro (era a causa de engasgos no Mac)
   document.body.classList.toggle('g3single',!split);const gm=gameCv;if(split?glCv.nextSibling===gm:glCv.nextSibling!==gm)gm.parentNode.insertBefore(glCv,split?gm.nextSibling:gm);
@@ -3357,6 +3436,45 @@ const hatOn=(L,bot)=>!!bot||!L||L.hat!=='none';
 let hatM=null;function hatMat(){if(!hatM&&CapyRig.map)hatM=patch(new T.MeshStandardMaterial({map:CapyRig.map,normalMap:CapyRig.nrm,normalScale:new T.Vector2(.8,.8),roughness:.8,metalness:0,emissiveMap:CapyRig.map,emissive:new T.Color(.5,.5,.5)}),{key:'capyHat'});return hatM}
 const capyFurHex=(L,bot)=>bot?'#E2C48C':(L&&L.body)||'#B07A4A';
 const FURF=['#include <map_fragment>','#include <map_fragment>\ndiffuseColor.rgb=furC(diffuseColor.rgb);'],FURE=['#include <emissivemap_fragment>','vec4 emissiveColor=texture2D(emissiveMap,vEmissiveMapUv);totalEmissiveRadiance*=furC(emissiveColor.rgb);'];
+// olhos 3D: tudo desenhado no shader pela posição na meia-esfera (vEP), animado por uniforms (abrir/piscar, expressões, olhar, tipo e cor)
+const EYE_FS=`
+{vec3 p=normalize(vEP);float x=p.x,y=p.y;
+ float open=uE1.x,sq=uE1.y,sl=uE1.z,sm=uE1.w;
+ float yL=-1.05+sq*.9+sm*.6*(1.-x*x)+.12*x*x;
+ float yU=mix(yL+.02,1.1,clamp(open,0.,1.))-sl*.42*x-.1*x*x;
+ float inside=step(yL,y)*step(y,yU);
+ vec2 q=vec2(x*uAsp,y)-uGaze;float ir=uE2.x;
+ vec3 e=mix(vec3(1.),vec3(.8,.84,.95),smoothstep(.5,1.,length(vec2(x,y))));
+ if(uE2.z>3.5&&uE2.z<4.5){e=vec3(.07,.045,.04);}
+ else{float d=length(q)/ir;
+  vec3 ic=uIrisC*mix(1.35,.5,smoothstep(-.7,.8,q.y/ir));ic=mix(ic,uIrisC*.3,smoothstep(.75,1.,d));
+  if(uE2.w>.01){float a=atan(q.y,q.x)-uTime*9.;float sp=sin(a*2.+length(q)*16.);ic=mix(ic,vec3(.12,.08,.2),smoothstep(-.2,.3,sp)*uE2.w);}
+  vec2 pq=q/ir;float pr=max(uE2.y,.001);float pd=(uE2.z>4.5)?length(vec2(pq.x/(pr*.3),pq.y/pr)):length(pq)/pr;
+  ic=mix(vec3(.03,.02,.025),ic,smoothstep(.9,1.05,pd)*step(.01,uE2.y)+step(uE2.y,.01));
+  e=mix(e,ic,1.-smoothstep(.95,1.04,d));}
+ float hs=(uE2.z>2.5&&uE2.z<3.5)?1.45:1.;float hr=max(ir,.5);
+ float h1=length(q-vec2(-.3,.34)*hr)/(hr*.25*hs),h2=length(q-vec2(.28,-.3)*hr)/(hr*.12*hs);
+ e=mix(e,vec3(1.),max(1.-smoothstep(.75,1.,h1),(1.-smoothstep(.7,1.,h2))*.9)*(1.-uE2.w));
+ vec3 lc=uFlat*uFur*(1.12+.25*y);
+ vec3 c=mix(lc,e,inside);
+ float edge=min(abs(y-yU),abs(y-yL));
+ float ln=(1.-smoothstep(.03,.075,edge))*step(yL-.08,y)*step(y,yU+.08);
+ float rim=1.-smoothstep(.36,.5,p.z);
+ c=mix(c,vec3(.09,.05,.04),max(ln,rim*inside));
+ diffuseColor.rgb=c;}`;
+function eyeMat(fur){const m=new T.MeshBasicMaterial({color:'#FFFFFF'});if(!FLATC){const fa=(CapyRig.extras&&CapyRig.extras.furAvg)||'#c3835c';FLATC={value:new T.Color(fa)}}
+  m.userData.eu={uFur:fur,uFlat:FLATC,uIrisC:{value:new T.Color('#6B3A1E')},uE1:{value:new T.Vector4(1,0,0,0)},uE2:{value:new T.Vector4(.6,.55,0,0)},uGaze:{value:new T.Vector2()},uAsp:{value:ER_ASP}};
+  return patch(m,{key:'eye',uni:mm=>mm.userData.eu,vd:'varying vec3 vEP;\n',v:'vEP=position;',fd:'uniform vec3 uFur,uFlat,uIrisC;uniform vec4 uE1,uE2;uniform vec2 uGaze;uniform float uAsp;varying vec3 vEP;',
+    fr:[['#include <color_fragment>','#include <color_fragment>\n'+EYE_FS]]})}
+const ER_ASP=.05/.041;
+function browMat(fur){const m=new T.MeshBasicMaterial({color:'#FFFFFF'});m.userData.bu={uFur:fur,uFlat:FLATC};
+  return patch(m,{key:'brow',uni:mm=>mm.userData.bu,fd:'uniform vec3 uFur,uFlat;',fr:[['#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=uFlat*uFur*.3;']]})}
+function eyeMats(body){if(!FLATC){const fa=(CapyRig.extras&&CapyRig.extras.furAvg)||'#c3835c';FLATC={value:new T.Color(fa)}}const f=body.userData.fur;return{eye:eyeMat(f),brow:browMat(f)}}
+// olhos de cada capivara: você usa os do Visual; bots ganham uns sorteados (fixos por bot); outros jogadores, o padrão
+let EYE={t:0,b:1,c:'#6B3A1E'};const EYECOLS=['#6B3A1E','#2A1A12','#3B7BD8','#3DAE5A','#C98A2E','#8A4FD8','#E0508A','#D8342E','#E8B830','#2FC4D0','#8A8F9A','#FF8A2A'];
+function setEyes(o){EYE=Object.assign({t:0,b:1,c:'#6B3A1E'},o||{});if(MN&&MN.A)CapyRig.setEyes(MN.A,EYE);for(const A of actors.values())if(A.self)CapyRig.setEyes(A,EYE)}
+function botEye(id){let h=7;for(const ch of String(id))h=h*31+ch.charCodeAt(0)|0;h=Math.abs(h);return{t:[0,0,1,3,5,2,4][h%7],b:(h>>3)%5,c:EYECOLS[(h>>6)%EYECOLS.length]}}
+const eyeKey=e=>(e.t|0)+'.'+e.b+'.'+e.c;
 function capyBodyMat(a,hex){const m=new T.MeshStandardMaterial({map:CapyRig.map,normalMap:CapyRig.nrm,normalScale:new T.Vector2(.8,.8),roughness:.78,metalness:0,emissiveMap:CapyRig.map,emissive:new T.Color(.5,.5,.5)});
   m.userData.fur={value:furVec(hex||capyFurHex(a.look,a.bot))};
   if(!FLATC){const fa=(CapyRig.extras&&CapyRig.extras.furAvg)||'#c3835c';FLATC={value:new T.Color(fa)}}
@@ -3391,28 +3509,29 @@ vec3 capyStyle(vec3 c){vec3 p=vOP;float lum=dot(c,vec3(.3,.59,.11));
   return c;}`;
 let FLATC=null,depthOnly=null;
 function newActor(a){const m=sharedCapyMats(),body=capyBodyMat(a);
-  const q=Q(),A=CapyRig.make({body,outline:q.key==='low'?null:m.out,xray:q.key==='low'?null:xray(a.xc),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},CAPY_H/CapyRig.MH);
+  const q=Q(),A=CapyRig.make(Object.assign({body,outline:q.key==='low'?null:m.out,xray:q.key==='low'?null:xray(a.xc),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},eyeMats(body)),CAPY_H/CapyRig.MH);A.self=!!a.self;CapyRig.setEyes(A,a.self?EYE:a.bot?botEye(a.id):null);
   A.body.castShadow=q.key==='high'||q.key==='chaos'||(!isTouch&&q.key==='medium'); A.bot=a.bot;A.lookKey=a.bot?'bot':(a.look&&a.look.body);A.xc=a.xc;A.mat=body; // no celular em Média a sombra 3D da capivara sai (fica a sombrinha redonda)
-  const blob=new T.Mesh(new T.PlaneGeometry(52,40).rotateX(-PI/2),m.blob);blob.position.y=.6;blob.renderOrder=3;A.g.add(blob);
+  const blob=new T.Mesh(m.blobG||(m.blobG=new T.PlaneGeometry(52,40).rotateX(-PI/2)),m.blob);blob.position.y=.6;blob.renderOrder=3;A.g.add(blob);
   // anéis no chão: cor do time e o seu anel tracejado girando
   // anel do time (fino) e o SEU anel: círculo inteiro, translúcido, com brilho suave que pulsa — fica no chão, embaixo da capivara
   const ring=gfxMesh({fill:.05,inn:.8,edge:.1,a:.9});ring.scale.set(58,1,58);ring.position.y=.9;ring.visible=false;
   const dash=gfxMesh({fill:.14,inn:.72,edge:.14,glow:.55,a:.85});dash.scale.set(70,1,70);dash.position.y=1;dash.material.uniforms.uCol.value.set('#FFC531');dash.visible=false;
   const rg=new T.Group();rg.add(ring,dash);rg.position.z=-FEET*0;A.rings={g:rg,ring,dash};actG.add(rg);
-  if(a.bot){const ch=A.B.chest;const r1=new T.Mesh(new T.RingGeometry(.03,.046,18),m.target),r2=new T.Mesh(new T.CircleGeometry(.03,18),m.targetW),r3=new T.Mesh(new T.CircleGeometry(.013,12),m.target);
+  if(a.bot){const ch=A.B.chest;const r1=new T.Mesh(m.tg1||(m.tg1=new T.RingGeometry(.03,.046,18)),m.target),r2=new T.Mesh(m.tg2||(m.tg2=new T.CircleGeometry(.03,18)),m.targetW),r3=new T.Mesh(m.tg3||(m.tg3=new T.CircleGeometry(.013,12)),m.target);
     for(const [mm,z] of [[r1,.272],[r2,.27],[r3,.274]]){mm.position.set(0,-.07,z);mm.rotation.x=-.12;ch.add(mm)}}
   A.gun=null;A.gunId=-2;
   actG.add(A.g);return A}
-function dropActor(id){const A=actors.get(id);if(!A)return;actG.remove(A.g);if(A.gun)actG.remove(A.gun);actG.remove(A.rings.g);A.rings.ring.material.dispose();if(A.mat)A.mat.dispose();actors.delete(id)}
+function dropActor(id){const A=actors.get(id);if(!A)return;actG.remove(A.g);if(A.gun)actG.remove(A.gun);actG.remove(A.rings.g);A.rings.ring.material.dispose();A.rings.dash.material.dispose();if(A.mat)A.mat.dispose();if(A.E3){A.E3.mat.dispose();A.E3.list[0].brow.material.dispose()}actors.delete(id)}
 // arma = modelo 3D low poly (03_guns3d.js) preso na mão direita, apontando para a mira
 function setGun(A,gi){if(A.gun){actG.remove(A.gun);A.gun=null}A.gunId=gi;if(gi==null||gi<0)return;const g=Guns3D.instance(gi);if(!g)return;
-  g.matrixAutoUpdate=false;g.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.castShadow=!o.material.userData.nocast&&!!(cur&&cur.q.sh)}});actG.add(g);A.gun=g}
+  g.matrixAutoUpdate=false;g.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.castShadow=!isTouch&&!o.material.userData.nocast&&!!(cur&&cur.q.sh)}});actG.add(g);A.gun=g}
 let _v,_A,_N,_Y,_V,_m;
 function syncActors(list,t,dt){if(!_v){_v=new T.Vector3();_A=new T.Vector3();_N=new T.Vector3();_Y=new T.Vector3();_V=new T.Vector3();_m=new T.Matrix4()}const seen=new Set();_V.set(0,1,K).normalize();
   for(const a of list){let A=actors.get(a.id);const lk=a.bot?'bot':(a.look&&a.look.body);
     if(A&&(A.lookKey!==lk||A.bot!==a.bot)){dropActor(a.id);A=null}if(!A){A=newActor(a);actors.set(a.id,A)}seen.add(a.id);A.hid=0;A.g.visible=true;
     if(A.xray&&A.xc!==a.xc){A.xray.material=xray(a.xc);if(A.hat[2])A.hat[2].material=A.xray.material;A.xc=a.xc}A.setHat(hatOn(a.look,a.bot));applySty(A,!!a.self);
-    CapyRig.animate(A,{dt,t:t/1000,x:a.x,y:a.y,aim:a.aim,frozen:a.frozen,recoil:a.recoil,swing:a.swing,hurt:a.hurt,dashing:a.dash,melee:a.melee});
+    if(A.self!==!!a.self){A.self=!!a.self;CapyRig.setEyes(A,a.self?EYE:a.bot?botEye(a.id):null)}else if(A.self)CapyRig.setEyes(A,EYE);
+    CapyRig.animate(A,{dt,t:t/1000,x:a.x,y:a.y,aim:a.aim,frozen:a.frozen,recoil:a.recoil,swing:a.swing,hurt:a.hurt,dashing:a.dash,melee:a.melee,low:a.low,kill:a.kill});
     A.g.position.set(a.x,0,a.y+FEET);A.g.updateMatrixWorld(true);
     dustFrom(A,a,dt);
     const R_=A.rings;R_.g.visible=true;R_.g.position.set(a.x,0,a.y+FEET);R_.ring.visible=!!a.ring&&!a.self;if(a.ring)R_.ring.material.uniforms.uCol.value.set(a.ring);R_.dash.visible=!!a.self;if(a.self){const au=STY.fx==='aura',pu=(au?1.12:1)+Math.sin(t/260)*.035;R_.dash.scale.set(70*pu,1,70*pu);R_.dash.material.uniforms.uGlow.value=au?1.3:.55;R_.dash.material.uniforms.uA.value=.75+.15*Math.sin(t/260);if(a.ring)R_.dash.material.uniforms.uCol.value.set(a.ring)}
@@ -3513,7 +3632,7 @@ function menuBuild(){const sc=new T.Scene(),q={lam:false},G=lib();let B=makeBuil
   const cam=new T.PerspectiveCamera(30,1,10,6000);
   return{sc,water,sp,spD,cam,padG,dockG,bg:'',gun:null,gunId:-2,A:null,mat:null,warm:0,v:{tx:0,ty:30,d:440,el:.5,off:0},spin:0,spinV:0}}
 const MVIEW={home:{ty:76,d:360,el:.4,off:0},side:{ty:36,d:340,el:.36,off:.24},wide:{ty:36,d:380,el:.38,off:.3}};
-function menuCapy(){const m=sharedCapyMats(),mat=capyBodyMat({},'#B07A4A');const A=CapyRig.make({body:mat,outline:m.out,xray:null,hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},CAPY_H/CapyRig.MH);A.mat=mat;return A}
+function menuCapy(){const m=sharedCapyMats(),mat=capyBodyMat({},'#B07A4A');const A=CapyRig.make(Object.assign({body:mat,outline:m.out,xray:null,hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},eyeMats(mat)),CAPY_H/CapyRig.MH);A.mat=mat;CapyRig.setEyes(A,EYE);return A}
 let menuT=0,menuOk=false;
 function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!R&&!initR())return false;
   if(!MN){try{MN=menuBuild()}catch(e){console.error('menu 3D',e);return false}}
@@ -3521,8 +3640,8 @@ function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!
   if(!MN.warm&&!compiling){MN.warm=-1;compiling=true;loading(true);MN.cam.aspect=innerWidth/innerHeight;MN.cam.updateProjectionMatrix();
     const done=()=>{compiling=false;loading(false);MN.warm=1};(R.compileAsync&&R.extensions.has('KHR_parallel_shader_compile')?R.compileAsync(MN.sc,MN.cam):new Promise(r=>setTimeout(()=>{R.compile(MN.sc,MN.cam);r()},30))).then(done,done)}
   if(MN.warm!==1)return false;
-  const dt=clamp((t-(menuT||t))/1000,0,.1);menuT=t;
-  const dpr=Math.min(window.devicePixelRatio||1,1.5),bud=(isTouch?(S.quality==='low'?.45e6:.95e6):(S.quality==='low'?.9e6:2.2e6))*autoS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
+  const rawM=menuT?t-menuT:16,dt=clamp(rawM/1000,0,.1);menuT=t;menuWatch(rawM);
+  const dpr=Math.min(window.devicePixelRatio||1,2),bud=(isTouch?(S.quality==='low'?.8e6:1.8e6):(S.quality==='low'?.9e6:2.4e6))*menuS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
   if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false)}
   document.body.classList.add('g3don','g3menu');sharedCapyMats();OU.uRes.value.set(w,h);OU.uOW.value=Math.max(1.8,h*.0052);
   const V=MVIEW[o.view]||MVIEW.home,v=MN.v,k=Math.min(1,dt*5);for(const key of ['ty','d','el','off'])v[key]+=(V[key]-v[key])*k;
@@ -3541,28 +3660,34 @@ function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!
       m.setPosition(v.x+cs*2*CAPYS,v.y+1,v.z+sn*2*CAPYS);MN.gun.matrix.copy(m);MN.gun.matrixWorldNeedsUpdate=true}}
   const ts=t/1000;MN.water.material.uniforms.uT.value=ts;U.uTime.value=ts;U.uDark.value=0;U.uNL.value=0;U.uClipOn.value=0;
   const m4=new T.Matrix4();MN.spD.forEach((p,i)=>{const hh=(p.h+ts*12)%170;m4.makeScale(p.s*(.6+.4*Math.sin(ts*2+p.ph)),p.s,p.s).setPosition(p.x+Math.sin(ts*.5+p.ph)*20,hh,p.z);MN.sp.setMatrixAt(i,m4)});MN.sp.instanceMatrix.needsUpdate=true;
-  camera&&camera.layers.set(0);cam.layers.set(0);if(MN.clear)R.setClearColor(MN.clear,1);else R.setClearColor(0x000000,0);R.shadowMap.needsUpdate=!isTouch||(++frameN%3===0);R.render(MN.sc,cam);menuOk=true;return true}
+  camera&&camera.layers.set(0);cam.layers.set(0);if(MN.clear)R.setClearColor(MN.clear,1);else R.setClearColor(0x000000,0);R.shadowMap.needsUpdate=!isTouch||(++frameN%4===0);R.render(MN.sc,cam);menuOk=true;return true}
+// menu: resolução própria (não herda a da partida); só baixa se o celular realmente não aguentar 60 fps
+let menuS=1,mEma=16,mSlow=0,mSkip=3;function menuWatch(raw){if(mSkip>0){mSkip--;return}mEma+=(Math.min(raw,200)-mEma)*.06;if(mEma>24){mSlow+=raw;if(mSlow>2000){mSlow=0;menuS=Math.max(.55,menuS*.85)}}else mSlow=Math.max(0,mSlow-raw*.5)}
 function preload(M){try{return ensure(M)&&!compiling&&!!(cur&&cur.warm)&&(!capyReady()||capyWarm)}catch(e){return false}}
 // aquecimento em segundo plano (menus e tela de carregamento): monta as 67 armas e os ícones aos poucos, sem travar
 let pwI=0,pwJ=0;
-function prewarm(ms){if(st!=='ready'||!R||lost||compiling)return true;const t0=performance.now();
-  while(performance.now()-t0<ms){if(pwI<GUNS.length){Guns3D.build(pwI++);continue}if(pwJ<GUNS.length){gunIconBig(pwJ++);continue}return true}return false}
+function prewarm(ms,geoOnly){if(st!=='ready'||!R||lost||compiling)return true;const t0=performance.now();
+  while(performance.now()-t0<ms){if(pwI<GUNS.length){Guns3D.build(pwI++);continue}if(geoOnly)return true;if(pwJ<GUNS.length){gunIconBig(pwJ++);continue}return true}return false}
 // visual equipado (só para a SUA capivara): pelagem, roupa e efeito
 let STY={pat:0,patC:'#2A1A12',out:0,outC:'#FF4F9A',fx:''};
 function setStyle(o){STY=Object.assign({pat:0,patC:'#2A1A12',out:0,outC:'#FF4F9A',fx:''},o||{})}
 function applySty(A,on){const u=A.mat&&A.mat.userData.sty;if(!u)return;const s=on?STY:null;u.uPat.value=s?s.pat:0;u.uPatC.value.set(s?s.patC:'#2A1A12');u.uOut.value=s?s.out:0;u.uOutC.value.set(s?s.outC:'#FF4F9A');
   const m=sharedCapyMats(),ol=on&&STY.fx==='neon'?m.outNeon:m.out;if(A.outline&&A.outline.material!==ol){A.outline.material=ol;if(A.hat[1])A.hat[1].material=ol}}
-const styKey=(o=STY)=>o.pat+'|'+o.out+'|'+o.outC+'|'+o.fx;
+const styKey=(o=STY)=>o.pat+'|'+o.out+'|'+o.outC+'|'+o.fx+'|'+eyeKey(o.eye||EYE)+(o.ex||'');
 function menuSpin(dx){if(MN)MN.spin+=dx*.012}
 function menuPoke(){if(MN&&MN.A)CapyRig.poke(MN.A)}
 // retrato 3D da capivara (cabeça ou corpo todo), guardado por cor e tamanho — usado no HUD, nos menus e no pódio
 const capyIcons=new Map();let ICN=null;
 function capyIcon(hex,w,h,mode='head',hat=true,sty=false){const so=sty&&typeof sty==='object'?Object.assign({pat:0,patC:'#2A1A12',out:0,outC:'#FF4F9A',fx:''},sty):sty?STY:null;const key=hex+'|'+w+'x'+h+'|'+mode+'|'+(hat?1:0)+'|'+(so?styKey(so):'');if(capyIcons.has(key))return capyIcons.get(key);if(st==='idle')load();if(st!=='ready'||lost)return null;if(!R&&!initR())return null;if(!capyReady())return null;
   if(!ICN){const sc=new T.Scene();sc.add(new T.HemisphereLight('#E8DEFF','#4A2F8A',1.4));const d=new T.DirectionalLight('#FFF1DC',2.2);d.position.set(-.6,1,1.2);sc.add(d);const f=new T.DirectionalLight('#B38CFF',1.1);f.position.set(1,.4,-1);sc.add(f);
-    const A=menuCapy();sc.add(A.g);for(let i=0;i<40;i++)CapyRig.animate(A,{dt:.05,t:i*.05,x:0,y:0,aim:PI/2-.42,relax:true});ICN={sc,A,cam:new T.PerspectiveCamera(24,1,1,2000)}}
-  furVec(hex,ICN.A.mat.userData.fur.value);ICN.A.setHat(hat);{const keep=STY;if(so)STY=so;applySty(ICN.A,!!so);STY=keep}const cam=ICN.cam;cam.aspect=w/h;
+    const A=menuCapy();sc.add(A.g);for(let i=0;i<40;i++)CapyRig.animate(A,{dt:.05,t:i*.05,x:0,y:0,aim:PI/2-.42,relax:true,calm:true});ICN={sc,A,cam:new T.PerspectiveCamera(24,1,1,2000)}}
+  furVec(hex,ICN.A.mat.userData.fur.value);ICN.A.setHat(hat);{const keep=STY;if(so)STY=so;applySty(ICN.A,!!so);STY=keep}CapyRig.setEyes(ICN.A,so?(so.eye||EYE):null);if(so&&so.ex){CapyRig.expr(ICN.A,so.ex,9)}else if(ICN.A.E3){ICN.A.E3.exT=0}CapyRig.animate(ICN.A,{dt:.05,t:2,x:0,y:0,aim:PI/2-.42,relax:true,frozen:true,icon:true});const cam=ICN.cam;cam.aspect=w/h;
   if(mode==='full'){cam.position.set(0,52,250);cam.lookAt(0,31,0)}else{cam.position.set(0,58,118);cam.lookAt(0,46,0)}cam.updateProjectionMatrix();
   const out=snap(ICN.sc,cam,w,h);if(out)capyIcons.set(key,out);return out}
+// foto livre da capivara (usada para gerar o ícone do app): câmera própria
+function capyShot(hex,w,h,c,sty){if(!capyIcon(hex,8,8,'head',true,sty))return null;const cam=new T.PerspectiveCamera(c.fov||22,w/h,1,4000);cam.position.fromArray(c.pos);cam.lookAt(new T.Vector3().fromArray(c.look));cam.updateProjectionMatrix();
+  if(c.ex)CapyRig.expr(ICN.A,c.ex,9);CapyRig.animate(ICN.A,{dt:.05,t:2,x:0,y:0,aim:PI/2+(c.yaw||0),relax:true,frozen:true,icon:true});ICN.A.g.rotation.y=(c.yaw||0);ICN.A.g.updateMatrixWorld(true);
+  const keep=STY;if(sty&&typeof sty==='object')STY=Object.assign({pat:0,patC:'#2A1A12',out:0,outC:'#FF4F9A',fx:''},sty);applySty(ICN.A,!!sty);STY=keep;const out=snap(ICN.sc,cam,w,h);ICN.A.g.rotation.y=0;capyIcons.clear();return out}
 function snap(scene,cam,w,h){const S2=2,W2=w*S2,H2=h*S2;if(!iconRT||iconRT.width!==W2||iconRT.height!==H2){if(iconRT)iconRT.dispose();iconRT=new T.WebGLRenderTarget(W2,H2,{samples:4})}
   const keep=[U.uClipOn.value,U.uDark.value];U.uClipOn.value=0;U.uDark.value=0;const oc=new T.Color();R.getClearColor(oc);const oa=R.getClearAlpha(),ort=R.getRenderTarget();
   if(OU.uRes.value){OU.uRes.value.set(W2,H2);OU.uOW.value=Math.max(2,H2*.012)}
@@ -3628,7 +3753,7 @@ function kit(){if(!T)T=window.THREE;if(!U)U={uTime:{value:0},uClipOn:{value:0},u
     glass:stdMat(q,{std:{roughness:.15,metalness:.1,transparent:true,opacity:.7}},{key:'gunG'})};gunMats.emit.userData.nocast=true;gunMats.glass.userData.nocast=true}return gunMats}}}
 function stats(){if(!R||!cur)return null;let tris=0,meshes=0;cur.scene.traverse(o=>{if(o.isMesh){meshes++;const g=o.geometry;tris+=(g.index?g.index.count:g.attributes.position.count)/3}});
   return{progs:(R.info.programs||[]).map(p=>p.name+':'+p.cacheKey.slice(0,40)),map:curKey,buildMs,meshes,tris:Math.round(tris),calls:R.info.render.calls,frameTris:R.info.render.triangles,textures:R.info.memory.textures,geometries:R.info.memory.geometries,dust:dust?dust.list.length:0,dustMax:dustMax}}
-return{on,render,idle,stats,capysOn,fail,kit,gunIcon,prewarm,setAim,setStyle,get fx(){return STY.fx},menu,menuSpin,menuPoke,capyIcon,preload,FUR0,MBG,get menuOk(){return menuOk},get perf(){return{autoS,shadowEvery,emaDt:Math.round(emaDt)}},get compiling(){return compiling},get ok(){return st==='ready'&&!lost},K,SQ:SQ3,FEET,NAMEOFF:K*CAPY_H+22}})();
+return{capyShot,on,render,idle,stats,capysOn,fail,kit,gunIcon,prewarm,setAim,setStyle,setEyes,EYECOLS,menuExpr(k){if(MN&&MN.A)CapyRig.expr(MN.A,k,2.2)},getStyle:()=>STY,get fx(){return STY.fx},menu,menuSpin,menuPoke,capyIcon,preload,FUR0,MBG,get menuOk(){return menuOk},get perf(){return{autoS,shadowEvery,emaDt:Math.round(emaDt)}},get compiling(){return compiling},get ok(){return st==='ready'&&!lost},K,SQ:SQ3,FEET,NAMEOFF:K*CAPY_H+22}})();
 
 // ===== Simulação (autoridade do anfitrião) e rede =====
 const MAX_PLAYERS=10,PEER_PREFIX='chaos67-',SWAP_CD=250;
@@ -4074,7 +4199,7 @@ function onEffect(e){const near=nearCam(e.x||0,e.y||0),snd=!demo&&near,mine=e.pi
       if(mine){Sound.play('spawn');if(!e.first)showRespawnCard(e.g,'NOVAS ARMAS',e.g2)}break;
     case 'ko':if(!near)break;burst(e.x,e.y,12,[e.c,'#FFF4E0','#FFC531'],'star',260,8,.8);for(let i=0;i<5;i++)addP({x:e.x+rand(-10,10),y:e.y+rand(-10,10),vy:-40,type:'smoke',col:'#cfc6e6',size:14,life:.8,drag:1});word(e.x,e.y-20,'KO!','#FF4F9A',34);if(snd)Sound.play('ko');break;
     case '67':if(mine){stamp67(e.lv);Sound.play('level');vibe([40,40,80]);celebrate(80)}else if(near){word(e.x,e.y-50,'67!','#FFC531',40);burst(e.x,e.y,14,'#FFC531','star',260,8)}break;
-    case 'kill':addFeed(e);if(e.ki===self&&e.vi!==self&&!demo){killPop(e.v);tk('kills');const kg=GUNS[e.g];if(kg)tk('k_'+kg.cat)}break;
+    case 'kill':addFeed(e);{const kt=track[e.ki];if(kt)kt.killT=performance.now()}if(e.ki===self&&e.vi!==self&&!demo){killPop(e.v);tk('kills');const kg=GUNS[e.g];if(kg)tk('k_'+kg.cat)}break;
     case 'gem':if(near&&S.particles!=='low')burst(e.x,e.y,4,['#FF8A1F','#FFC07A','#fff'],'star',120,4,.4);if(mine){Sound.play('gem',(e.n%8));flyGem(e.x,e.y);const tg=store.get('totalGems',0)+1;store.set('totalGems',tg);$('totalGems').textContent=wallet();bump('gems')}break;
     case 'flagtake':if(!demo){toast(e.name+' pegou a bandeira!',e.pid===self?'good':'');Sound.play('pickup')}break;
     case 'flagret':if(!demo&&MODE.id==='ctf')toast('Bandeira '+(TEAM[e.team]?TEAM[e.team].n:'')+' voltou pra base');break;
@@ -4144,7 +4269,7 @@ function drawPlayer(p,tr,t,ht,fancy){const x=p.rx,y=p.ry;
   if(ht<p.burnUntil)FX3D.burning(x,y+8,1/60);
   const hurt=ht-p.hurtAt<140,frozen=ht<p.frozenUntil,g=GUNS[p.gun],me=players[self];
   acts3.push({id:p.id,x,y,aim:p.aim,bot:p.bot,look:p.look,gun:p.gun,melee:!!(g&&g.melee),swing:tr.swing||0,recoil:t-tr.shotT<90?1:0,hurt:hurt?1-(ht-p.hurtAt)/140:0,
-    frozen,dash:p.dashTime>0,shield:ht<p.shieldUntil,self:p.id===self,ring:p.team>=0&&isTeams()?TEAM[p.team].c:null,xc:p.id===self?'#FFC531':(p.team>=0&&isTeams())?TEAM[p.team].c:(me&&sameTeam(me,p)?'#6CF06A':'#FF4F9A')});
+    frozen,dash:p.dashTime>0,low:p.hp<=(p.maxHp||100)*.3,kill:performance.now()-(tr.killT||-1e9)<1600,shield:ht<p.shieldUntil,self:p.id===self,ring:p.team>=0&&isTeams()?TEAM[p.team].c:null,xc:p.id===self?'#FFC531':(p.team>=0&&isTeams())?TEAM[p.team].c:(me&&sameTeam(me,p)?'#6CF06A':'#FF4F9A')});
   if(!CAP3)return;
   ctx.save();ctx.translate(x,y);ctx.translate(0,Map3D.FEET-Map3D.K*30);ctx.scale(1,1/SQ);
   ctx.globalAlpha=1;
@@ -4179,13 +4304,13 @@ function predictSelf(p){const t=time(),ht=hostNow(),dt=pred.on?clamp((t-pred.lt)
   p.rx=pred.x;p.ry=pred.y;return true}
 
 // ---------- Laço ----------
-let lastFrame=0,hudAt=0,mmAt=0,slowT=0,wasMenuBg=null;
+let lastFrame=0,hudAt=0,mmAt=0,slowT=0,wasMenuBg=null,menuClr=false;
 function frame(t){requestAnimationFrame(frame);
   const mb=menuBg();if(mb!==wasMenuBg){wasMenuBg=mb;resize()}
-  const minDt=1000/(mb?Math.min(30,S.fps):S.fps)-1.5;if(t-lastFrame<minDt)return;let dt=Math.min(.05,(t-lastFrame)/1000);
-  if(S.dynres&&!mb&&view==='game'&&dt>.026){slowT+=dt;if(slowT>2&&resScale>.55){resScale*=.85;resize();slowT=0}}else slowT=Math.max(0,slowT-dt*.5);
+  const minDt=1000/(mb&&!Map3D.menuOk?Math.min(30,S.fps):S.fps)-1.5;if(t-lastFrame<minDt)return;let dt=Math.min(.05,(t-lastFrame)/1000);
+  if(S.dynres&&!isTouch&&!mb&&view==='game'&&dt>.026){slowT+=dt;if(slowT>2&&resScale>.55){resScale*=.85;resize();slowT=0}}else slowT=Math.max(0,slowT-dt*.5);
   lastFrame=t;
-  const active=demo||started;
+  const active=demo||started;if(active)menuClr=false;
   if(demo)step(dt,time());
   else if(host&&started&&!(paused&&solo)){pushInputs();step(dt,time());sync()}
   else if(!host&&started){pushInputs()}
@@ -4193,7 +4318,7 @@ function frame(t){requestAnimationFrame(frame);
   if(started&&isTouch&&aimStick.on&&view==='game'&&players[self]){const me=players[self],g=GUNS[me.gun],R=g?Math.max(90,gunReach(g,me.mods||defaultMods())):300,d=g&&g.instant?R*.8:R*.92;mouseSX=((me.rx??me.x)+Math.cos(aimStick.a)*d-cam.x)*zoom;mouseSY=((me.ry??me.y)+Math.sin(aimStick.a)*d-cam.y)*zoom*SQ;aimAt(mouseSX,mouseSY)}
   // menus: a capivara 3D no deque da lagoa (03_map3d.js > menu)
   if(!active){ctx.setTransform(1,0,0,1,0,0);let ok3=false;try{ok3=Map3D.menu(t,{view:menuView(),fur:menuFur(),drag:menuDrag,gun:menuGun(),bg:menuBgKey(),hat:menuHat()})}catch(e){Map3D.fail(e)}
-    if(ok3){ctx.clearRect(0,0,canvas.width,canvas.height);if(Map3D.prewarm(isTouch?3:5))iconPrewarm()}else{Map3D.idle();ctx.fillStyle='#2A1366';ctx.fillRect(0,0,canvas.width,canvas.height)}return}
+    if(ok3){if(!menuClr){ctx.clearRect(0,0,canvas.width,canvas.height);menuClr=true}if(isTouch)Map3D.prewarm(2,true);else if(Map3D.prewarm(5))iconPrewarm()}else{Map3D.idle();ctx.fillStyle='#2A1366';ctx.fillRect(0,0,canvas.width,canvas.height)}return}
   // câmera inclinada só quando o 3D está ligado neste mapa (senão fica a visão de cima do 2D)
   processEffects(t);
   const sm=Math.min(1,dt*14);
@@ -4255,7 +4380,7 @@ let view='home',hudGun=-1;
 const SCREENS=['home','custom','loja','fundo','play','setup','online','lobby','arsenal','bye','result'];
 // abas do menu (todas são "dentro" da tela inicial: a capivara desliza para o lado e o painel entra pela direita)
 const NAVV=['home','custom','loja','arsenal','fundo'],MENUV=['home','custom','loja','arsenal','fundo','setup','online'];
-function go(v){const prev=view;view=v;for(const s of SCREENS)$(s).classList.toggle('hidden',s!==v);
+function go(v){const prev=view;view=v;if(prev==='loja'&&v!=='loja')clearTry();for(const s of SCREENS)$(s).classList.toggle('hidden',s!==v);
   const inGame=v==='game';$('hud').classList.toggle('hidden',!inGame);$('touch').classList.toggle('hidden',!inGame);document.body.classList.toggle('menu',!inGame);
   const inMenu=MENUV.includes(v);$('mnav').classList.toggle('hidden',!inMenu);$('mtop').classList.toggle('hidden',!inMenu);$('mnav').querySelectorAll('[data-nav]').forEach(b=>b.classList.toggle('on',b.dataset.nav===v));
   document.body.classList.toggle('mclear',inMenu);document.body.classList.toggle('mpanel',inMenu&&v!=='home');
@@ -4269,9 +4394,10 @@ function goHome(){leaveNet();players={};bullets=[];effects=[];started=false;over
 let menuDrag=false,arsSel=0;
 const menuView=()=>view==='home'?'home':(view==='setup'||view==='online')?'wide':'side';
 const menuHat=()=>myLook.hat!=='none';
-const menuFur=()=>view==='custom'&&draftFur?draftFur:myLook.body;
+const menuFur=()=>view==='custom'&&draftFur?draftFur:(view==='loja'&&PV.fur)?PV.fur:myLook.body;
+let PV={sty:{},fur:null,bg:null,ids:[]}; // loja: itens que você está só experimentando (não comprados)
 const menuGun=()=>view==='arsenal'?arsSel:-1;
-let curBg=store.get('menubg','lagoa');const menuBgKey=()=>curBg;
+let curBg=store.get('menubg','lagoa');const menuBgKey=()=>(view==='loja'&&PV.bg)||curBg;
 
 // ---------- Retratos: a própria capivara 3D (cabeça ou corpo todo) ----------
 function drawPortrait(cv,L,o={}){const c=cv.getContext('2d'),w=cv.width,h=cv.height;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);
@@ -4417,9 +4543,15 @@ const FXK=['neon','rainbow','hearts','aura','sparks','bubbles'];
 function equip(){return Object.assign({pat:-1,out:-1,fx:-1,title:-1},store.get('equip',{}))}
 function setEquip(k,v){const e=equip();e[k]=v;store.set('equip',e);applyEquip();Map3D.menuPoke()}
 function styOf(e){const R=SHOP.find(s=>s[0]==='roupas')[3];return{pat:e.pat>=0?e.pat+1:0,out:e.out>=0?e.out+1:0,outC:e.out>=0?R[e.out][1]:'#FF4F9A',fx:e.fx>=0?FXK[e.fx]:''}}
-function applyEquip(){Map3D.setStyle(styOf(equip()));drawSpheres()}
+function applyEquip(){Map3D.setStyle(styOf(Object.assign({},equip(),view==='loja'?PV.sty:{})));Map3D.setEyes(eyesCfg());drawSpheres()}
+// olhos (vestiário): tipo, sobrancelha e cor — grátis, só a sua capivara usa
+const EYE_T=['Redondo','Grandão','Sonolento','Brilhante','Pontinho','Gatinho'],EYE_B=['Nenhuma','Fina','Grossa','Arqueada','Brava'],
+  EYE_CN=['Castanho','Preto','Azul','Verde','Mel','Violeta','Rosa','Vermelho','Dourado','Ciano','Cinza','Laranja'],
+  EYE_X=[['feliz','Feliz'],['raiva','Raiva'],['medo','Medo'],['surpreso','Surpresa'],['triste','Triste'],['tonto','Tonto'],['sono','Sono'],['dor','Ai!']];
+const eyesCfg=()=>Object.assign({t:0,b:1,c:'#6B3A1E'},store.get('eyes',{}));
+function setEyeCfg(k,v){const e=eyesCfg();e[k]=v;store.set('eyes',e);applyEquip();Map3D.menuExpr(k==='c'?'surpreso':'feliz');Sound.play('pop')}
 // abas do Visual
-const VTABS=[['cor','palette','Cor'],['cabeca','hat','Cabeça'],['roupa','shirt','Roupas'],['pelo','sparkle','Pelagens'],['fx','bolt','Efeitos'],['titulo','crown','Títulos']];
+const VTABS=[['cor','palette','Cor'],['olhos','eye','Olhos'],['cabeca','hat','Cabeça'],['roupa','shirt','Roupas'],['pelo','sparkle','Pelagens'],['fx','bolt','Efeitos'],['titulo','crown','Títulos']];
 let vtab='cor';
 const HEADS=[['none','Nada'],['palha','Chapéu de palha']];
 function openCustom(){draftFur=myLook.body;renderVis()}
@@ -4427,13 +4559,25 @@ const lockTile=(n,where,data)=>`<button class="m-fur lock" ${data||''}><span cla
 function shopGo(cat){shopTab=cat;Sound.play('click');go('loja')}
 function renderVis(){$('visTabs').innerHTML=VTABS.map(([k,ic,n])=>`<button class="m-tab${k===vtab?' on':''}" data-vt="${k}">${I(ic)}<span>${n}</span></button>`).join('');
   $('visTabs').querySelectorAll('[data-vt]').forEach(b=>b.onclick=()=>{vtab=b.dataset.vt;Sound.play('click');renderVis()});
-  const g=$('furGrid'),sub=$('visSub'),e=equip();g.classList.remove('empty');g.classList.toggle('titles',vtab==='titulo');
+  tabArrows('visTabs');$('visTabs')._upd();
+  const g=$('furGrid'),sub=$('visSub'),e=equip();g.classList.remove('empty','eyes');g.classList.toggle('titles',vtab==='titulo');
   const tileCv=(cv,body,styObj)=>drawPortrait(cv,{body,hat:myLook.hat},{bg:false,styObj});
   if(vtab==='cor'){const L=allFurs(),mine=L.filter(f=>!f.id||has(f.id)),lock=L.filter(f=>f.id&&!has(f.id));
     sub.innerHTML=`<b id="furName">${escapeHtml(furName(draftFur))}</b> — ${mine.length} de ${L.length} cores. Mais cores na Loja e nos Desafios!`;
     g.innerHTML=mine.map(f=>`<button class="m-fur${f.h.toLowerCase()===String(draftFur).toLowerCase()?' on':''}" data-fur="${f.h}" title="${escapeHtml(f.n)}"><canvas width="112" height="112"></canvas><span style="--fc:${f.h}"></span><b>${escapeHtml(f.n)}</b></button>`).join('')+
       lock.map(f=>lockTile(f.n,f.id.startsWith('cores')?'LOJA':'DESAFIOS',`data-lock="${f.id}"`)).join('');
     g.querySelectorAll('[data-fur]').forEach(b=>{tileCv(b.querySelector('canvas'),b.dataset.fur,styOf(equip()));b.onclick=()=>setFur(b.dataset.fur)})}
+  else if(vtab==='olhos'){const ec=eyesCfg(),so=styOf(e);g.classList.add('eyes');
+    sub.innerHTML=`<b>${EYE_T[ec.t]||EYE_T[0]}</b> · ${EYE_CN[Map3D.EYECOLS.indexOf(ec.c)]||'Personalizado'} — escolha o tipo, a sobrancelha e a cor. Teste as expressões!`;
+    const tile=(n,on,a)=>`<button class="m-fur${on?' on':''}" ${a}><canvas width="112" height="112"></canvas><b>${n}</b></button>`;
+    g.innerHTML=`<h5 class="m-sech">Expressões <small>(toque para testar)</small></h5><div class="m-exprs">${EYE_X.map(([k,n])=>`<button class="m-chip" data-ex="${k}">${n}</button>`).join('')}</div>
+      <h5 class="m-sech">Tipo de olho</h5><div class="m-subgrid">${EYE_T.map((n,i)=>tile(n,ec.t===i,`data-et="${i}"`)).join('')}</div>
+      <h5 class="m-sech">Cor dos olhos</h5><div class="m-swatches">${Map3D.EYECOLS.map((c,i)=>`<button class="m-sw${ec.c===c?' on':''}" data-ec="${c}" style="--c:${c}" title="${EYE_CN[i]}"><i></i></button>`).join('')}</div>
+      <h5 class="m-sech">Sobrancelha</h5><div class="m-subgrid">${EYE_B.map((n,i)=>tile(n,ec.b===i,`data-eb="${i}"`)).join('')}</div>`;
+    g.querySelectorAll('[data-et]').forEach(b=>{drawPortrait(b.querySelector('canvas'),myLook,{bg:false,styObj:Object.assign({},so,{eye:Object.assign({},ec,{t:+b.dataset.et})})});b.onclick=()=>{setEyeCfg('t',+b.dataset.et);renderVis()}});
+    g.querySelectorAll('[data-eb]').forEach(b=>{drawPortrait(b.querySelector('canvas'),myLook,{bg:false,styObj:Object.assign({},so,{eye:Object.assign({},ec,{b:+b.dataset.eb})})});b.onclick=()=>{setEyeCfg('b',+b.dataset.eb);renderVis()}});
+    g.querySelectorAll('[data-ec]').forEach(b=>b.onclick=()=>{setEyeCfg('c',b.dataset.ec);renderVis()});
+    g.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{Map3D.menuExpr(b.dataset.ex);Sound.play('click')})}
   else if(vtab==='cabeca'){const cur=myLook.hat==='none'?'none':'palha';sub.innerHTML=`<b>${cur==='none'?'Nada':'Chapéu de palha'}</b> — chapéus, cabelos e óculos.`;
     g.innerHTML=HEADS.map(([k,n])=>`<button class="m-fur${k===cur?' on':''}" data-head="${k}"><canvas width="112" height="112"></canvas><b>${n}</b></button>`).join('')+['Boné','Óculos escuros','Topete','Coroa'].map(n=>lockTile(n,'EM BREVE')).join('');
     g.querySelectorAll('[data-head]').forEach(b=>{drawPortrait(b.querySelector('canvas'),{body:myLook.body},{bg:false,hat:b.dataset.head!=='none',styObj:styOf(equip())});b.onclick=()=>setHead(b.dataset.head)})}
@@ -4462,29 +4606,51 @@ const SHOP=[['roupas','shirt','Roupas',[['Camiseta Listrada','#FF4F9A','comum',6
   ['cores','palette','Cores de pelo',[['Verde Musgo','#6E8B4A','comum',80],['Azul Royal','#3B5BD8','raro',160],['Roxo Uva','#7A3FA8','raro',160],['Dourado Brilhante','#F2C14E','epico',300],['Vermelho Fogo','#E23B2E','raro',160],['Prata','#BFC5CF','epico',300]]],
   ['pelos','sparkle','Pelagens e texturas',[['Listras de Tigre','repeating-linear-gradient(60deg,#E8913A 0 10px,#2A1A12 10px 16px)','epico',380],['Pintinhas','radial-gradient(#5A3A20 22%,transparent 24%) 0 0/16px 16px,#D9A066','raro',200],['Estrelinhas','radial-gradient(#FFF4B0 18%,transparent 20%) 0 0/14px 14px,#3A1C80','raro',220],['Camuflagem','radial-gradient(circle at 30% 30%,#4E6B2E 30%,transparent 32%) 0 0/24px 24px,radial-gradient(circle at 70% 60%,#2E3A1E 25%,transparent 27%) 0 0/20px 20px,#8A9A5A','epico',340],['Pelúcia Macia','radial-gradient(circle,#FFE8D6,#E8B890)','comum',100],['Galáxia','radial-gradient(circle at 30% 30%,#FF8FC8,transparent 40%),radial-gradient(circle at 70% 70%,#45D4FF,transparent 40%),#1B1033','lend',800]]],
   ['estilos','bolt','Estilos e efeitos',[['Contorno Neon','#45D4FF','raro',240],['Rastro de Arco-íris','linear-gradient(90deg,#FF4F4F,#FFC531,#6CF06A,#45D4FF,#B777FF)','epico',360],['Pegadas de Coração','#FF4F9A','comum',120],['Aura Dourada','#FFC531','lend',650],['Faíscas no Dash','#FFF066','raro',220],['Bolhas ao Andar','#C9F0FF','comum',110]]]];
+// abas da Loja e do Visual: no PC ganham setinhas nas pontas, dá para arrastar com o mouse e rolar com a rodinha
+function tabArrows(id){const el=$(id);if(!el||el._upd)return;const w=document.createElement('div');w.className='m-tabwrap';el.parentNode.insertBefore(w,el);w.appendChild(el);
+  const mk=d=>{const b=document.createElement('button');b.className='m-tabarr '+(d<0?'l':'r');b.setAttribute('aria-label',d<0?'Anterior':'Próximo');b.innerHTML=I('back');
+    b.onclick=()=>{el.scrollBy({left:d*el.clientWidth*.7,behavior:'smooth'});Sound.play('click')};w.appendChild(b);return b};
+  const L=mk(-1),R=mk(1),upd=()=>{const m=el.scrollWidth-el.clientWidth;L.classList.toggle('off',el.scrollLeft<4);R.classList.toggle('off',el.scrollLeft>m-4||m<=2);w.classList.toggle('scr',m>2)};
+  el.addEventListener('scroll',upd,{passive:true});if(window.ResizeObserver)new ResizeObserver(upd).observe(el);el._upd=()=>{const on=el.querySelector('.on');if(on){const a=on.offsetLeft-28,b=on.offsetLeft+on.offsetWidth-el.clientWidth+28;if(el.scrollLeft>a)el.scrollLeft=a;else if(el.scrollLeft<b)el.scrollLeft=b}upd()};
+  let dn=null,moved=false;el.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button)return;dn={x:e.clientX,s:el.scrollLeft};moved=false});
+  addEventListener('pointermove',e=>{if(!dn)return;const dx=e.clientX-dn.x;if(Math.abs(dx)>6)moved=true;if(moved){el.scrollLeft=dn.s-dx;w.classList.add('drag')}});
+  addEventListener('pointerup',()=>{dn=null;w.classList.remove('drag')});
+  el.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false}},true);
+  el.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&el.scrollWidth>el.clientWidth){el.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false})}
 let shopTab='roupas';
+// experimentar: tocar no card aplica o item na sua capivara / no fundo só para ver; comprar é só no botão do preço
+function tryItem(id){const [k,i]=id.split(':'),n=+i,on=PV.ids.includes(id);PV.ids=PV.ids.filter(x=>x.split(':')[0]!==k);
+  const key={roupas:'out',pelos:'pat',estilos:'fx'}[k];
+  if(key){if(on)delete PV.sty[key];else PV.sty[key]=n;Map3D.setStyle(styOf(Object.assign({},equip(),PV.sty)))}
+  else if(k==='cores')PV.fur=on?null:SHOP.find(c=>c[0]==='cores')[3][n][1];
+  else{PV.bg=on?null:k==='fundos'?'shop_f'+n:SHOP.find(c=>c[0]==='quadros')[3][n][1];applyMenuBg()}
+  if(!on){PV.ids.push(id);Map3D.menuExpr(pick(['feliz','surpreso']))}Sound.play(on?'click':'pop');renderShop()}
+function clearTry(){if(!PV.ids.length)return;PV={sty:{},fur:null,bg:null,ids:[]};Map3D.setStyle(styOf(equip()));applyMenuBg()}
 const isEq=id=>{const [k,i]=id.split(':'),e=equip(),n=+i;return k==='roupas'?e.out===n:k==='pelos'?e.pat===n:k==='estilos'?e.fx===n:k==='cores'?myLook.body.toLowerCase()===SHOP.find(s=>s[0]==='cores')[3][n][1].toLowerCase():k==='fundos'?curBg==='shop_f'+n:k==='quadros'?curBg===SHOP.find(s=>s[0]==='quadros')[3][n][1]:false};
 function equipItem(id){const [k,i]=id.split(':'),n=+i;if(k==='roupas')setEquip('out',n);else if(k==='pelos')setEquip('pat',n);else if(k==='estilos')setEquip('fx',n);
   else if(k==='cores')setFur(SHOP.find(s=>s[0]==='cores')[3][n][1]);else if(k==='fundos'||k==='quadros'){curBg=k==='fundos'?'shop_f'+n:SHOP.find(s=>s[0]==='quadros')[3][n][1];store.set('menubg',curBg);applyMenuBg()}Sound.play('pop')}
 function renderShop(){$('shopBal').textContent=wallet();
   $('shopTabs').innerHTML=SHOP.map(([k,ic,n])=>`<button class="m-tab${k===shopTab?' on':''}" data-st="${k}">${I(ic)}<span>${n}</span></button>`).join('');
   $('shopTabs').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{shopTab=b.dataset.st;Sound.play('click');renderShop()});
+  tabArrows('shopTabs');$('shopTabs')._upd();
   const cat=SHOP.find(c=>c[0]===shopTab),bal=wallet();
   $('shopGrid').innerHTML=cat[3].map(([n,v,r,price],i)=>{const id=shopTab+':'+i,own=has(id),[rn,rc]=RAR[r],eqd=own&&isEq(id);
     const pv=(shopTab==='roupas'||shopTab==='pelos'||shopTab==='cores')?`<span class="m-spv" style="background:radial-gradient(circle at 50% 40%,#5A34B0,#24104F)"><canvas width="112" height="112" data-pv="${id}"></canvas></span>`
       :shopTab==='estilos'?`<span class="m-spv" style="background:radial-gradient(circle at 50% 40%,#3A1C80,#170A38)"><i class="m-sglow" style="background:${v}"></i></span>`
       :shopTab==='quadros'?`<span class="m-spv m-art" style="background-image:url(loading/${v}_p.jpg?v=${ASSETV})"></span>`
       :`<span class="m-spv" style="background:radial-gradient(ellipse at 50% 60%,${SHOPWATERS[i][0]},${SHOPWATERS[i][1]} 70%,${SHOPWATERS[i][3]})"><i class="m-wv"></i></span>`;
-    return `<div class="m-sitem${own?' owned':''}" style="--rc:${rc}">${pv}<em>${rn}</em><b>${escapeHtml(n)}</b>${own?(eqd?`<span class="m-sown">${I('check')}EQUIPADO</span>`:`<button class="m-buy eq" data-eq="${id}">EQUIPAR</button>`):`<button class="m-buy${bal<price?' poor':''}" data-buy="${id}" data-price="${price}">${I('orange')}${price}</button>`}</div>`}).join('');
+    const tr=PV.ids.includes(id);return `<div class="m-sitem${own?' owned':''}${tr?' trying':''}" data-try="${id}" style="--rc:${rc}">${pv}${tr?`<span class="m-tryb">${I('eye')}EXPERIMENTANDO</span>`:''}<em>${rn}</em><b>${escapeHtml(n)}</b>${own?(eqd?`<span class="m-sown">${I('check')}EQUIPADO</span>`:`<button class="m-buy eq" data-eq="${id}">EQUIPAR</button>`):`<button class="m-buy${bal<price?' poor':''}" data-buy="${id}" data-price="${price}">${I('orange')}${price}</button>`}</div>`}).join('');
   const e=equip();
   $('shopGrid').querySelectorAll('canvas[data-pv]').forEach(cv=>{const [k,i]=cv.dataset.pv.split(':'),n=+i;
     if(k==='cores')drawPortrait(cv,{body:cat[3][n][1],hat:myLook.hat},{bg:false,styObj:styOf(e)});
     else drawPortrait(cv,{body:myLook.body,hat:myLook.hat},{bg:false,full:k==='roupas',styObj:styOf(Object.assign({},e,k==='roupas'?{out:n}:{pat:n}))})});
-  $('shopGrid').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>buy(b.dataset.buy,+b.dataset.price));
-  $('shopGrid').querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>{equipItem(b.dataset.eq);renderShop()})}
+  $('shopGrid').querySelectorAll('[data-try]').forEach(c=>c.onclick=()=>tryItem(c.dataset.try));
+  $('shopGrid').querySelectorAll('[data-buy]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();buy(b.dataset.buy,+b.dataset.price)});
+  $('shopGrid').querySelectorAll('[data-eq]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();untry(b.dataset.eq);equipItem(b.dataset.eq);renderShop()})}
+function untry(id){const k=id.split(':')[0];if(!PV.ids.some(x=>x.split(':')[0]===k))return;PV.ids=PV.ids.filter(x=>x.split(':')[0]!==k);const key={roupas:'out',pelos:'pat',estilos:'fx'}[k];if(key)delete PV.sty[key];else if(k==='cores')PV.fur=null;else PV.bg=null}
 async function buy(id,price){if(wallet()<price){Sound.play('no');toast(`Faltam ${price-wallet()} laranjas. Jogue partidas e complete desafios para juntar mais!`,'bad');return}
   if(!await confirmBox('Comprar item?',`${itemName(id)} — ${price} laranjas.`,'COMPRAR','CANCELAR'))return;
-  store.set('spent',store.get('spent',0)+price);give(id);Sound.play('level');celebrate(30);equipItem(id);toast('Comprado e equipado! Troque quando quiser no Visual'+(id.startsWith('fundos')||id.startsWith('quadros')?' / Fundo':'')+'.','good');renderShop();renderTop()}
+  store.set('spent',store.get('spent',0)+price);give(id);untry(id);Sound.play('level');celebrate(30);equipItem(id);toast('Comprado e equipado! Troque quando quiser no Visual'+(id.startsWith('fundos')||id.startsWith('quadros')?' / Fundo':'')+'.','good');renderShop();renderTop()}
 
 $('btnRandom').onclick=()=>{let h;do{h=pick(FURS)[0]}while(h===draftFur);vtab='cor';setFur(h);renderVis()};
 $('btnSaveLook').onclick=()=>{Sound.play('level');toast('Visual salvo: '+furName(myLook.body)+'!','good');celebrate(40);go('home')};

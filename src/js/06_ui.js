@@ -7,7 +7,7 @@ let view='home',hudGun=-1;
 const SCREENS=['home','custom','loja','fundo','play','setup','online','lobby','arsenal','bye','result'];
 // abas do menu (todas são "dentro" da tela inicial: a capivara desliza para o lado e o painel entra pela direita)
 const NAVV=['home','custom','loja','arsenal','fundo'],MENUV=['home','custom','loja','arsenal','fundo','setup','online'];
-function go(v){const prev=view;view=v;for(const s of SCREENS)$(s).classList.toggle('hidden',s!==v);
+function go(v){const prev=view;view=v;if(prev==='loja'&&v!=='loja')clearTry();for(const s of SCREENS)$(s).classList.toggle('hidden',s!==v);
   const inGame=v==='game';$('hud').classList.toggle('hidden',!inGame);$('touch').classList.toggle('hidden',!inGame);document.body.classList.toggle('menu',!inGame);
   const inMenu=MENUV.includes(v);$('mnav').classList.toggle('hidden',!inMenu);$('mtop').classList.toggle('hidden',!inMenu);$('mnav').querySelectorAll('[data-nav]').forEach(b=>b.classList.toggle('on',b.dataset.nav===v));
   document.body.classList.toggle('mclear',inMenu);document.body.classList.toggle('mpanel',inMenu&&v!=='home');
@@ -21,9 +21,10 @@ function goHome(){leaveNet();players={};bullets=[];effects=[];started=false;over
 let menuDrag=false,arsSel=0;
 const menuView=()=>view==='home'?'home':(view==='setup'||view==='online')?'wide':'side';
 const menuHat=()=>myLook.hat!=='none';
-const menuFur=()=>view==='custom'&&draftFur?draftFur:myLook.body;
+const menuFur=()=>view==='custom'&&draftFur?draftFur:(view==='loja'&&PV.fur)?PV.fur:myLook.body;
+let PV={sty:{},fur:null,bg:null,ids:[]}; // loja: itens que você está só experimentando (não comprados)
 const menuGun=()=>view==='arsenal'?arsSel:-1;
-let curBg=store.get('menubg','lagoa');const menuBgKey=()=>curBg;
+let curBg=store.get('menubg','lagoa');const menuBgKey=()=>(view==='loja'&&PV.bg)||curBg;
 
 // ---------- Retratos: a própria capivara 3D (cabeça ou corpo todo) ----------
 function drawPortrait(cv,L,o={}){const c=cv.getContext('2d'),w=cv.width,h=cv.height;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);
@@ -169,9 +170,15 @@ const FXK=['neon','rainbow','hearts','aura','sparks','bubbles'];
 function equip(){return Object.assign({pat:-1,out:-1,fx:-1,title:-1},store.get('equip',{}))}
 function setEquip(k,v){const e=equip();e[k]=v;store.set('equip',e);applyEquip();Map3D.menuPoke()}
 function styOf(e){const R=SHOP.find(s=>s[0]==='roupas')[3];return{pat:e.pat>=0?e.pat+1:0,out:e.out>=0?e.out+1:0,outC:e.out>=0?R[e.out][1]:'#FF4F9A',fx:e.fx>=0?FXK[e.fx]:''}}
-function applyEquip(){Map3D.setStyle(styOf(equip()));drawSpheres()}
+function applyEquip(){Map3D.setStyle(styOf(Object.assign({},equip(),view==='loja'?PV.sty:{})));Map3D.setEyes(eyesCfg());drawSpheres()}
+// olhos (vestiário): tipo, sobrancelha e cor — grátis, só a sua capivara usa
+const EYE_T=['Redondo','Grandão','Sonolento','Brilhante','Pontinho','Gatinho'],EYE_B=['Nenhuma','Fina','Grossa','Arqueada','Brava'],
+  EYE_CN=['Castanho','Preto','Azul','Verde','Mel','Violeta','Rosa','Vermelho','Dourado','Ciano','Cinza','Laranja'],
+  EYE_X=[['feliz','Feliz'],['raiva','Raiva'],['medo','Medo'],['surpreso','Surpresa'],['triste','Triste'],['tonto','Tonto'],['sono','Sono'],['dor','Ai!']];
+const eyesCfg=()=>Object.assign({t:0,b:1,c:'#6B3A1E'},store.get('eyes',{}));
+function setEyeCfg(k,v){const e=eyesCfg();e[k]=v;store.set('eyes',e);applyEquip();Map3D.menuExpr(k==='c'?'surpreso':'feliz');Sound.play('pop')}
 // abas do Visual
-const VTABS=[['cor','palette','Cor'],['cabeca','hat','Cabeça'],['roupa','shirt','Roupas'],['pelo','sparkle','Pelagens'],['fx','bolt','Efeitos'],['titulo','crown','Títulos']];
+const VTABS=[['cor','palette','Cor'],['olhos','eye','Olhos'],['cabeca','hat','Cabeça'],['roupa','shirt','Roupas'],['pelo','sparkle','Pelagens'],['fx','bolt','Efeitos'],['titulo','crown','Títulos']];
 let vtab='cor';
 const HEADS=[['none','Nada'],['palha','Chapéu de palha']];
 function openCustom(){draftFur=myLook.body;renderVis()}
@@ -179,13 +186,25 @@ const lockTile=(n,where,data)=>`<button class="m-fur lock" ${data||''}><span cla
 function shopGo(cat){shopTab=cat;Sound.play('click');go('loja')}
 function renderVis(){$('visTabs').innerHTML=VTABS.map(([k,ic,n])=>`<button class="m-tab${k===vtab?' on':''}" data-vt="${k}">${I(ic)}<span>${n}</span></button>`).join('');
   $('visTabs').querySelectorAll('[data-vt]').forEach(b=>b.onclick=()=>{vtab=b.dataset.vt;Sound.play('click');renderVis()});
-  const g=$('furGrid'),sub=$('visSub'),e=equip();g.classList.remove('empty');g.classList.toggle('titles',vtab==='titulo');
+  tabArrows('visTabs');$('visTabs')._upd();
+  const g=$('furGrid'),sub=$('visSub'),e=equip();g.classList.remove('empty','eyes');g.classList.toggle('titles',vtab==='titulo');
   const tileCv=(cv,body,styObj)=>drawPortrait(cv,{body,hat:myLook.hat},{bg:false,styObj});
   if(vtab==='cor'){const L=allFurs(),mine=L.filter(f=>!f.id||has(f.id)),lock=L.filter(f=>f.id&&!has(f.id));
     sub.innerHTML=`<b id="furName">${escapeHtml(furName(draftFur))}</b> — ${mine.length} de ${L.length} cores. Mais cores na Loja e nos Desafios!`;
     g.innerHTML=mine.map(f=>`<button class="m-fur${f.h.toLowerCase()===String(draftFur).toLowerCase()?' on':''}" data-fur="${f.h}" title="${escapeHtml(f.n)}"><canvas width="112" height="112"></canvas><span style="--fc:${f.h}"></span><b>${escapeHtml(f.n)}</b></button>`).join('')+
       lock.map(f=>lockTile(f.n,f.id.startsWith('cores')?'LOJA':'DESAFIOS',`data-lock="${f.id}"`)).join('');
     g.querySelectorAll('[data-fur]').forEach(b=>{tileCv(b.querySelector('canvas'),b.dataset.fur,styOf(equip()));b.onclick=()=>setFur(b.dataset.fur)})}
+  else if(vtab==='olhos'){const ec=eyesCfg(),so=styOf(e);g.classList.add('eyes');
+    sub.innerHTML=`<b>${EYE_T[ec.t]||EYE_T[0]}</b> · ${EYE_CN[Map3D.EYECOLS.indexOf(ec.c)]||'Personalizado'} — escolha o tipo, a sobrancelha e a cor. Teste as expressões!`;
+    const tile=(n,on,a)=>`<button class="m-fur${on?' on':''}" ${a}><canvas width="112" height="112"></canvas><b>${n}</b></button>`;
+    g.innerHTML=`<h5 class="m-sech">Expressões <small>(toque para testar)</small></h5><div class="m-exprs">${EYE_X.map(([k,n])=>`<button class="m-chip" data-ex="${k}">${n}</button>`).join('')}</div>
+      <h5 class="m-sech">Tipo de olho</h5><div class="m-subgrid">${EYE_T.map((n,i)=>tile(n,ec.t===i,`data-et="${i}"`)).join('')}</div>
+      <h5 class="m-sech">Cor dos olhos</h5><div class="m-swatches">${Map3D.EYECOLS.map((c,i)=>`<button class="m-sw${ec.c===c?' on':''}" data-ec="${c}" style="--c:${c}" title="${EYE_CN[i]}"><i></i></button>`).join('')}</div>
+      <h5 class="m-sech">Sobrancelha</h5><div class="m-subgrid">${EYE_B.map((n,i)=>tile(n,ec.b===i,`data-eb="${i}"`)).join('')}</div>`;
+    g.querySelectorAll('[data-et]').forEach(b=>{drawPortrait(b.querySelector('canvas'),myLook,{bg:false,styObj:Object.assign({},so,{eye:Object.assign({},ec,{t:+b.dataset.et})})});b.onclick=()=>{setEyeCfg('t',+b.dataset.et);renderVis()}});
+    g.querySelectorAll('[data-eb]').forEach(b=>{drawPortrait(b.querySelector('canvas'),myLook,{bg:false,styObj:Object.assign({},so,{eye:Object.assign({},ec,{b:+b.dataset.eb})})});b.onclick=()=>{setEyeCfg('b',+b.dataset.eb);renderVis()}});
+    g.querySelectorAll('[data-ec]').forEach(b=>b.onclick=()=>{setEyeCfg('c',b.dataset.ec);renderVis()});
+    g.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{Map3D.menuExpr(b.dataset.ex);Sound.play('click')})}
   else if(vtab==='cabeca'){const cur=myLook.hat==='none'?'none':'palha';sub.innerHTML=`<b>${cur==='none'?'Nada':'Chapéu de palha'}</b> — chapéus, cabelos e óculos.`;
     g.innerHTML=HEADS.map(([k,n])=>`<button class="m-fur${k===cur?' on':''}" data-head="${k}"><canvas width="112" height="112"></canvas><b>${n}</b></button>`).join('')+['Boné','Óculos escuros','Topete','Coroa'].map(n=>lockTile(n,'EM BREVE')).join('');
     g.querySelectorAll('[data-head]').forEach(b=>{drawPortrait(b.querySelector('canvas'),{body:myLook.body},{bg:false,hat:b.dataset.head!=='none',styObj:styOf(equip())});b.onclick=()=>setHead(b.dataset.head)})}
@@ -214,29 +233,51 @@ const SHOP=[['roupas','shirt','Roupas',[['Camiseta Listrada','#FF4F9A','comum',6
   ['cores','palette','Cores de pelo',[['Verde Musgo','#6E8B4A','comum',80],['Azul Royal','#3B5BD8','raro',160],['Roxo Uva','#7A3FA8','raro',160],['Dourado Brilhante','#F2C14E','epico',300],['Vermelho Fogo','#E23B2E','raro',160],['Prata','#BFC5CF','epico',300]]],
   ['pelos','sparkle','Pelagens e texturas',[['Listras de Tigre','repeating-linear-gradient(60deg,#E8913A 0 10px,#2A1A12 10px 16px)','epico',380],['Pintinhas','radial-gradient(#5A3A20 22%,transparent 24%) 0 0/16px 16px,#D9A066','raro',200],['Estrelinhas','radial-gradient(#FFF4B0 18%,transparent 20%) 0 0/14px 14px,#3A1C80','raro',220],['Camuflagem','radial-gradient(circle at 30% 30%,#4E6B2E 30%,transparent 32%) 0 0/24px 24px,radial-gradient(circle at 70% 60%,#2E3A1E 25%,transparent 27%) 0 0/20px 20px,#8A9A5A','epico',340],['Pelúcia Macia','radial-gradient(circle,#FFE8D6,#E8B890)','comum',100],['Galáxia','radial-gradient(circle at 30% 30%,#FF8FC8,transparent 40%),radial-gradient(circle at 70% 70%,#45D4FF,transparent 40%),#1B1033','lend',800]]],
   ['estilos','bolt','Estilos e efeitos',[['Contorno Neon','#45D4FF','raro',240],['Rastro de Arco-íris','linear-gradient(90deg,#FF4F4F,#FFC531,#6CF06A,#45D4FF,#B777FF)','epico',360],['Pegadas de Coração','#FF4F9A','comum',120],['Aura Dourada','#FFC531','lend',650],['Faíscas no Dash','#FFF066','raro',220],['Bolhas ao Andar','#C9F0FF','comum',110]]]];
+// abas da Loja e do Visual: no PC ganham setinhas nas pontas, dá para arrastar com o mouse e rolar com a rodinha
+function tabArrows(id){const el=$(id);if(!el||el._upd)return;const w=document.createElement('div');w.className='m-tabwrap';el.parentNode.insertBefore(w,el);w.appendChild(el);
+  const mk=d=>{const b=document.createElement('button');b.className='m-tabarr '+(d<0?'l':'r');b.setAttribute('aria-label',d<0?'Anterior':'Próximo');b.innerHTML=I('back');
+    b.onclick=()=>{el.scrollBy({left:d*el.clientWidth*.7,behavior:'smooth'});Sound.play('click')};w.appendChild(b);return b};
+  const L=mk(-1),R=mk(1),upd=()=>{const m=el.scrollWidth-el.clientWidth;L.classList.toggle('off',el.scrollLeft<4);R.classList.toggle('off',el.scrollLeft>m-4||m<=2);w.classList.toggle('scr',m>2)};
+  el.addEventListener('scroll',upd,{passive:true});if(window.ResizeObserver)new ResizeObserver(upd).observe(el);el._upd=()=>{const on=el.querySelector('.on');if(on){const a=on.offsetLeft-28,b=on.offsetLeft+on.offsetWidth-el.clientWidth+28;if(el.scrollLeft>a)el.scrollLeft=a;else if(el.scrollLeft<b)el.scrollLeft=b}upd()};
+  let dn=null,moved=false;el.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button)return;dn={x:e.clientX,s:el.scrollLeft};moved=false});
+  addEventListener('pointermove',e=>{if(!dn)return;const dx=e.clientX-dn.x;if(Math.abs(dx)>6)moved=true;if(moved){el.scrollLeft=dn.s-dx;w.classList.add('drag')}});
+  addEventListener('pointerup',()=>{dn=null;w.classList.remove('drag')});
+  el.addEventListener('click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false}},true);
+  el.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&el.scrollWidth>el.clientWidth){el.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false})}
 let shopTab='roupas';
+// experimentar: tocar no card aplica o item na sua capivara / no fundo só para ver; comprar é só no botão do preço
+function tryItem(id){const [k,i]=id.split(':'),n=+i,on=PV.ids.includes(id);PV.ids=PV.ids.filter(x=>x.split(':')[0]!==k);
+  const key={roupas:'out',pelos:'pat',estilos:'fx'}[k];
+  if(key){if(on)delete PV.sty[key];else PV.sty[key]=n;Map3D.setStyle(styOf(Object.assign({},equip(),PV.sty)))}
+  else if(k==='cores')PV.fur=on?null:SHOP.find(c=>c[0]==='cores')[3][n][1];
+  else{PV.bg=on?null:k==='fundos'?'shop_f'+n:SHOP.find(c=>c[0]==='quadros')[3][n][1];applyMenuBg()}
+  if(!on){PV.ids.push(id);Map3D.menuExpr(pick(['feliz','surpreso']))}Sound.play(on?'click':'pop');renderShop()}
+function clearTry(){if(!PV.ids.length)return;PV={sty:{},fur:null,bg:null,ids:[]};Map3D.setStyle(styOf(equip()));applyMenuBg()}
 const isEq=id=>{const [k,i]=id.split(':'),e=equip(),n=+i;return k==='roupas'?e.out===n:k==='pelos'?e.pat===n:k==='estilos'?e.fx===n:k==='cores'?myLook.body.toLowerCase()===SHOP.find(s=>s[0]==='cores')[3][n][1].toLowerCase():k==='fundos'?curBg==='shop_f'+n:k==='quadros'?curBg===SHOP.find(s=>s[0]==='quadros')[3][n][1]:false};
 function equipItem(id){const [k,i]=id.split(':'),n=+i;if(k==='roupas')setEquip('out',n);else if(k==='pelos')setEquip('pat',n);else if(k==='estilos')setEquip('fx',n);
   else if(k==='cores')setFur(SHOP.find(s=>s[0]==='cores')[3][n][1]);else if(k==='fundos'||k==='quadros'){curBg=k==='fundos'?'shop_f'+n:SHOP.find(s=>s[0]==='quadros')[3][n][1];store.set('menubg',curBg);applyMenuBg()}Sound.play('pop')}
 function renderShop(){$('shopBal').textContent=wallet();
   $('shopTabs').innerHTML=SHOP.map(([k,ic,n])=>`<button class="m-tab${k===shopTab?' on':''}" data-st="${k}">${I(ic)}<span>${n}</span></button>`).join('');
   $('shopTabs').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{shopTab=b.dataset.st;Sound.play('click');renderShop()});
+  tabArrows('shopTabs');$('shopTabs')._upd();
   const cat=SHOP.find(c=>c[0]===shopTab),bal=wallet();
   $('shopGrid').innerHTML=cat[3].map(([n,v,r,price],i)=>{const id=shopTab+':'+i,own=has(id),[rn,rc]=RAR[r],eqd=own&&isEq(id);
     const pv=(shopTab==='roupas'||shopTab==='pelos'||shopTab==='cores')?`<span class="m-spv" style="background:radial-gradient(circle at 50% 40%,#5A34B0,#24104F)"><canvas width="112" height="112" data-pv="${id}"></canvas></span>`
       :shopTab==='estilos'?`<span class="m-spv" style="background:radial-gradient(circle at 50% 40%,#3A1C80,#170A38)"><i class="m-sglow" style="background:${v}"></i></span>`
       :shopTab==='quadros'?`<span class="m-spv m-art" style="background-image:url(loading/${v}_p.jpg?v=${ASSETV})"></span>`
       :`<span class="m-spv" style="background:radial-gradient(ellipse at 50% 60%,${SHOPWATERS[i][0]},${SHOPWATERS[i][1]} 70%,${SHOPWATERS[i][3]})"><i class="m-wv"></i></span>`;
-    return `<div class="m-sitem${own?' owned':''}" style="--rc:${rc}">${pv}<em>${rn}</em><b>${escapeHtml(n)}</b>${own?(eqd?`<span class="m-sown">${I('check')}EQUIPADO</span>`:`<button class="m-buy eq" data-eq="${id}">EQUIPAR</button>`):`<button class="m-buy${bal<price?' poor':''}" data-buy="${id}" data-price="${price}">${I('orange')}${price}</button>`}</div>`}).join('');
+    const tr=PV.ids.includes(id);return `<div class="m-sitem${own?' owned':''}${tr?' trying':''}" data-try="${id}" style="--rc:${rc}">${pv}${tr?`<span class="m-tryb">${I('eye')}EXPERIMENTANDO</span>`:''}<em>${rn}</em><b>${escapeHtml(n)}</b>${own?(eqd?`<span class="m-sown">${I('check')}EQUIPADO</span>`:`<button class="m-buy eq" data-eq="${id}">EQUIPAR</button>`):`<button class="m-buy${bal<price?' poor':''}" data-buy="${id}" data-price="${price}">${I('orange')}${price}</button>`}</div>`}).join('');
   const e=equip();
   $('shopGrid').querySelectorAll('canvas[data-pv]').forEach(cv=>{const [k,i]=cv.dataset.pv.split(':'),n=+i;
     if(k==='cores')drawPortrait(cv,{body:cat[3][n][1],hat:myLook.hat},{bg:false,styObj:styOf(e)});
     else drawPortrait(cv,{body:myLook.body,hat:myLook.hat},{bg:false,full:k==='roupas',styObj:styOf(Object.assign({},e,k==='roupas'?{out:n}:{pat:n}))})});
-  $('shopGrid').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>buy(b.dataset.buy,+b.dataset.price));
-  $('shopGrid').querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>{equipItem(b.dataset.eq);renderShop()})}
+  $('shopGrid').querySelectorAll('[data-try]').forEach(c=>c.onclick=()=>tryItem(c.dataset.try));
+  $('shopGrid').querySelectorAll('[data-buy]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();buy(b.dataset.buy,+b.dataset.price)});
+  $('shopGrid').querySelectorAll('[data-eq]').forEach(b=>b.onclick=ev=>{ev.stopPropagation();untry(b.dataset.eq);equipItem(b.dataset.eq);renderShop()})}
+function untry(id){const k=id.split(':')[0];if(!PV.ids.some(x=>x.split(':')[0]===k))return;PV.ids=PV.ids.filter(x=>x.split(':')[0]!==k);const key={roupas:'out',pelos:'pat',estilos:'fx'}[k];if(key)delete PV.sty[key];else if(k==='cores')PV.fur=null;else PV.bg=null}
 async function buy(id,price){if(wallet()<price){Sound.play('no');toast(`Faltam ${price-wallet()} laranjas. Jogue partidas e complete desafios para juntar mais!`,'bad');return}
   if(!await confirmBox('Comprar item?',`${itemName(id)} — ${price} laranjas.`,'COMPRAR','CANCELAR'))return;
-  store.set('spent',store.get('spent',0)+price);give(id);Sound.play('level');celebrate(30);equipItem(id);toast('Comprado e equipado! Troque quando quiser no Visual'+(id.startsWith('fundos')||id.startsWith('quadros')?' / Fundo':'')+'.','good');renderShop();renderTop()}
+  store.set('spent',store.get('spent',0)+price);give(id);untry(id);Sound.play('level');celebrate(30);equipItem(id);toast('Comprado e equipado! Troque quando quiser no Visual'+(id.startsWith('fundos')||id.startsWith('quadros')?' / Fundo':'')+'.','good');renderShop();renderTop()}
 
 $('btnRandom').onclick=()=>{let h;do{h=pick(FURS)[0]}while(h===draftFur);vtab='cor';setFur(h);renderVis()};
 $('btnSaveLook').onclick=()=>{Sound.play('level');toast('Visual salvo: '+furName(myLook.body)+'!','good');celebrate(40);go('home')};

@@ -1252,3 +1252,31 @@ body.mport .m-chal:not(.open) #chalList,body.mport .m-chal:not(.open) .m-chalfoo
 body.mport .m-chal.open{position:relative;z-index:5;box-shadow:0 10px 40px #000a}
 /* celular em pé: cartão da arma sobe para baixo do cartão de vida (não fica em cima do joystick) */
 @media (orientation:portrait){body.mobile #weaponCard{left:calc(10px + var(--sal,0px))!important;right:auto!important;top:calc(78px + var(--sat))!important;bottom:auto!important;transform:scale(.82)!important;transform-origin:left top!important}}
+/* abas com setinhas (PC) */
+.m-tabwrap{position:relative;flex:none;min-width:0;display:flex}.m-phead>.m-tabwrap{flex:1}
+.m-tabwrap>.m-tabs{flex:1}
+.m-tabarr{position:absolute;top:50%;z-index:3;width:30px;height:40px;margin-top:-20px;display:grid;place-items:center;border-radius:10px;border:2.5px solid var(--mdark);background:linear-gradient(#FFE15A,#F2B21C);color:#3A1A6A;cursor:pointer;box-shadow:0 3px 0 var(--mdark),0 0 14px 6px #24104Fcc;transition:opacity .15s,transform .1s}
+.m-tabarr .i{width:16px;height:16px}.m-tabarr.l{left:-2px}.m-tabarr.r{right:-2px}.m-tabarr.r .i{transform:rotate(180deg)}
+.m-tabarr:hover{filter:brightness(1.06)}.m-tabarr:active{transform:translateY(2px)}
+.m-tabarr.off{opacity:0;pointer-events:none}
+.m-tabwrap:not(.scr) .m-tabarr{display:none}
+body.mobile .m-tabarr{display:none}
+.m-tabwrap.drag .m-tabs{cursor:grabbing}.m-tabwrap.drag .m-tab{pointer-events:none}
+/* loja: experimentar */
+.m-sitem{cursor:pointer;transition:transform .1s,box-shadow .15s}.m-sitem:hover{transform:translateY(-2px)}
+.m-sitem.trying{border-color:#45D4FF;box-shadow:0 0 0 3px #45D4FF66,0 0 22px #45D4FF55}
+.m-tryb{position:absolute;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;background:#45D4FF;color:#0B1A3A;font:800 10px var(--font-ui);letter-spacing:1px;white-space:nowrap;z-index:2;box-shadow:0 2px 0 #0B1A3A}
+.m-tryb .i{width:13px;height:13px}
+/* olhos no Visual */
+#furGrid.eyes{display:block}
+.m-sech{font:400 16px var(--font-display);margin:10px 2px 6px;color:#FFC531;letter-spacing:.3px}.m-sech:first-child{margin-top:2px}
+.m-sech small{font:700 11px var(--font-ui);color:var(--cream);opacity:.7;letter-spacing:0}
+.m-subgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.m-swatches{display:flex;flex-wrap:wrap;gap:9px;padding:2px}
+.m-sw{width:40px;height:40px;border-radius:50%;border:3px solid #ffffff30;background:radial-gradient(circle at 50% 50%,#111 0 24%,var(--c) 26% 62%,#fff 64%);cursor:pointer;position:relative;transition:transform .1s}
+.m-sw:hover{transform:scale(1.08)}.m-sw.on{border-color:#FFC531;box-shadow:0 0 0 3px #FFC53166}
+.m-sw i{position:absolute;left:30%;top:24%;width:7px;height:7px;border-radius:50%;background:#fff}
+.m-exprs{display:flex;flex-wrap:wrap;gap:7px}.m-exprs .m-chip{font-size:13px;padding:6px 13px}
+.m-exprs .m-chip:hover{border-color:#FFC531}
+/* menu 3D: o canvas 2D do jogo fica vazio — esconder evita compor uma camada transparente a mais em cada quadro */
+body.g3menu.menu #game{visibility:hidden}

@@ -23,7 +23,7 @@ if(document.fonts)document.fonts.ready.then(()=>{fontsOk=true;if(cur&&cur.repain
 
 // ---------- Qualidade (segue Configurações > Gráficos) ----------
 function Q(){const q=S.quality;return{key:q,sh:q==='low'?0:q==='medium'?(isTouch?1024:2048):q==='high'?2048:4096,tex:q==='low'?1024:q==='medium'?(isTouch?1536:2048):q==='high'?3072:4096,
-  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low',pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:q!=='low'}} // MSAA também no celular: nas GPUs de celular (tile-based) ele custa pouco e tira o serrilhado
+  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low'||(isTouch&&q==='medium'),pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:q!=='low'}} // MSAA também no celular: nas GPUs de celular (tile-based) ele custa pouco e tira o serrilhado
 
 // ---------- Ruído e aleatório determinísticos ----------
 function hrand(x,y,z,s){return mulberry(Math.imul(x|0,73856093)^Math.imul(y|0,19349663)^Math.imul(z|0,83492791)^Math.imul(s|0,40503))}
@@ -567,7 +567,7 @@ function setCam(c,cx,cz,vw,vh){c.position.set(cx,CH,cz);c.lookAt(cx,0,cz);c.upda
 let buildMs=0,compiling=false;
 function loading(on){document.body.classList.toggle('g3load',!!on)}
 function warmCompile(c){compiling=true;loading(true);const warm=new T.Group();warm.position.set(-9999,0,-9999);
-  try{if(capyReady()){const m=sharedCapyMats(),A=CapyRig.make({body:capyBodyMat({}),outline:m.out,xray:xray('#FFC531'),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},CAPY_H/CapyRig.MH);warm.add(A.g)}
+  try{if(capyReady()){const m=sharedCapyMats(),bm=capyBodyMat({}),A=CapyRig.make(Object.assign({body:bm,outline:m.out,xray:xray('#FFC531'),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},eyeMats(bm)),CAPY_H/CapyRig.MH);CapyRig.setEyes(A,EYE);warm.add(A.g)}
     for(let i=0;i<GUNS.length;i++){const g=Guns3D.instance(i);if(g)warm.add(g)}const fw=FX3D.warm();if(fw)warm.add(fw);warm.add(gfxMesh({}));if(!dust)dustInit();warm.add(dust.im);if(!bldMat)syncBuilds();const bm=new T.Mesh(new T.BoxGeometry(1,1,1),bldMat.wall);warm.add(bm)}catch(e){console.warn('aquecimento',e)}
   c.scene.add(warm);setCam(camera,W/2,H/2,1200,800);camera.layers.enableAll();
   const done=()=>{if(dust&&dust.im.parent===warm)warm.remove(dust.im);c.scene.remove(warm);compiling=false;loading(false);c.warm=1;capyWarm=capyReady()?1:capyWarm};
@@ -586,18 +586,18 @@ let lastT=0;
 // O 3D é desenhado num tamanho limitado de pixels (o navegador estica na tela) e, se o jogo ficar lento, a resolução
 // cai sozinha e as sombras passam a atualizar menos vezes (sem recompilar nada).
 // no celular o 3D desenha bem menos pixels (o navegador estica) e as sombras atualizam a cada 2 quadros
-const PXB=isTouch?{low:.45e6,medium:.95e6,high:1.3e6,chaos:1.6e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=isTouch&&((navigator.deviceMemory||4)<=3||(navigator.hardwareConcurrency||8)<=4)?.7:1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?2:1,frameN=0,skipNext=true;
+const PXB=isTouch?{low:.7e6,medium:1.35e6,high:1.8e6,chaos:2.2e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=isTouch&&(navigator.deviceMemory||4)<=3?.75:1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?6:1,frameN=0,skipNext=true;
 document.addEventListener('visibilitychange',()=>{skipNext=true});
 function watch(rawDt){if(skipNext){skipNext=false;return}emaDt+=(Math.min(rawDt,250)-emaDt)*.08;
-  if(emaDt>(isTouch?26:36)){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;if(autoS>.45)autoS=Math.max(.45,autoS*.8);else shadowEvery=Math.min(4,shadowEvery+1)}}
-  else if(emaDt<20){fastFor+=rawDt;slowFor=Math.max(0,slowFor-rawDt);if(fastFor>6000){fastFor=0;if(shadowEvery>1)shadowEvery--;else if(autoS<1)autoS=Math.min(1,autoS*1.12)}}else{slowFor=Math.max(0,slowFor-rawDt*.5)}}
+  if(emaDt>(isTouch?26:36)){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;const fl=isTouch?.62:.45;if(isTouch&&shadowEvery<16)shadowEvery=Math.min(16,shadowEvery*2);else if(autoS>fl)autoS=Math.max(fl,autoS*.85);else shadowEvery=Math.min(16,shadowEvery+1)}}
+  else if(emaDt<20){fastFor+=rawDt;slowFor=Math.max(0,slowFor-rawDt);if(fastFor>6000){fastFor=0;if(autoS<1)autoS=Math.min(1,autoS*1.1);else if(shadowEvery>(isTouch?6:1))shadowEvery--}}else{slowFor=Math.max(0,slowFor-rawDt*.5)}}
 let failN=0;function fail(e){if(failN++<3)console.error('Erro no 3D:',e)}
 // libera a placa de vídeo na hora ao recarregar/fechar (o Live Server recarrega a página a cada arquivo salvo)
 function freeGPU(){try{if(R){R.dispose();R.forceContextLoss()}}catch(e){}}
 addEventListener('pagehide',freeGPU);
 function render(M,camX,camY,VW,VH,t,lights,acts){if(!ensure(M))return false;const c=cur;const rawDt=lastT?t-lastT:16;const dt=clamp(rawDt/1000,0,.1);lastT=t;
   if(compiling){skipNext=true;return false}watch(rawDt);
-  gameCv=gameCv||$('game');const W0=gameCv.width,H0=gameCv.height,sc=Math.min(1,Math.sqrt((PXB[c.q.key]||1.2e6)*autoS/(W0*H0))),w=Math.max(2,Math.round(W0*sc)),h=Math.max(2,Math.round(H0*sc));
+  gameCv=gameCv||$('game');const gdp=Math.min(window.devicePixelRatio||1,isTouch?2:(S.quality==='high'||S.quality==='chaos'?2:1.25)),W0=isTouch?Math.round(innerWidth*gdp):gameCv.width,H0=isTouch?Math.round(innerHeight*gdp):gameCv.height,sc=Math.min(1,Math.sqrt((PXB[c.q.key]||1.2e6)*autoS/(W0*H0))),w=Math.max(2,Math.round(W0*sc)),h=Math.max(2,Math.round(H0*sc));
   // modo "duas camadas" (paredes altas meio transparentes por cima dos textos 2D) só no PC em Alta/Caótica; no resto, uma camada só (bem mais leve)
   const split=false; // camada única sempre: copiar o WebGL para um canvas 2D a cada quadro custava caro (era a causa de engasgos no Mac)
   document.body.classList.toggle('g3single',!split);const gm=gameCv;if(split?glCv.nextSibling===gm:glCv.nextSibling!==gm)gm.parentNode.insertBefore(glCv,split?gm.nextSibling:gm);
@@ -695,6 +695,45 @@ const hatOn=(L,bot)=>!!bot||!L||L.hat!=='none';
 let hatM=null;function hatMat(){if(!hatM&&CapyRig.map)hatM=patch(new T.MeshStandardMaterial({map:CapyRig.map,normalMap:CapyRig.nrm,normalScale:new T.Vector2(.8,.8),roughness:.8,metalness:0,emissiveMap:CapyRig.map,emissive:new T.Color(.5,.5,.5)}),{key:'capyHat'});return hatM}
 const capyFurHex=(L,bot)=>bot?'#E2C48C':(L&&L.body)||'#B07A4A';
 const FURF=['#include <map_fragment>','#include <map_fragment>\ndiffuseColor.rgb=furC(diffuseColor.rgb);'],FURE=['#include <emissivemap_fragment>','vec4 emissiveColor=texture2D(emissiveMap,vEmissiveMapUv);totalEmissiveRadiance*=furC(emissiveColor.rgb);'];
+// olhos 3D: tudo desenhado no shader pela posição na meia-esfera (vEP), animado por uniforms (abrir/piscar, expressões, olhar, tipo e cor)
+const EYE_FS=`
+{vec3 p=normalize(vEP);float x=p.x,y=p.y;
+ float open=uE1.x,sq=uE1.y,sl=uE1.z,sm=uE1.w;
+ float yL=-1.05+sq*.9+sm*.6*(1.-x*x)+.12*x*x;
+ float yU=mix(yL+.02,1.1,clamp(open,0.,1.))-sl*.42*x-.1*x*x;
+ float inside=step(yL,y)*step(y,yU);
+ vec2 q=vec2(x*uAsp,y)-uGaze;float ir=uE2.x;
+ vec3 e=mix(vec3(1.),vec3(.8,.84,.95),smoothstep(.5,1.,length(vec2(x,y))));
+ if(uE2.z>3.5&&uE2.z<4.5){e=vec3(.07,.045,.04);}
+ else{float d=length(q)/ir;
+  vec3 ic=uIrisC*mix(1.35,.5,smoothstep(-.7,.8,q.y/ir));ic=mix(ic,uIrisC*.3,smoothstep(.75,1.,d));
+  if(uE2.w>.01){float a=atan(q.y,q.x)-uTime*9.;float sp=sin(a*2.+length(q)*16.);ic=mix(ic,vec3(.12,.08,.2),smoothstep(-.2,.3,sp)*uE2.w);}
+  vec2 pq=q/ir;float pr=max(uE2.y,.001);float pd=(uE2.z>4.5)?length(vec2(pq.x/(pr*.3),pq.y/pr)):length(pq)/pr;
+  ic=mix(vec3(.03,.02,.025),ic,smoothstep(.9,1.05,pd)*step(.01,uE2.y)+step(uE2.y,.01));
+  e=mix(e,ic,1.-smoothstep(.95,1.04,d));}
+ float hs=(uE2.z>2.5&&uE2.z<3.5)?1.45:1.;float hr=max(ir,.5);
+ float h1=length(q-vec2(-.3,.34)*hr)/(hr*.25*hs),h2=length(q-vec2(.28,-.3)*hr)/(hr*.12*hs);
+ e=mix(e,vec3(1.),max(1.-smoothstep(.75,1.,h1),(1.-smoothstep(.7,1.,h2))*.9)*(1.-uE2.w));
+ vec3 lc=uFlat*uFur*(1.12+.25*y);
+ vec3 c=mix(lc,e,inside);
+ float edge=min(abs(y-yU),abs(y-yL));
+ float ln=(1.-smoothstep(.03,.075,edge))*step(yL-.08,y)*step(y,yU+.08);
+ float rim=1.-smoothstep(.36,.5,p.z);
+ c=mix(c,vec3(.09,.05,.04),max(ln,rim*inside));
+ diffuseColor.rgb=c;}`;
+function eyeMat(fur){const m=new T.MeshBasicMaterial({color:'#FFFFFF'});if(!FLATC){const fa=(CapyRig.extras&&CapyRig.extras.furAvg)||'#c3835c';FLATC={value:new T.Color(fa)}}
+  m.userData.eu={uFur:fur,uFlat:FLATC,uIrisC:{value:new T.Color('#6B3A1E')},uE1:{value:new T.Vector4(1,0,0,0)},uE2:{value:new T.Vector4(.6,.55,0,0)},uGaze:{value:new T.Vector2()},uAsp:{value:ER_ASP}};
+  return patch(m,{key:'eye',uni:mm=>mm.userData.eu,vd:'varying vec3 vEP;\n',v:'vEP=position;',fd:'uniform vec3 uFur,uFlat,uIrisC;uniform vec4 uE1,uE2;uniform vec2 uGaze;uniform float uAsp;varying vec3 vEP;',
+    fr:[['#include <color_fragment>','#include <color_fragment>\n'+EYE_FS]]})}
+const ER_ASP=.05/.041;
+function browMat(fur){const m=new T.MeshBasicMaterial({color:'#FFFFFF'});m.userData.bu={uFur:fur,uFlat:FLATC};
+  return patch(m,{key:'brow',uni:mm=>mm.userData.bu,fd:'uniform vec3 uFur,uFlat;',fr:[['#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=uFlat*uFur*.3;']]})}
+function eyeMats(body){if(!FLATC){const fa=(CapyRig.extras&&CapyRig.extras.furAvg)||'#c3835c';FLATC={value:new T.Color(fa)}}const f=body.userData.fur;return{eye:eyeMat(f),brow:browMat(f)}}
+// olhos de cada capivara: você usa os do Visual; bots ganham uns sorteados (fixos por bot); outros jogadores, o padrão
+let EYE={t:0,b:1,c:'#6B3A1E'};const EYECOLS=['#6B3A1E','#2A1A12','#3B7BD8','#3DAE5A','#C98A2E','#8A4FD8','#E0508A','#D8342E','#E8B830','#2FC4D0','#8A8F9A','#FF8A2A'];
+function setEyes(o){EYE=Object.assign({t:0,b:1,c:'#6B3A1E'},o||{});if(MN&&MN.A)CapyRig.setEyes(MN.A,EYE);for(const A of actors.values())if(A.self)CapyRig.setEyes(A,EYE)}
+function botEye(id){let h=7;for(const ch of String(id))h=h*31+ch.charCodeAt(0)|0;h=Math.abs(h);return{t:[0,0,1,3,5,2,4][h%7],b:(h>>3)%5,c:EYECOLS[(h>>6)%EYECOLS.length]}}
+const eyeKey=e=>(e.t|0)+'.'+e.b+'.'+e.c;
 function capyBodyMat(a,hex){const m=new T.MeshStandardMaterial({map:CapyRig.map,normalMap:CapyRig.nrm,normalScale:new T.Vector2(.8,.8),roughness:.78,metalness:0,emissiveMap:CapyRig.map,emissive:new T.Color(.5,.5,.5)});
   m.userData.fur={value:furVec(hex||capyFurHex(a.look,a.bot))};
   if(!FLATC){const fa=(CapyRig.extras&&CapyRig.extras.furAvg)||'#c3835c';FLATC={value:new T.Color(fa)}}
@@ -729,28 +768,29 @@ vec3 capyStyle(vec3 c){vec3 p=vOP;float lum=dot(c,vec3(.3,.59,.11));
   return c;}`;
 let FLATC=null,depthOnly=null;
 function newActor(a){const m=sharedCapyMats(),body=capyBodyMat(a);
-  const q=Q(),A=CapyRig.make({body,outline:q.key==='low'?null:m.out,xray:q.key==='low'?null:xray(a.xc),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},CAPY_H/CapyRig.MH);
+  const q=Q(),A=CapyRig.make(Object.assign({body,outline:q.key==='low'?null:m.out,xray:q.key==='low'?null:xray(a.xc),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},eyeMats(body)),CAPY_H/CapyRig.MH);A.self=!!a.self;CapyRig.setEyes(A,a.self?EYE:a.bot?botEye(a.id):null);
   A.body.castShadow=q.key==='high'||q.key==='chaos'||(!isTouch&&q.key==='medium'); A.bot=a.bot;A.lookKey=a.bot?'bot':(a.look&&a.look.body);A.xc=a.xc;A.mat=body; // no celular em Média a sombra 3D da capivara sai (fica a sombrinha redonda)
-  const blob=new T.Mesh(new T.PlaneGeometry(52,40).rotateX(-PI/2),m.blob);blob.position.y=.6;blob.renderOrder=3;A.g.add(blob);
+  const blob=new T.Mesh(m.blobG||(m.blobG=new T.PlaneGeometry(52,40).rotateX(-PI/2)),m.blob);blob.position.y=.6;blob.renderOrder=3;A.g.add(blob);
   // anéis no chão: cor do time e o seu anel tracejado girando
   // anel do time (fino) e o SEU anel: círculo inteiro, translúcido, com brilho suave que pulsa — fica no chão, embaixo da capivara
   const ring=gfxMesh({fill:.05,inn:.8,edge:.1,a:.9});ring.scale.set(58,1,58);ring.position.y=.9;ring.visible=false;
   const dash=gfxMesh({fill:.14,inn:.72,edge:.14,glow:.55,a:.85});dash.scale.set(70,1,70);dash.position.y=1;dash.material.uniforms.uCol.value.set('#FFC531');dash.visible=false;
   const rg=new T.Group();rg.add(ring,dash);rg.position.z=-FEET*0;A.rings={g:rg,ring,dash};actG.add(rg);
-  if(a.bot){const ch=A.B.chest;const r1=new T.Mesh(new T.RingGeometry(.03,.046,18),m.target),r2=new T.Mesh(new T.CircleGeometry(.03,18),m.targetW),r3=new T.Mesh(new T.CircleGeometry(.013,12),m.target);
+  if(a.bot){const ch=A.B.chest;const r1=new T.Mesh(m.tg1||(m.tg1=new T.RingGeometry(.03,.046,18)),m.target),r2=new T.Mesh(m.tg2||(m.tg2=new T.CircleGeometry(.03,18)),m.targetW),r3=new T.Mesh(m.tg3||(m.tg3=new T.CircleGeometry(.013,12)),m.target);
     for(const [mm,z] of [[r1,.272],[r2,.27],[r3,.274]]){mm.position.set(0,-.07,z);mm.rotation.x=-.12;ch.add(mm)}}
   A.gun=null;A.gunId=-2;
   actG.add(A.g);return A}
-function dropActor(id){const A=actors.get(id);if(!A)return;actG.remove(A.g);if(A.gun)actG.remove(A.gun);actG.remove(A.rings.g);A.rings.ring.material.dispose();if(A.mat)A.mat.dispose();actors.delete(id)}
+function dropActor(id){const A=actors.get(id);if(!A)return;actG.remove(A.g);if(A.gun)actG.remove(A.gun);actG.remove(A.rings.g);A.rings.ring.material.dispose();A.rings.dash.material.dispose();if(A.mat)A.mat.dispose();if(A.E3){A.E3.mat.dispose();A.E3.list[0].brow.material.dispose()}actors.delete(id)}
 // arma = modelo 3D low poly (03_guns3d.js) preso na mão direita, apontando para a mira
 function setGun(A,gi){if(A.gun){actG.remove(A.gun);A.gun=null}A.gunId=gi;if(gi==null||gi<0)return;const g=Guns3D.instance(gi);if(!g)return;
-  g.matrixAutoUpdate=false;g.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.castShadow=!o.material.userData.nocast&&!!(cur&&cur.q.sh)}});actG.add(g);A.gun=g}
+  g.matrixAutoUpdate=false;g.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.castShadow=!isTouch&&!o.material.userData.nocast&&!!(cur&&cur.q.sh)}});actG.add(g);A.gun=g}
 let _v,_A,_N,_Y,_V,_m;
 function syncActors(list,t,dt){if(!_v){_v=new T.Vector3();_A=new T.Vector3();_N=new T.Vector3();_Y=new T.Vector3();_V=new T.Vector3();_m=new T.Matrix4()}const seen=new Set();_V.set(0,1,K).normalize();
   for(const a of list){let A=actors.get(a.id);const lk=a.bot?'bot':(a.look&&a.look.body);
     if(A&&(A.lookKey!==lk||A.bot!==a.bot)){dropActor(a.id);A=null}if(!A){A=newActor(a);actors.set(a.id,A)}seen.add(a.id);A.hid=0;A.g.visible=true;
     if(A.xray&&A.xc!==a.xc){A.xray.material=xray(a.xc);if(A.hat[2])A.hat[2].material=A.xray.material;A.xc=a.xc}A.setHat(hatOn(a.look,a.bot));applySty(A,!!a.self);
-    CapyRig.animate(A,{dt,t:t/1000,x:a.x,y:a.y,aim:a.aim,frozen:a.frozen,recoil:a.recoil,swing:a.swing,hurt:a.hurt,dashing:a.dash,melee:a.melee});
+    if(A.self!==!!a.self){A.self=!!a.self;CapyRig.setEyes(A,a.self?EYE:a.bot?botEye(a.id):null)}else if(A.self)CapyRig.setEyes(A,EYE);
+    CapyRig.animate(A,{dt,t:t/1000,x:a.x,y:a.y,aim:a.aim,frozen:a.frozen,recoil:a.recoil,swing:a.swing,hurt:a.hurt,dashing:a.dash,melee:a.melee,low:a.low,kill:a.kill});
     A.g.position.set(a.x,0,a.y+FEET);A.g.updateMatrixWorld(true);
     dustFrom(A,a,dt);
     const R_=A.rings;R_.g.visible=true;R_.g.position.set(a.x,0,a.y+FEET);R_.ring.visible=!!a.ring&&!a.self;if(a.ring)R_.ring.material.uniforms.uCol.value.set(a.ring);R_.dash.visible=!!a.self;if(a.self){const au=STY.fx==='aura',pu=(au?1.12:1)+Math.sin(t/260)*.035;R_.dash.scale.set(70*pu,1,70*pu);R_.dash.material.uniforms.uGlow.value=au?1.3:.55;R_.dash.material.uniforms.uA.value=.75+.15*Math.sin(t/260);if(a.ring)R_.dash.material.uniforms.uCol.value.set(a.ring)}
@@ -851,7 +891,7 @@ function menuBuild(){const sc=new T.Scene(),q={lam:false},G=lib();let B=makeBuil
   const cam=new T.PerspectiveCamera(30,1,10,6000);
   return{sc,water,sp,spD,cam,padG,dockG,bg:'',gun:null,gunId:-2,A:null,mat:null,warm:0,v:{tx:0,ty:30,d:440,el:.5,off:0},spin:0,spinV:0}}
 const MVIEW={home:{ty:76,d:360,el:.4,off:0},side:{ty:36,d:340,el:.36,off:.24},wide:{ty:36,d:380,el:.38,off:.3}};
-function menuCapy(){const m=sharedCapyMats(),mat=capyBodyMat({},'#B07A4A');const A=CapyRig.make({body:mat,outline:m.out,xray:null,hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},CAPY_H/CapyRig.MH);A.mat=mat;return A}
+function menuCapy(){const m=sharedCapyMats(),mat=capyBodyMat({},'#B07A4A');const A=CapyRig.make(Object.assign({body:mat,outline:m.out,xray:null,hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},eyeMats(mat)),CAPY_H/CapyRig.MH);A.mat=mat;CapyRig.setEyes(A,EYE);return A}
 let menuT=0,menuOk=false;
 function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!R&&!initR())return false;
   if(!MN){try{MN=menuBuild()}catch(e){console.error('menu 3D',e);return false}}
@@ -859,8 +899,8 @@ function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!
   if(!MN.warm&&!compiling){MN.warm=-1;compiling=true;loading(true);MN.cam.aspect=innerWidth/innerHeight;MN.cam.updateProjectionMatrix();
     const done=()=>{compiling=false;loading(false);MN.warm=1};(R.compileAsync&&R.extensions.has('KHR_parallel_shader_compile')?R.compileAsync(MN.sc,MN.cam):new Promise(r=>setTimeout(()=>{R.compile(MN.sc,MN.cam);r()},30))).then(done,done)}
   if(MN.warm!==1)return false;
-  const dt=clamp((t-(menuT||t))/1000,0,.1);menuT=t;
-  const dpr=Math.min(window.devicePixelRatio||1,1.5),bud=(isTouch?(S.quality==='low'?.45e6:.95e6):(S.quality==='low'?.9e6:2.2e6))*autoS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
+  const rawM=menuT?t-menuT:16,dt=clamp(rawM/1000,0,.1);menuT=t;menuWatch(rawM);
+  const dpr=Math.min(window.devicePixelRatio||1,2),bud=(isTouch?(S.quality==='low'?.8e6:1.8e6):(S.quality==='low'?.9e6:2.4e6))*menuS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
   if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false)}
   document.body.classList.add('g3don','g3menu');sharedCapyMats();OU.uRes.value.set(w,h);OU.uOW.value=Math.max(1.8,h*.0052);
   const V=MVIEW[o.view]||MVIEW.home,v=MN.v,k=Math.min(1,dt*5);for(const key of ['ty','d','el','off'])v[key]+=(V[key]-v[key])*k;
@@ -879,28 +919,34 @@ function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!
       m.setPosition(v.x+cs*2*CAPYS,v.y+1,v.z+sn*2*CAPYS);MN.gun.matrix.copy(m);MN.gun.matrixWorldNeedsUpdate=true}}
   const ts=t/1000;MN.water.material.uniforms.uT.value=ts;U.uTime.value=ts;U.uDark.value=0;U.uNL.value=0;U.uClipOn.value=0;
   const m4=new T.Matrix4();MN.spD.forEach((p,i)=>{const hh=(p.h+ts*12)%170;m4.makeScale(p.s*(.6+.4*Math.sin(ts*2+p.ph)),p.s,p.s).setPosition(p.x+Math.sin(ts*.5+p.ph)*20,hh,p.z);MN.sp.setMatrixAt(i,m4)});MN.sp.instanceMatrix.needsUpdate=true;
-  camera&&camera.layers.set(0);cam.layers.set(0);if(MN.clear)R.setClearColor(MN.clear,1);else R.setClearColor(0x000000,0);R.shadowMap.needsUpdate=!isTouch||(++frameN%3===0);R.render(MN.sc,cam);menuOk=true;return true}
+  camera&&camera.layers.set(0);cam.layers.set(0);if(MN.clear)R.setClearColor(MN.clear,1);else R.setClearColor(0x000000,0);R.shadowMap.needsUpdate=!isTouch||(++frameN%4===0);R.render(MN.sc,cam);menuOk=true;return true}
+// menu: resolução própria (não herda a da partida); só baixa se o celular realmente não aguentar 60 fps
+let menuS=1,mEma=16,mSlow=0,mSkip=3;function menuWatch(raw){if(mSkip>0){mSkip--;return}mEma+=(Math.min(raw,200)-mEma)*.06;if(mEma>24){mSlow+=raw;if(mSlow>2000){mSlow=0;menuS=Math.max(.55,menuS*.85)}}else mSlow=Math.max(0,mSlow-raw*.5)}
 function preload(M){try{return ensure(M)&&!compiling&&!!(cur&&cur.warm)&&(!capyReady()||capyWarm)}catch(e){return false}}
 // aquecimento em segundo plano (menus e tela de carregamento): monta as 67 armas e os ícones aos poucos, sem travar
 let pwI=0,pwJ=0;
-function prewarm(ms){if(st!=='ready'||!R||lost||compiling)return true;const t0=performance.now();
-  while(performance.now()-t0<ms){if(pwI<GUNS.length){Guns3D.build(pwI++);continue}if(pwJ<GUNS.length){gunIconBig(pwJ++);continue}return true}return false}
+function prewarm(ms,geoOnly){if(st!=='ready'||!R||lost||compiling)return true;const t0=performance.now();
+  while(performance.now()-t0<ms){if(pwI<GUNS.length){Guns3D.build(pwI++);continue}if(geoOnly)return true;if(pwJ<GUNS.length){gunIconBig(pwJ++);continue}return true}return false}
 // visual equipado (só para a SUA capivara): pelagem, roupa e efeito
 let STY={pat:0,patC:'#2A1A12',out:0,outC:'#FF4F9A',fx:''};
 function setStyle(o){STY=Object.assign({pat:0,patC:'#2A1A12',out:0,outC:'#FF4F9A',fx:''},o||{})}
 function applySty(A,on){const u=A.mat&&A.mat.userData.sty;if(!u)return;const s=on?STY:null;u.uPat.value=s?s.pat:0;u.uPatC.value.set(s?s.patC:'#2A1A12');u.uOut.value=s?s.out:0;u.uOutC.value.set(s?s.outC:'#FF4F9A');
   const m=sharedCapyMats(),ol=on&&STY.fx==='neon'?m.outNeon:m.out;if(A.outline&&A.outline.material!==ol){A.outline.material=ol;if(A.hat[1])A.hat[1].material=ol}}
-const styKey=(o=STY)=>o.pat+'|'+o.out+'|'+o.outC+'|'+o.fx;
+const styKey=(o=STY)=>o.pat+'|'+o.out+'|'+o.outC+'|'+o.fx+'|'+eyeKey(o.eye||EYE)+(o.ex||'');
 function menuSpin(dx){if(MN)MN.spin+=dx*.012}
 function menuPoke(){if(MN&&MN.A)CapyRig.poke(MN.A)}
 // retrato 3D da capivara (cabeça ou corpo todo), guardado por cor e tamanho — usado no HUD, nos menus e no pódio
 const capyIcons=new Map();let ICN=null;
 function capyIcon(hex,w,h,mode='head',hat=true,sty=false){const so=sty&&typeof sty==='object'?Object.assign({pat:0,patC:'#2A1A12',out:0,outC:'#FF4F9A',fx:''},sty):sty?STY:null;const key=hex+'|'+w+'x'+h+'|'+mode+'|'+(hat?1:0)+'|'+(so?styKey(so):'');if(capyIcons.has(key))return capyIcons.get(key);if(st==='idle')load();if(st!=='ready'||lost)return null;if(!R&&!initR())return null;if(!capyReady())return null;
   if(!ICN){const sc=new T.Scene();sc.add(new T.HemisphereLight('#E8DEFF','#4A2F8A',1.4));const d=new T.DirectionalLight('#FFF1DC',2.2);d.position.set(-.6,1,1.2);sc.add(d);const f=new T.DirectionalLight('#B38CFF',1.1);f.position.set(1,.4,-1);sc.add(f);
-    const A=menuCapy();sc.add(A.g);for(let i=0;i<40;i++)CapyRig.animate(A,{dt:.05,t:i*.05,x:0,y:0,aim:PI/2-.42,relax:true});ICN={sc,A,cam:new T.PerspectiveCamera(24,1,1,2000)}}
-  furVec(hex,ICN.A.mat.userData.fur.value);ICN.A.setHat(hat);{const keep=STY;if(so)STY=so;applySty(ICN.A,!!so);STY=keep}const cam=ICN.cam;cam.aspect=w/h;
+    const A=menuCapy();sc.add(A.g);for(let i=0;i<40;i++)CapyRig.animate(A,{dt:.05,t:i*.05,x:0,y:0,aim:PI/2-.42,relax:true,calm:true});ICN={sc,A,cam:new T.PerspectiveCamera(24,1,1,2000)}}
+  furVec(hex,ICN.A.mat.userData.fur.value);ICN.A.setHat(hat);{const keep=STY;if(so)STY=so;applySty(ICN.A,!!so);STY=keep}CapyRig.setEyes(ICN.A,so?(so.eye||EYE):null);if(so&&so.ex){CapyRig.expr(ICN.A,so.ex,9)}else if(ICN.A.E3){ICN.A.E3.exT=0}CapyRig.animate(ICN.A,{dt:.05,t:2,x:0,y:0,aim:PI/2-.42,relax:true,frozen:true,icon:true});const cam=ICN.cam;cam.aspect=w/h;
   if(mode==='full'){cam.position.set(0,52,250);cam.lookAt(0,31,0)}else{cam.position.set(0,58,118);cam.lookAt(0,46,0)}cam.updateProjectionMatrix();
   const out=snap(ICN.sc,cam,w,h);if(out)capyIcons.set(key,out);return out}
+// foto livre da capivara (usada para gerar o ícone do app): câmera própria
+function capyShot(hex,w,h,c,sty){if(!capyIcon(hex,8,8,'head',true,sty))return null;const cam=new T.PerspectiveCamera(c.fov||22,w/h,1,4000);cam.position.fromArray(c.pos);cam.lookAt(new T.Vector3().fromArray(c.look));cam.updateProjectionMatrix();
+  if(c.ex)CapyRig.expr(ICN.A,c.ex,9);CapyRig.animate(ICN.A,{dt:.05,t:2,x:0,y:0,aim:PI/2+(c.yaw||0),relax:true,frozen:true,icon:true});ICN.A.g.rotation.y=(c.yaw||0);ICN.A.g.updateMatrixWorld(true);
+  const keep=STY;if(sty&&typeof sty==='object')STY=Object.assign({pat:0,patC:'#2A1A12',out:0,outC:'#FF4F9A',fx:''},sty);applySty(ICN.A,!!sty);STY=keep;const out=snap(ICN.sc,cam,w,h);ICN.A.g.rotation.y=0;capyIcons.clear();return out}
 function snap(scene,cam,w,h){const S2=2,W2=w*S2,H2=h*S2;if(!iconRT||iconRT.width!==W2||iconRT.height!==H2){if(iconRT)iconRT.dispose();iconRT=new T.WebGLRenderTarget(W2,H2,{samples:4})}
   const keep=[U.uClipOn.value,U.uDark.value];U.uClipOn.value=0;U.uDark.value=0;const oc=new T.Color();R.getClearColor(oc);const oa=R.getClearAlpha(),ort=R.getRenderTarget();
   if(OU.uRes.value){OU.uRes.value.set(W2,H2);OU.uOW.value=Math.max(2,H2*.012)}
@@ -966,4 +1012,4 @@ function kit(){if(!T)T=window.THREE;if(!U)U={uTime:{value:0},uClipOn:{value:0},u
     glass:stdMat(q,{std:{roughness:.15,metalness:.1,transparent:true,opacity:.7}},{key:'gunG'})};gunMats.emit.userData.nocast=true;gunMats.glass.userData.nocast=true}return gunMats}}}
 function stats(){if(!R||!cur)return null;let tris=0,meshes=0;cur.scene.traverse(o=>{if(o.isMesh){meshes++;const g=o.geometry;tris+=(g.index?g.index.count:g.attributes.position.count)/3}});
   return{progs:(R.info.programs||[]).map(p=>p.name+':'+p.cacheKey.slice(0,40)),map:curKey,buildMs,meshes,tris:Math.round(tris),calls:R.info.render.calls,frameTris:R.info.render.triangles,textures:R.info.memory.textures,geometries:R.info.memory.geometries,dust:dust?dust.list.length:0,dustMax:dustMax}}
-return{on,render,idle,stats,capysOn,fail,kit,gunIcon,prewarm,setAim,setStyle,get fx(){return STY.fx},menu,menuSpin,menuPoke,capyIcon,preload,FUR0,MBG,get menuOk(){return menuOk},get perf(){return{autoS,shadowEvery,emaDt:Math.round(emaDt)}},get compiling(){return compiling},get ok(){return st==='ready'&&!lost},K,SQ:SQ3,FEET,NAMEOFF:K*CAPY_H+22}})();
+return{capyShot,on,render,idle,stats,capysOn,fail,kit,gunIcon,prewarm,setAim,setStyle,setEyes,EYECOLS,menuExpr(k){if(MN&&MN.A)CapyRig.expr(MN.A,k,2.2)},getStyle:()=>STY,get fx(){return STY.fx},menu,menuSpin,menuPoke,capyIcon,preload,FUR0,MBG,get menuOk(){return menuOk},get perf(){return{autoS,shadowEvery,emaDt:Math.round(emaDt)}},get compiling(){return compiling},get ok(){return st==='ready'&&!lost},K,SQ:SQ3,FEET,NAMEOFF:K*CAPY_H+22}})();
