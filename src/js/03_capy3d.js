@@ -71,7 +71,11 @@ function animate(A,s){const S=A.st,B=A.B,dt=Math.min(s.dt,.05),t=s.t;
   const sg=sn>=0?1:-1;if(mv>.45&&sg!==S.lastS){A.ev.push({k:'step',foot:sg>0?'R':'L',f:.6+ds*.8})}S.lastS=sg;
   S.rec=Math.max(0,S.rec-dt*7);if(s.recoil>S.rec)S.rec=s.recoil;S.hurt=Math.max(0,S.hurt-dt*4);if(s.hurt>S.hurt)S.hurt=s.hurt;
   // ---- olhar em volta / gracinhas quando está parada
-  S.idle=mv<.2?S.idle+dt:0;S.lookT-=dt;if(S.lookT<=0){S.lookAt=(Math.random()-.5)*1.5;S.tilt=(Math.random()-.5)*.5;S.lookT=1.1+Math.random()*1.8}
+  S.idle=mv<.2?S.idle+dt:0;
+  if(s.calm){// menu: só respira; de vez em quando (~30 s) olha para um lado e para o outro
+    if(S.calmT==null)S.calmT=12;S.calmT-=dt;if(S.calmT<=0){S.calmK=0;S.calmT=28+Math.random()*6}
+    if(S.calmK!=null){S.calmK+=dt;const k=S.calmK;S.lookAt=k<1.3?.75:k<2.9?-.75:0;if(k>3.6)S.calmK=null}else S.lookAt=0;S.tilt=0;S.gagK='';S.gagT=99}
+  else{S.lookT-=dt;if(S.lookT<=0){S.lookAt=(Math.random()-.5)*1.5;S.tilt=(Math.random()-.5)*.5;S.lookT=1.1+Math.random()*1.8}}
   S.look+=(S.lookAt*id-S.look)*Math.min(1,dt*6);
   S.gagT-=dt;if(S.gagT<=0&&S.idle>1.2&&!S.gagK){S.gagK=pick(GAGS);S.gag=0;S.gagT=3+Math.random()*4}
   let gHop=0,gDance=0,gDouble=0,gStretch=0,gSpin=0,gWig=0;if(S.gagK){S.gag+=dt;const k=S.gag,L=GAGL[S.gagK];
@@ -115,5 +119,5 @@ function animate(A,s){const S=A.st,B=A.B,dt=Math.min(s.dt,.05),t=s.t;
   let sy=1-contact*.1+air*.05-S.hurt*.14+(gHop?Math.sin(gHop/.9*Math.PI*2)*.07:0),sxz=1+contact*.07-air*.03+S.hurt*.08,st=1+ds*.08;
   A.inner.scale.set(A.sc*sxz/Math.sqrt(st),A.sc*sy,A.sc*sxz*st);
   A.inner.rotation.set(0,gSpin?gSpin*Math.PI*2:0,wad*.12)}
-function poke(A){const S=A.st;S.idle=Math.max(S.idle,2);S.gagK='';S.gagT=0}
+function poke(A){const S=A.st;if(S.calmT!=null){if(S.calmK==null)S.calmK=0;return}S.idle=Math.max(S.idle,2);S.gagK='';S.gagT=0}
 return{load,make,animate,poke,get ready(){return st==='ready'},get state(){return st},get map(){return data&&data.map},get extras(){return data&&data.extras},get nrm(){return data&&data.nrm},MH}})();

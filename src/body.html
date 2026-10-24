@@ -93,7 +93,7 @@
     <div class="m-panel m-name"><b id="homeNick">Capivara</b><div class="m-bar"><i id="xpFill"></i></div><small id="xpTxt">0 / 100 XP</small></div>
   </div>
   <div class="m-res">
-    <div class="m-pill" title="Vitórias"><svg class="i"><use href="#i-trophy"/></svg><span id="totWins">0</span></div>
+    <div class="m-pill" title="Troféus"><svg class="i"><use href="#i-trophy"/></svg><span id="totWins">0</span></div>
     <div class="m-pill" title="Laranjinhas coletadas"><svg class="i"><use href="#i-orange"/></svg><span id="totalGems">0</span></div>
     <button class="m-sq" id="btnFs" title="Tela cheia" aria-label="Tela cheia"><svg class="i"><use href="#i-expand"/></svg></button>
     <button class="m-sq" id="btnSettings" title="Configurações"><svg class="i"><use href="#i-gear"/></svg></button>
@@ -136,7 +136,7 @@
     <div class="m-phead"><button class="m-back" data-back aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button><h3><svg class="i"><use href="#i-shop"/></svg>LOJA</h3><span class="m-count m-wallet"><svg class="i"><use href="#i-orange"/></svg><b id="shopBal">0</b></span></div>
     <div class="m-tabs m-tabs2" id="shopTabs"></div>
     <div class="m-shopgrid" id="shopGrid"></div>
-    <p class="m-sub m-shopnote">Itens de amostra: a loja já funciona (compra com laranjinhas); os itens poderão ser equipados nas próximas versões.</p>
+    <p class="m-sub m-shopnote">Compre com laranjas: o item vai para o seu Visual (ou Fundo) e já sai equipado. Ganhe laranjas jogando e nos Desafios Diários.</p>
   </div>
   <div class="m-hint">arraste para girar a capivara</div>
 </section>
@@ -241,25 +241,24 @@
 <!-- HUD -->
 <div id="hud" class="hidden">
   <div id="hurtVignette"></div>
-  <div class="hp sticker">
-    <canvas class="portrait" id="portrait" width="108" height="108"></canvas>
-    <div><div class="hpname" id="hudName">Jogador</div><div class="bar" id="hpBar"><b id="hpGhost"></b><i id="hpFill"></i></div></div>
-    <div class="hpnum" id="hpNum">100</div>
-  </div>
-  <div class="lvl sticker">
-    <div class="lvbadge"><small>NÍVEL</small><span id="lvNum">1</span></div>
-    <div class="lvcol">
+  <!-- cartão único: retrato, nível, vida e progresso (os 67 para o próximo poder) -->
+  <div class="hcard">
+    <div class="hc-ava"><canvas class="portrait" id="portrait" width="108" height="108"></canvas><b class="hc-lv" id="lvNum">1</b></div>
+    <div class="hc-main">
+      <div class="hc-top"><span class="hc-name" id="hudName">Jogador</span><span class="hc-hp" id="hpNum">100</span></div>
+      <div class="bar hc-hpbar" id="hpBar"><b id="hpGhost"></b><i id="hpFill"></i></div>
+      <div class="bar67 hc-xp" id="bar67"><i id="fill67"></i><span id="txt67">0/67</span></div>
       <div class="modehud" id="modeHud"></div>
-      <div class="bar67" id="bar67"><i id="fill67"></i><span id="txt67">0/67</span></div>
     </div>
+  </div>
+  <div class="htr">
     <div class="timer" id="timer">3:00</div>
-  </div>
-  <div class="stats">
-    <div class="stat sticker" id="statKills" title="Eliminações"><svg class="i si"><use href="#i-skull"/></svg><span id="kNum">0</span></div>
-    <div class="stat sticker" id="statGems" title="Laranjinhas"><svg class="i si"><use href="#i-orange"/></svg><span id="gNum">0</span></div>
     <button class="frbtn btn round hudfr" data-friends aria-label="CapyAmigos"><svg class="i"><use href="#i-chat"/></svg><b class="frbadge hidden"></b></button>
-    <button class="btn round pausebtn" id="btnPause" aria-label="Pausar"><svg class="i"><use href="#i-pause"/></svg></button>
+    <button class="hbtn pausebtn" id="btnPause" aria-label="Pausar"><svg class="i"><use href="#i-pause"/></svg></button>
   </div>
+  <!-- contadores antigos (escondidos; o placar completo continua no Tab) -->
+  <div class="hidden"><span id="statKills"><span id="kNum">0</span></span><span id="statGems"><span id="gNum">0</span></span><span class="lvbadge"><small></small></span></div>
+  <div id="killPop"></div>
   <div class="perkrow" id="perkRow"></div>
   <div id="feed"></div>
   <canvas id="minimap" width="340" height="226"></canvas>
