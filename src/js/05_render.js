@@ -71,7 +71,7 @@ function onEffect(e){const near=nearCam(e.x||0,e.y||0),snd=!demo&&near,mine=e.pi
     case 'ko':if(!near)break;burst(e.x,e.y,12,[e.c,'#FFF4E0','#FFC531'],'star',260,8,.8);for(let i=0;i<5;i++)addP({x:e.x+rand(-10,10),y:e.y+rand(-10,10),vy:-40,type:'smoke',col:'#cfc6e6',size:14,life:.8,drag:1});word(e.x,e.y-20,'KO!','#FF4F9A',34);if(snd)Sound.play('ko');break;
     case '67':if(mine){stamp67(e.lv);Sound.play('level');vibe([40,40,80]);celebrate(80)}else if(near){word(e.x,e.y-50,'67!','#FFC531',40);burst(e.x,e.y,14,'#FFC531','star',260,8)}break;
     case 'kill':addFeed(e);if(e.ki===self&&e.vi!==self&&!demo){toast('Você eliminou '+e.v+'!','good');bump('kills')}break;
-    case 'gem':if(near&&S.particles!=='low')burst(e.x,e.y,4,['#FF8A1F','#FFC07A','#fff'],'star',120,4,.4);if(mine){Sound.play('gem',(e.n%8));flyGem(e.x,e.y);const tg=store.get('totalGems',0)+1;store.set('totalGems',tg);$('totalGems').textContent=tg;bump('gems')}break;
+    case 'gem':if(near&&S.particles!=='low')burst(e.x,e.y,4,['#FF8A1F','#FFC07A','#fff'],'star',120,4,.4);if(mine){Sound.play('gem',(e.n%8));flyGem(e.x,e.y);const tg=store.get('totalGems',0)+1;store.set('totalGems',tg);$('totalGems').textContent=wallet();bump('gems')}break;
     case 'flagtake':if(!demo){toast(e.name+' pegou a bandeira!',e.pid===self?'good':'');Sound.play('pickup')}break;
     case 'flagret':if(!demo&&MODE.id==='ctf')toast('Bandeira '+(TEAM[e.team]?TEAM[e.team].n:'')+' voltou pra base');break;
     case 'capture':if(!demo){bigBanner('CAPTURA!',`${e.name} pontuou para o time ${TEAM[e.team].n}`,TEAM[e.team].c);Sound.play('capture');celebrate(60)}break;
@@ -187,7 +187,7 @@ function frame(t){requestAnimationFrame(frame);
   if(started&&!isTouch&&mouseOn&&view==='game'&&players[self])aimAt(mouseSX,mouseSY);
   if(started&&isTouch&&aimStick.on&&view==='game'&&players[self]){const me=players[self],g=GUNS[me.gun],R=g?Math.max(90,gunReach(g,me.mods||defaultMods())):300,d=g&&g.instant?R*.8:R*.92;mouseSX=((me.rx??me.x)+Math.cos(aimStick.a)*d-cam.x)*zoom;mouseSY=((me.ry??me.y)+Math.sin(aimStick.a)*d-cam.y)*zoom*SQ;aimAt(mouseSX,mouseSY)}
   // menus: a capivara 3D no deque da lagoa (03_map3d.js > menu)
-  if(!active){ctx.setTransform(1,0,0,1,0,0);let ok3=false;try{ok3=Map3D.menu(t,{view:menuView(),fur:menuFur(),drag:menuDrag,gun:menuGun(),bg:menuBgKey()})}catch(e){Map3D.fail(e)}
+  if(!active){ctx.setTransform(1,0,0,1,0,0);let ok3=false;try{ok3=Map3D.menu(t,{view:menuView(),fur:menuFur(),drag:menuDrag,gun:menuGun(),bg:menuBgKey(),hat:menuHat()})}catch(e){Map3D.fail(e)}
     if(ok3)ctx.clearRect(0,0,canvas.width,canvas.height);else{Map3D.idle();ctx.fillStyle='#2A1366';ctx.fillRect(0,0,canvas.width,canvas.height)}return}
   // câmera inclinada só quando o 3D está ligado neste mapa (senão fica a visão de cima do 2D)
   processEffects(t);

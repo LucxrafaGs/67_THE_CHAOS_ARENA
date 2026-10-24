@@ -1126,3 +1126,40 @@ body.mshort .m-chal .m-chalsum{display:inline-block;margin-left:auto;font:400 15
 body.mshort .m-chal:not(.open) #chalList,body.mshort .m-chal:not(.open) .m-chalfoot{display:none}
 body.mshort .m-chal.open{position:relative;z-index:5;box-shadow:0 10px 40px #000a}
 body.mport .m-hint,body.mport #home .version{display:none}
+/* ---------- abas dentro dos painéis (Visual e Loja) ---------- */
+.m-tabs{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}.m-tabs::-webkit-scrollbar{display:none}
+.m-tab{flex:none;display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;border-radius:10px;border:2.5px solid #ffffff26;background:#170A38;color:var(--cream);font:400 15px var(--font-display);letter-spacing:.3px;cursor:pointer;transition:transform .1s}
+.m-tab .i{width:20px;height:20px}.m-tab:hover{border-color:var(--ml);transform:translateY(-1px)}
+.m-tab.on{background:var(--mpink);border-color:#fff;color:#fff;box-shadow:0 3px 0 #8a1a58}
+.m-tabs2{flex:none}
+.m-furgrid.empty{display:flex}
+.m-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:20px;border:2.5px dashed #ffffff2a;border-radius:14px;min-height:240px}
+.m-empty>.i{width:54px;height:54px;color:var(--ml);opacity:.8}.m-empty b{font:400 24px var(--font-display)}.m-empty span{font-size:14px;opacity:.8;max-width:300px}
+.m-fur.lock{opacity:.55;cursor:default;justify-content:center;min-height:100px}.m-fur.lock .i{width:30px;height:30px;margin:18px 0 6px}
+.m-soon{position:absolute;top:6px;left:50%;transform:translateX(-50%);font:800 9px var(--font-ui);letter-spacing:1px;background:#170A38;border-radius:999px;padding:2px 7px;white-space:nowrap}
+.m-fur.lock span.m-soon{left:50%;top:6px;width:auto;height:auto;border:0;border-radius:999px;background:#170A38}
+/* ---------- Loja ---------- */
+.m-wallet{display:flex;align-items:center;gap:6px}.m-wallet .i{width:18px;height:18px}
+.m-shopgrid{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:2px;align-content:start}
+.m-sitem{position:relative;display:flex;flex-direction:column;gap:3px;padding:6px 6px 8px;border-radius:12px;background:#170A38c0;border:2px solid #ffffff1a;border-bottom:4px solid var(--rc)}
+.m-spv{display:grid;place-items:center;width:100%;aspect-ratio:4/3;border-radius:9px;border:2px solid #0d0524;overflow:hidden}
+.m-spv canvas{width:78%;height:auto;aspect-ratio:1}.m-spv>.i{width:52%;height:52%;filter:drop-shadow(0 4px 0 #0007)}
+.m-sglow{width:46%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 24px 6px #ffffff40;animation:sglow 1.6s ease-in-out infinite alternate}
+@keyframes sglow{to{transform:scale(1.12);filter:brightness(1.25)}}
+.m-sitem em{font:800 10px var(--font-ui);letter-spacing:1px;color:var(--rc);text-transform:uppercase;font-style:normal;margin-top:3px}
+.m-sitem b{font:400 15px/1.1 var(--font-display);min-height:2.2em}
+.m-buy{display:flex;align-items:center;justify-content:center;gap:6px;height:36px;border-radius:9px;border:2.5px solid var(--mdark);background:linear-gradient(#FFE15A,#F2B21C);color:#3A1A6A;font:400 17px var(--font-display);cursor:pointer;box-shadow:0 3px 0 var(--mdark)}
+.m-buy .i{width:18px;height:18px}.m-buy:hover{filter:brightness(1.06)}.m-buy:active{transform:translateY(2px);box-shadow:0 1px 0 var(--mdark)}
+.m-buy.poor{filter:grayscale(.6) brightness(.8)}
+.m-sown{display:flex;align-items:center;justify-content:center;gap:5px;height:36px;border-radius:9px;background:#1f4a2f;color:#6CF06A;font:400 14px var(--font-display)}.m-sown .i{width:16px;height:16px}
+.m-sitem.owned{border-color:#6CF06A66}
+.m-shopnote{font-size:11px;opacity:.65;margin:0}
+@media (max-width:1100px){.m-shopgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* ---------- botões da home: CONTRA BOTS com a mesma largura do JOGAR, sem etiquetas de tecla ---------- */
+.m-br{align-items:stretch}
+.m-sel{width:min(330px,42vw);justify-content:center}
+body.mobile .m-nav kbd{display:none}
+.m-sq kbd,.m-sel kbd,.m-play kbd,.m-seahead kbd,.m-link kbd{display:none}
+/* celular em pé: abas descem para uma segunda linha (não encostam nos botões do topo) */
+body.mport .m-nav{top:calc(64px + var(--sat));border-radius:14px;clip-path:none;border-top:2.5px solid #00000060}
+body.mport #mtop .m-pill{display:none}

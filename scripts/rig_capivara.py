@@ -27,39 +27,106 @@ def find_tail(P,I,ymax=.22,zmax=-.135):
   tail=np.zeros(nw,bool);tail[list(seen)]=True;ring=[q for q in seen if any(not tail[r] for r in adj[q])]
   return tail[wid],wpos[ring].mean(0)
 TAIL,TA=find_tail(P,IDX.reshape(-1,3))
-# o rabo sai de verdade: apaga os triângulos dele e tampa o buraco com um leque (antes ele era só "amassado" e o contorno de tinta vazava ali)
+# o rabo sai de verdade (os triângulos dele são apagados) e o chapéu vira uma peça separada (item equipável)
 F=IDX.reshape(-1,3);F=F[~TAIL[F].any(1)]
-key=np.round(P*3000).astype(np.int64);_,WID=np.unique(key,axis=0,return_inverse=True);WID=WID.reshape(-1)
-from collections import Counter
-ec=Counter();ed={}
-for f in F:
-  for a_,b_ in ((f[0],f[1]),(f[1],f[2]),(f[2],f[0])):
-    k=(min(WID[a_],WID[b_]),max(WID[a_],WID[b_]));ec[k]+=1;ed[k]=(a_,b_)
-bnd=[ed[k] for k,c in ec.items() if c==1 and np.linalg.norm(P[ed[k][0]]-TA)<.12]
-newP=[];newN=[];newUV=[];newF=[];n0=len(P)
-if bnd:
-  c=np.mean([P[a_] for a_,b_ in bnd],0);cn=np.mean([N[a_] for a_,b_ in bnd],0);cn/=np.linalg.norm(cn)+1e-9
-  near=min(bnd,key=lambda e:np.linalg.norm(P[e[0]]-c))[0]
-  newP.append(c+cn*.004);newN.append(cn);newUV.append(UV[near])
-  for a_,b_ in bnd:newF.append((b_,a_,n0))
-  P=np.vstack([P,np.array(newP,np.float32)]);N=np.vstack([N,np.array(newN,np.float32)]);UV=np.vstack([UV,np.array(newUV,np.float32)])
-  F=np.vstack([F,np.array(newF)]);TAIL=np.append(TAIL,False)
-IDX=F.reshape(-1).astype(np.uint32);print('buraco do rabo tampado com',len(bnd),'triângulos')
+HATY=.855
+hatF=F[(P[F][:,:,1]>HATY).all(1)];F=F[~(P[F][:,:,1]>HATY).all(1)]
+hv=np.unique(hatF.reshape(-1));remap=np.full(len(P),-1);remap[hv]=np.arange(len(hv))+len(P)
+P=np.vstack([P,P[hv]+np.array([0,.048,-.004],np.float32)]);N=np.vstack([N,N[hv]]);UV=np.vstack([UV,UV[hv]]);TAIL=np.append(TAIL,np.zeros(len(hv),bool));hatF=remap[hatF]
+print('chapéu separado:',len(hatF),'triângulos (erguido para assentar na cabeça redonda)')
+# o alto da cabeça tinha sido moldado para caber no chapéu (paredes retas): sai tudo acima de y=.80 e entra uma cúpula redonda
+F=F[~(P[F][:,:,1]>.80).all(1)]
+def wkey(P):
+  k=np.round(P*3000).astype(np.int64);_,w=np.unique(k,axis=0,return_inverse=True);return w.reshape(-1)
+# tampa buracos com uma cúpula arredondada (anéis que fecham em direção ao centro, estufando para fora)
+CAPS=[]
+def cap_loops(F,P,N,UV,want,bulge,uvfix):
+  W_=wkey(P);ec={};
+  for f in F:
+    for a_,b_ in ((f[0],f[1]),(f[1],f[2]),(f[2],f[0])):
+      k=(min(W_[a_],W_[b_]),max(W_[a_],W_[b_]));ec.setdefault(k,[]).append((a_,b_))
+  nxt={}
+  for k,v in ec.items():
+    if len(v)==1:a_,b_=v[0];nxt[W_[a_]]=(W_[b_],a_,b_)
+  seen=set();loops=[]
+  for s0 in list(nxt):
+    if s0 in seen:continue
+    loop=[];w=s0
+    while w in nxt and w not in seen:seen.add(w);wb,a_,b_=nxt[w];loop.append((a_,b_));w=wb
+    if len(loop)>=3:loops.append(loop)
+  P=list(P);N=list(N);UV=list(UV);NF=[]
+  for loop in loops:
+    ring=[a_ for a_,b_ in loop];pts=np.array([P[i] for i in ring]);c=pts.mean(0)
+    if not want(c,pts):continue
+    nrm=np.mean([N[i] for i in ring],0);nrm/=np.linalg.norm(nrm)+1e-9;rad=np.linalg.norm(pts-c,axis=1).mean()
+    # cópias da borda com a UV do pelo (senão a textura "rasga" atravessando o atlas inteiro)
+    prev=[]
+    for i in ring:prev.append(len(P));P.append(P[i].copy());N.append(N[i].copy());UV.append(uvfix)
+    R=4
+    for j in range(1,R+1):
+      f=j/(R+1);cur=[]
+      for i in ring:
+        q=c+(P[i]-c)*np.cos(f*np.pi/2)+nrm*bulge*rad*np.sin(f*np.pi/2);cur.append(len(P));P.append(q.astype(np.float32));N.append(nrm.astype(np.float32));UV.append(uvfix)
+      for k in range(len(ring)):
+        a0,b0,a1,b1=prev[k],prev[(k+1)%len(ring)],cur[k],cur[(k+1)%len(ring)];NF+=[(b0,a0,a1),(b0,a1,b1)]
+      prev=cur
+    ap=len(P);P.append((c+nrm*bulge*rad).astype(np.float32));N.append(nrm.astype(np.float32));UV.append(uvfix)
+    for k in range(len(ring)):NF.append((prev[(k+1)%len(ring)],prev[k],ap))
+    print('buraco tampado:',len(ring),'arestas, centro',np.round(c,3));CAPS.append((c,rad))
+  F=np.vstack([F,np.array(NF,dtype=F.dtype)]) if NF else F
+  return F,np.array(P,np.float32),np.array(N,np.float32),np.array(UV,np.float32)
+# cor de pelo para as tampas: UV de um vértice do alto da nuca (fora do chapéu)
+FURUV=UV[np.argmin(np.linalg.norm(P-np.array([0,.6,-.21]),axis=1))].copy()   # meio das costas: pelo liso, longe das bordas da textura
+n0=len(P)
+F,P,N,UV=cap_loops(F,P,N,UV,lambda c,pts:c[1]<.4,.55,FURUV)                     # bumbum (onde era o rabo): bem redondinho
+F,P,N,UV=cap_loops(F,P,N,UV,lambda c,pts:c[1]>.7,.62,FURUV)                     # topo da cabeça: cúpula redondinha
+# a faixa logo abaixo do corte tinha a sombra da aba pintada na textura: vira pelo liso
+bv=np.unique(F.reshape(-1));top=bv[P[bv,1]>.805];UV[top]=FURUV
+# orelhinhas novas (as antigas ficavam escondidas no chapéu): elipsoides pequenos no alto da cabeça
+def ear(cx,cy,cz,rx,ry,rz,tilt):
+  global P,N,UV,F
+  g=[];n=[];nlat,nlon=6,10;base=len(P)
+  for i in range(nlat+1):
+    th=np.pi*i/nlat
+    for j in range(nlon):
+      ph=2*np.pi*j/nlon;v=np.array([np.sin(th)*np.cos(ph),np.cos(th),np.sin(th)*np.sin(ph)])
+      q=v*np.array([rx,ry,rz]);c_,s_=np.cos(tilt),np.sin(tilt);q=np.array([q[0]*c_-q[1]*s_,q[0]*s_+q[1]*c_,q[2]])
+      nn=v/np.array([rx,ry,rz]);nn=np.array([nn[0]*c_-nn[1]*s_,nn[0]*s_+nn[1]*c_,nn[2]]);nn/=np.linalg.norm(nn)
+      g.append(q+np.array([cx,cy,cz]));n.append(nn)
+  f=[]
+  for i in range(nlat):
+    for j in range(nlon):
+      a0=base+i*nlon+j;b0=base+i*nlon+(j+1)%nlon;a1=a0+nlon;b1=b0+nlon;f+=[(a0,a1,b0),(b0,a1,b1)]
+  P=np.vstack([P,np.array(g,np.float32)]);N=np.vstack([N,np.array(n,np.float32)]);UV=np.vstack([UV,np.tile(FURUV,(len(g),1)).astype(np.float32)]);F=np.vstack([F,np.array(f)])
+topy=P[np.unique(F.reshape(-1)),1].max()
+for sgn in (1,-1):ear(sgn*.168,topy-.075,-.04,.04,.048,.027,sgn*-.6)
+TAIL=np.append(TAIL,np.zeros(len(P)-len(TAIL),bool));IDX=F.reshape(-1).astype(np.uint32)
+print('topo da cabeça em y=',round(float(topy),3))
+capC,capR=CAPS[0] if CAPS else (np.array([0,9,9]),.01)
+TAIL=np.append(TAIL,np.zeros(len(P)-len(TAIL),bool))
+IDX=F.reshape(-1).astype(np.uint32);HIDX=hatF.reshape(-1).astype(np.uint32)
 # deixa a capivara "redondinha": suavização de Taubin (não encolhe) no corpo; o chapéu fica como está
-key=np.round(P*3000).astype(np.int64);_,WID=np.unique(key,axis=0,return_inverse=True);WID=WID.reshape(-1);nw=WID.max()+1
+WID=wkey(P);nw=WID.max()+1
 Wp=np.zeros((nw,3));np.add.at(Wp,WID,P);Wp/=np.bincount(WID,minlength=nw)[:,None]
 T3=WID[F];E=np.concatenate([T3[:,[0,1]],T3[:,[1,2]],T3[:,[2,0]]]);E=np.concatenate([E,E[:,::-1]]);E=np.unique(E,axis=0)
 deg=np.bincount(E[:,0],minlength=nw)[:,None].astype(float)
-free=(Wp[:,1]<.845)[:,None]*1.0
-used=np.zeros(nw,bool);used[T3.reshape(-1)]=True;free*=used[:,None]
-for it in range(10):
+used=np.zeros(nw,bool);used[T3.reshape(-1)]=True;hatw=np.zeros(nw,bool);hatw[WID[hatF.reshape(-1)]]=True
+free=(used&~hatw)[:,None]*1.0
+for it in range(12):
   for lam in (.5,-.53):
     acc=np.zeros_like(Wp);np.add.at(acc,E[:,0],Wp[E[:,1]]);Wp=Wp+lam*free*(acc/np.maximum(deg,1)-Wp)
 P=Wp[WID].astype(np.float32)
-# normais lisas recalculadas (iguais em todas as cópias da mesma posição)
+# normais lisas recalculadas no corpo (o chapéu mantém as dele, com as quinas da aba)
 a_,b_,c_=Wp[T3[:,0]],Wp[T3[:,1]],Wp[T3[:,2]];fn=np.cross(b_-a_,c_-a_);vn=np.zeros((nw,3))
 for k in range(3):np.add.at(vn,T3[:,k],fn)
-vn/=np.linalg.norm(vn,axis=1,keepdims=True)+1e-12;N=np.where((P[:,1]>.845)[:,None],N,vn[WID]).astype(np.float32)
+vn/=np.linalg.norm(vn,axis=1,keepdims=True)+1e-12;isHat=np.zeros(len(P),bool);isHat[HIDX]=True
+N=np.where(isHat[:,None],N,vn[WID]).astype(np.float32)
+# "pelo liso" no alto da cabeça e no bumbum (onde não há textura): a cor média do pelo, misturada aos poucos com a textura (sem emenda)
+FLAT=np.zeros(len(P),np.float32);FLAT[n0:]=1;FLAT[isHat]=0
+def ss_(a,b,v):t=np.clip((v-a)/(b-a),0,1);return t*t*(3-2*t)
+band=ss_(.772,.8,P[:,1])*(1-((P[:,2]>.1)&(np.abs(P[:,0])>.12)&(np.abs(P[:,0])<.23)&(P[:,1]<.798)))
+tb=np.linalg.norm(P-capC,axis=1);band2=ss_(capR*1.9,capR*1.05,tb)
+FLAT[:n0]=np.maximum(band[:n0],band2[:n0])
 print('rabo removido:',int(TAIL.sum()),'vértices')
 x,y,z=P[:,0],P[:,1],P[:,2];ax=np.abs(x);sx=np.where(x>=0,1,-1)
 def ss(a,b,v):t=np.clip((v-a)/(b-a),0,1);return t*t*(3-2*t)
@@ -110,7 +177,10 @@ def img(k):
   v=j['bufferViews'][j['images'][j['textures'][ti]['source']]['bufferView']];return Image.open(io.BytesIO(d[b0+v.get('byteOffset',0):b0+v.get('byteOffset',0)+v['byteLength']]))
 def jpg(im,size,q):
   im=im.convert('RGB').resize((size,size),Image.LANCZOS);b=io.BytesIO();im.save(b,'JPEG',quality=q,optimize=True);return b.getvalue()
-base=jpg(img('base'),1024,86);nrm=jpg(img('normal'),1024,82)
+_bi=img('base').convert('RGB');_ta=np.asarray(_bi).astype(float)/255;_h,_w=_ta.shape[:2]
+_sel=np.where((P[:,1]>.35)&(P[:,1]<.75)&(P[:,2]<-.05)&(FLAT==0))[0];_uv=UV[_sel];_c=_ta[np.clip((_uv[:,1]%1*_h).astype(int),0,_h-1),np.clip((_uv[:,0]%1*_w).astype(int),0,_w-1)]
+FURAVG='#%02x%02x%02x'%tuple(int(v*255) for v in np.median(_c,0));print('cor média do pelo',FURAVG)
+base=jpg(_bi,1024,86);nrm=jpg(img('normal'),1024,82)
 # ---------- escreve GLB ----------
 blobs=[];views=[];accs=[]
 def add(data,target=None):
@@ -123,7 +193,7 @@ def addacc(arr,ctype,typ,target,mm=False):
   accs.append(a);return len(accs)-1
 iv0=add(base);iv1=add(nrm)
 aP=addacc(P.astype(np.float32),5126,'VEC3',34962,True);aN=addacc(N.astype(np.float32),5126,'VEC3',34962);aU=addacc(UV.astype(np.float32),5126,'VEC2',34962)
-aJ=addacc(J4,5121,'VEC4',34962);aW=addacc(W4,5126,'VEC4',34962);aI=addacc(IDX.astype(np.uint32),5125,'SCALAR',34963)
+aF=addacc(FLAT.astype(np.float32),5126,'SCALAR',34962);aJ=addacc(J4,5121,'VEC4',34962);aW=addacc(W4,5126,'VEC4',34962);aI=addacc(IDX.astype(np.uint32),5125,'SCALAR',34963);aH=addacc(HIDX.astype(np.uint32),5125,'SCALAR',34963)
 ibm=np.zeros((len(B),16),np.float32)
 for i,(n,p,ps) in enumerate(B):m=np.eye(4);m[:3,3]=-np.array(ps);ibm[i]=m.T.reshape(-1)
 aB=addacc(ibm,5126,'MAT4',None)
@@ -132,8 +202,8 @@ for i,(n,p,ps) in enumerate(B):
   par=pos[p] if p else np.zeros(3);nodes.append({'name':n,'translation':(np.array(ps)-par).tolist()})
 for i,(n,p,ps) in enumerate(B):
   if p:nodes[2+bi[p]].setdefault('children',[]).append(2+i)
-gl={'asset':{'version':'2.0','generator':'CapyBoom re-rig','extras':{'eyes':False,'model':'capivara-chapeu'}},'scene':0,'scenes':[{'nodes':[0]}],'nodes':nodes,
- 'meshes':[{'primitives':[{'attributes':{'POSITION':aP,'NORMAL':aN,'TEXCOORD_0':aU,'JOINTS_0':aJ,'WEIGHTS_0':aW},'indices':aI,'material':0}]}],
+gl={'asset':{'version':'2.0','generator':'CapyBoom re-rig','extras':{'eyes':False,'model':'capivara-chapeu','hat':'separado','furAvg':FURAVG}},'scene':0,'scenes':[{'nodes':[0]}],'nodes':nodes,
+ 'meshes':[{'primitives':[{'attributes':{'POSITION':aP,'NORMAL':aN,'TEXCOORD_0':aU,'JOINTS_0':aJ,'WEIGHTS_0':aW,'_FLAT':aF},'indices':aI,'material':0},{'attributes':{'POSITION':aP,'NORMAL':aN,'TEXCOORD_0':aU,'JOINTS_0':aJ,'WEIGHTS_0':aW},'indices':aH,'material':0,'extras':{'part':'chapeu'}}]}],
  'skins':[{'joints':[2+i for i in range(len(B))],'inverseBindMatrices':aB,'skeleton':2}],
  'materials':[{'name':'capivara','pbrMetallicRoughness':{'baseColorTexture':{'index':0},'metallicFactor':0,'roughnessFactor':.8},'normalTexture':{'index':1},'doubleSided':True}],
  'textures':[{'source':0,'sampler':0},{'source':1,'sampler':0}],'samplers':[{'magFilter':9729,'minFilter':9987}],

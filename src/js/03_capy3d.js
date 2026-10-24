@@ -21,10 +21,13 @@ async function parse(buf){const dv=new DataView(buf),jl=dv.getUint32(12,true),js
     if(s===undefined){s=sum.length/3;key.set(k,s);sum.push(0,0,0)}idx[i]=s;sum[s*3]+=nor[i*3];sum[s*3+1]+=nor[i*3+1];sum[s*3+2]+=nor[i*3+2]}
   const on=new Float32Array(n*3);for(let i=0;i<n;i++){const s=idx[i],x=sum[s*3],y=sum[s*3+1],z=sum[s*3+2],l=Math.hypot(x,y,z)||1;on[i*3]=x/l;on[i*3+1]=y/l;on[i*3+2]=z/l}
   g.setAttribute('outN',new T.BufferAttribute(on,3));g.computeBoundingSphere();
+  if(A._FLAT!=null)g.setAttribute('aFlat',new T.BufferAttribute(acc(A._FLAT),1)); // 1 = "pelo liso" (alto da cabeça e bumbum, sem textura)
+  // chapéu: segunda parte do arquivo (mesmos vértices, outros triângulos) — peça equipável
+  let hat=null;const hp=json.meshes[0].primitives[1];if(hp){hat=new T.BufferGeometry();for(const k of ['position','normal','uv','skinIndex','skinWeight','outN','aFlat'])if(g.getAttribute(k))hat.setAttribute(k,g.getAttribute(k));hat.setIndex(new T.BufferAttribute(acc(hp.indices),1));hat.computeBoundingSphere()}
   const sk=json.skins[0],ibm=acc(sk.inverseBindMatrices),par={};json.nodes.forEach((nd,i)=>(nd.children||[]).forEach(c=>par[c]=i));
   const bones=sk.joints.map((j,k)=>({name:json.nodes[j].name,t:json.nodes[j].translation||[0,0,0],p:sk.joints.indexOf(par[j]),ibm:new T.Matrix4().fromArray(ibm,k*16)}));
   const mi=json.materials[0],map=await tex(mi.pbrMetallicRoughness.baseColorTexture.index);map.colorSpace=T.SRGBColorSpace;const nrm=await tex(mi.normalTexture.index);
-  return{geo:g,bones,map,nrm,extras:(json.asset&&json.asset.extras)||{}}}
+  return{geo:g,hat,bones,map,nrm,extras:(json.asset&&json.asset.extras)||{}}}
 
 // ---------- Instância: grupo (posição/rotação no mundo) + esqueleto próprio + malhas que compartilham a geometria ----------
 // mats = {body, outline, xray} (materiais já prontos, um por capivara para dar para tingir)
@@ -35,12 +38,16 @@ function make(mats,scale){const d=data,g=new T.Group(),bs=d.bones.map(b=>{const 
   let outline=null,xray=null;
   if(mats.outline){outline=new T.SkinnedMesh(d.geo,mats.outline);outline.frustumCulled=false;inner.add(outline);outline.bind(skel,I)}
   if(mats.xray){xray=new T.SkinnedMesh(d.geo,mats.xray);xray.frustumCulled=false;xray.layers.set(2);inner.add(xray);xray.bind(skel,I)}
+  // chapéu separado (equipável): malha + contorno próprios, presos aos mesmos ossos
+  const hat=[];if(d.hat&&mats.hat){const hm=new T.SkinnedMesh(d.hat,mats.hat);hm.castShadow=true;hm.frustumCulled=false;inner.add(hm);hm.bind(skel,I);hat.push(hm);
+    if(mats.outline){const ho=new T.SkinnedMesh(d.hat,mats.outline);ho.frustumCulled=false;inner.add(ho);ho.bind(skel,I);hat.push(ho)}
+    if(mats.xray){const hx=new T.SkinnedMesh(d.hat,mats.xray);hx.frustumCulled=false;hx.layers.set(2);inner.add(hx);hx.bind(skel,I);hat.push(hx)}}
   // olhinhos com brilho/piscada e bochechas: só no modelo antigo (o de chapéu já tem olhinhos fechados e felizes desenhados)
   const eyes=[],lids=[];if(d.extras.eyes!==false&&B.head&&mats.shine){const head=B.head;for(const s of [1,-1]){const e=new T.Vector3(s*.121,.218,.128);
     const sh=new T.Mesh(new T.SphereGeometry(.011,8,6),mats.shine);sh.position.set(e.x+s*.004,e.y+.012,e.z+.02);head.add(sh);eyes.push(sh);
     const lid=new T.Mesh(new T.SphereGeometry(.03,10,8),mats.lid);lid.position.set(e.x+s*.004,e.y+.004,e.z+.008);lid.visible=false;head.add(lid);lids.push(lid);
     const ck=new T.Mesh(new T.CircleGeometry(.03,12),mats.blush);ck.position.set(s*.135,.125,.175);ck.rotation.set(-.1,s*.7,0);head.add(ck)}}
-  return{sc:scale,g,inner,B,skel,body,outline,xray,eyes,lids,ev:[],st:{ph:0,mv:0,dash:0,yaw:0,look:0,lookT:0,lookAt:0,tilt:0,gag:0,gagK:'',gagT:1.5+Math.random()*2.5,blink:3,bl:0,rec:0,hurt:0,lx:null,ly:null,idle:0,spd:0,lean:0,lastS:0,hatLag:0,hatV:0,wasDash:0,air:0}}}
+  return{sc:scale,g,inner,B,skel,body,outline,xray,hat,setHat(on){for(const m of hat)m.visible=!!on},eyes,lids,ev:[],st:{ph:0,mv:0,dash:0,yaw:0,look:0,lookT:0,lookAt:0,tilt:0,gag:0,gagK:'',gagT:1.5+Math.random()*2.5,blink:3,bl:0,rec:0,hurt:0,lx:null,ly:null,idle:0,spd:0,lean:0,lastS:0,hatLag:0,hatV:0,wasDash:0,air:0}}}
 
 // ---------- Animação ----------
 // s: {dt,t, x,y (mundo), aim, frozen, recoil(0..1), swing(0..1), hurt(0..1), dashing, melee}
@@ -109,4 +116,4 @@ function animate(A,s){const S=A.st,B=A.B,dt=Math.min(s.dt,.05),t=s.t;
   A.inner.scale.set(A.sc*sxz/Math.sqrt(st),A.sc*sy,A.sc*sxz*st);
   A.inner.rotation.set(0,gSpin?gSpin*Math.PI*2:0,wad*.12)}
 function poke(A){const S=A.st;S.idle=Math.max(S.idle,2);S.gagK='';S.gagT=0}
-return{load,make,animate,poke,get ready(){return st==='ready'},get state(){return st},get map(){return data&&data.map},get nrm(){return data&&data.nrm},MH}})();
+return{load,make,animate,poke,get ready(){return st==='ready'},get state(){return st},get map(){return data&&data.map},get extras(){return data&&data.extras},get nrm(){return data&&data.nrm},MH}})();

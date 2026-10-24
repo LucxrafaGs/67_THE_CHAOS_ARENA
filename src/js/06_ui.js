@@ -3,22 +3,23 @@ const I=(n,c='')=>`<svg class="i ${c}"><use href="#i-${n}"/></svg>`;
 let myLook=cleanLook(store.get('look',defaultLook(1)));
 const myNick=()=>safe($('nick').value||store.get('nick','')||pick(NICKS));
 let view='home',hudGun=-1;
-const SCREENS=['home','custom','fundo','play','setup','online','lobby','arsenal','bye','result'];
+const SCREENS=['home','custom','loja','fundo','play','setup','online','lobby','arsenal','bye','result'];
 // abas do menu (todas são "dentro" da tela inicial: a capivara desliza para o lado e o painel entra pela direita)
-const NAVV=['home','custom','arsenal','fundo'],MENUV=['home','custom','arsenal','fundo','setup','online'];
+const NAVV=['home','custom','loja','arsenal','fundo'],MENUV=['home','custom','loja','arsenal','fundo','setup','online'];
 function go(v){const prev=view;view=v;for(const s of SCREENS)$(s).classList.toggle('hidden',s!==v);
   const inGame=v==='game';$('hud').classList.toggle('hidden',!inGame);$('touch').classList.toggle('hidden',!inGame);document.body.classList.toggle('menu',!inGame);
   const inMenu=MENUV.includes(v);$('mnav').classList.toggle('hidden',!inMenu);$('mtop').classList.toggle('hidden',!inMenu);$('mnav').querySelectorAll('[data-nav]').forEach(b=>b.classList.toggle('on',b.dataset.nav===v));
   document.body.classList.toggle('mclear',inMenu);document.body.classList.toggle('mpanel',inMenu&&v!=='home');
   if(!inGame){$('death').classList.add('hidden');$('pause').classList.add('hidden');$('scoreOv').classList.add('hidden');$('perkOv').classList.add('hidden')}
   if(inMenu)renderTop();
-  if(v==='home')renderHome();if(v==='play')drawPlayArt();if(v==='custom')openCustom();if(v==='fundo')renderBgs();if(v==='lobby'){lobbyKey='';renderLobby();lobbyAnim()}if(v==='setup'){renderSetup($('setupPanel'),true);setupSub()}if(v==='arsenal')renderArsenal();
+  if(v==='home')renderHome();if(v==='play')drawPlayArt();if(v==='custom')openCustom();if(v==='fundo')renderBgs();if(v==='loja')renderShop();if(v==='lobby'){lobbyKey='';renderLobby();lobbyAnim()}if(v==='setup'){renderSetup($('setupPanel'),true);setupSub()}if(v==='arsenal')renderArsenal();
   if(v==='online'){$('nick').value=store.get('nick','');enterOnline();if(OFFLINE)setTimeout(()=>setNet('O online está desligado por enquanto (modo local). Por enquanto, jogue contra os bots!','err'),60)}
   Sound.music(true,inGame?140:100)}
 function goHome(){leaveNet();players={};bullets=[];effects=[];started=false;over=false;paused=false;stopDemo();FX3D.clear();$('result').classList.add('hidden');go('home')}
 // o que o menu 3D precisa saber (05_render.js > frame)
 let menuDrag=false,arsSel=0;
 const menuView=()=>view==='home'?'home':(view==='setup'||view==='online')?'wide':'side';
+const menuHat=()=>myLook.hat!=='none';
 const menuFur=()=>view==='custom'&&draftFur?draftFur:myLook.body;
 const menuGun=()=>view==='arsenal'?arsSel:-1;
 let curBg=store.get('menubg','lagoa');const menuBgKey=()=>curBg;
@@ -26,7 +27,7 @@ let curBg=store.get('menubg','lagoa');const menuBgKey=()=>curBg;
 // ---------- Retratos: a própria capivara 3D (cabeça ou corpo todo) ----------
 function drawPortrait(cv,L,o={}){const c=cv.getContext('2d'),w=cv.width,h=cv.height;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);
   if(o.bg!==false){const g=c.createRadialGradient(w/2,h*.7,4,w/2,h/2,w*.7);g.addColorStop(0,'#8A62D8');g.addColorStop(1,'#2B1B5A');c.fillStyle=g;c.fillRect(0,0,w,h)}
-  const hex=o.bot?'#E2C48C':(L&&L.body)||'#B07A4A',im=Map3D.capyIcon(hex,w,h,o.full?'full':'head');
+  const hex=o.bot?'#E2C48C':(L&&L.body)||'#B07A4A',im=Map3D.capyIcon(hex,w,h,o.full?'full':'head',o.hat!=null?o.hat:(!!o.bot||!L||L.hat!=='none'));
   if(im){c.drawImage(im,0,0,w,h);return}
   if(!cv._pw){cv._pw=1;setTimeout(()=>{cv._pw=0;drawPortrait(cv,L,o)},300)}}
 function drawSpheres(){document.querySelectorAll('.sphere canvas').forEach(cv=>drawPortrait(cv,myLook,{bg:false}));const a=$('avaCv');if(a)drawPortrait(a,myLook,{bg:false});const k=$('knobFace');if(k)drawPortrait(k,myLook,{bg:false})}
@@ -40,7 +41,7 @@ const SEASON=['Capivara Novata','Capivara Curiosa','Capivara Valente','Capivara 
 const CHAL=[['orange','Junte 67 laranjinhas','gems',67,40],['skull','Elimine 10 capivaras','kills',10,50],['play','Jogue 3 partidas','games',3,60]];
 function renderTop(){drawSpheres();const x=xpInfo();
   $('homeNick').textContent=store.get('nick','')||'Capivara';$('avaLv').textContent=x.lv;$('xpFill').style.width=(x.cur/x.need*100)+'%';$('xpTxt').textContent=`${x.cur} / ${x.need} XP`;
-  $('totalGems').textContent=store.get('totalGems',0);$('totWins').textContent=x.st.wins||0}
+  $('totalGems').textContent=wallet();$('totWins').textContent=x.st.wins||0}
 function renderHome(){const x=xpInfo(),d=daily();
   const sl=Math.floor((x.lv-1)/3);$('seaLv').textContent=x.lv;$('seaName').textContent=SEASON[Math.min(SEASON.length-1,sl)];$('seaFill').style.width=(((x.lv-1)%3)+x.cur/x.need)/3*100+'%';
   $('chalList').innerHTML=CHAL.map(([ic,n,k,goal,xp])=>{const v=Math.min(goal,d[k]||0),done=v>=goal;return `<div class="m-ch${done?' done':''}"><span class="m-chic">${I(done?'check':ic)}</span><div class="m-chtx"><b>${n}</b><div class="m-bar"><i style="width:${v/goal*100}%"></i></div></div><span class="m-chv">${v}/${goal}</span><span class="m-chxp">+${xp}<small>XP</small></span></div>`}).join('');
@@ -62,7 +63,7 @@ $('btnBack67').onclick=()=>go('home');
 $('mnav').querySelectorAll('[data-nav]').forEach(b=>{if(b.dataset.nav!=='friends')b.onclick=()=>{if(view===b.dataset.nav)return;Sound.play('click');go(b.dataset.nav)}});
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>{Sound.play('click');if(view==='online'){go('home');return}go('home')});
 // arrastar gira a capivara; um clique sem arrastar faz ela fazer uma gracinha
-for(const id of ['home','custom','arsenal','fundo'])(()=>{const el=$(id);let x0=null,moved=0;
+for(const id of ['home','custom','loja','arsenal','fundo'])(()=>{const el=$(id);let x0=null,moved=0;
   el.addEventListener('pointerdown',e=>{if(e.target.closest('button,.m-panel,.m-season,.m-nav,input'))return;x0=e.clientX;moved=0;menuDrag=true;try{el.setPointerCapture(e.pointerId)}catch(_){}});
   el.addEventListener('pointermove',e=>{if(x0==null)return;const dx=e.clientX-x0;x0=e.clientX;moved+=Math.abs(dx);Map3D.menuSpin(dx)});
   const up=e=>{if(x0==null)return;x0=null;menuDrag=false;if(moved<6&&Math.abs(e.clientX-innerWidth*(id==='home'?.5:.3))<innerWidth*.16){Map3D.menuPoke();Sound.play('boing')}};
@@ -81,13 +82,54 @@ const FURS=[['#B07A4A','Clássica'],['#C98B4E','Caramelo'],['#6B4129','Chocolate
   ['#E7A1B5','Algodão-doce'],['#A992D8','Lavanda'],['#8FD3B6','Menta'],['#8CC3EE','Céu'],['#D8E070','Limão'],['#FF9A3C','Tangerina'],['#D9485F','Cereja'],['#E8B84A','Ouro']];
 let draftFur=null;
 const furName=h=>(FURS.find(f=>f[0].toLowerCase()===String(h).toLowerCase())||[0,'Personalizada'])[1];
-function openCustom(){draftFur=myLook.body;renderFurs()}
-function renderFurs(){const g=$('furGrid');g.innerHTML=FURS.map(([h,n])=>`<button class="m-fur${h.toLowerCase()===String(draftFur).toLowerCase()?' on':''}" data-fur="${h}" title="${n}"><canvas width="112" height="112"></canvas><span style="--fc:${h}"></span><b>${n}</b></button>`).join('');
-  g.querySelectorAll('[data-fur]').forEach(b=>{drawPortrait(b.querySelector('canvas'),{body:b.dataset.fur},{bg:false});b.onclick=()=>setFur(b.dataset.fur)});$('furName').textContent=furName(draftFur)}
-function setFur(h){draftFur=h;myLook=cleanLook(Object.assign({},myLook,{body:h}));store.set('look',myLook);Sound.play('pop');Map3D.menuPoke();
-  $('furGrid').querySelectorAll('[data-fur]').forEach(b=>b.classList.toggle('on',b.dataset.fur===h));$('furName').textContent=furName(h);drawSpheres();
-  if(players[self]&&!started){players[self].look=myLook;if(host)sync(true);else if(conn)send(conn,{type:'look',look:myLook})}}
-$('btnRandom').onclick=()=>{let h;do{h=pick(FURS)[0]}while(h===draftFur);setFur(h)};
+// abas do Visual: cor, cabeça, roupas, detalhes e capa (por enquanto só a cor e o chapéu de palha existem)
+const VTABS=[['cor','palette','Cor'],['cabeca','hat','Cabeça'],['roupa','shirt','Roupas'],['detalhe','sparkle','Detalhes'],['capa','cape','Capa']];
+let vtab='cor';
+const HEADS=[['none','Nada'],['palha','Chapéu de palha']];
+function openCustom(){draftFur=myLook.body;renderVis()}
+function renderVis(){$('visTabs').innerHTML=VTABS.map(([k,ic,n])=>`<button class="m-tab${k===vtab?' on':''}" data-vt="${k}">${I(ic)}<span>${n}</span></button>`).join('');
+  $('visTabs').querySelectorAll('[data-vt]').forEach(b=>b.onclick=()=>{vtab=b.dataset.vt;Sound.play('click');renderVis()});
+  const g=$('furGrid'),sub=$('visSub');g.classList.toggle('empty',vtab!=='cor'&&vtab!=='cabeca');
+  if(vtab==='cor'){sub.innerHTML=`<b id="furName">${furName(draftFur)}</b> — escolha a cor do pelo.`;
+    g.innerHTML=FURS.map(([h,n])=>`<button class="m-fur${h.toLowerCase()===String(draftFur).toLowerCase()?' on':''}" data-fur="${h}" title="${n}"><canvas width="112" height="112"></canvas><span style="--fc:${h}"></span><b>${n}</b></button>`).join('');
+    g.querySelectorAll('[data-fur]').forEach(b=>{drawPortrait(b.querySelector('canvas'),{body:b.dataset.fur,hat:myLook.hat},{bg:false});b.onclick=()=>setFur(b.dataset.fur)})}
+  else if(vtab==='cabeca'){const cur=myLook.hat==='none'?'none':'palha';sub.innerHTML=`<b>${cur==='none'?'Nada':'Chapéu de palha'}</b> — chapéus, cabelos e óculos. Mais itens na Loja!`;
+    g.innerHTML=HEADS.map(([k,n])=>`<button class="m-fur${k===cur?' on':''}" data-head="${k}"><canvas width="112" height="112"></canvas><b>${n}</b></button>`).join('')+
+      ['Boné','Óculos escuros','Topete','Coroa'].map(n=>`<button class="m-fur lock" disabled><span class="m-soon">EM BREVE</span><svg class="i"><use href="#i-lock"/></svg><b>${n}</b></button>`).join('');
+    g.querySelectorAll('[data-head]').forEach(b=>{drawPortrait(b.querySelector('canvas'),{body:myLook.body},{bg:false,hat:b.dataset.head!=='none'});b.onclick=()=>setHead(b.dataset.head)})}
+  else{const n=VTABS.find(v=>v[0]===vtab)[2];sub.innerHTML=`<b>${n}</b> — ainda não temos itens aqui.`;
+    g.innerHTML=`<div class="m-empty">${I(VTABS.find(v=>v[0]===vtab)[1])}<b>Em breve!</b><span>Os itens de ${n.toLowerCase()} vão aparecer aqui. Dá uma olhada na Loja.</span><button class="m-btn2" id="goShop">${I('shop')}IR PARA A LOJA</button></div>`;$('goShop').onclick=()=>{Sound.play('click');go('loja')}}}
+function lookChanged(){store.set('look',myLook);drawSpheres();if(players[self]&&!started){players[self].look=myLook;if(host)sync(true);else if(conn)send(conn,{type:'look',look:myLook})}}
+function setHead(k){myLook=cleanLook(Object.assign({},myLook,{hat:k==='none'?'none':'cartola'}));lookChanged();Sound.play('pop');Map3D.menuPoke();renderVis()}
+function setFur(h){draftFur=h;myLook=cleanLook(Object.assign({},myLook,{body:h}));Sound.play('pop');Map3D.menuPoke();lookChanged();
+  $('furGrid').querySelectorAll('[data-fur]').forEach(b=>b.classList.toggle('on',b.dataset.fur===h));const fn=$('furName');if(fn)fn.textContent=furName(h)}
+
+// ---------- LOJA: itens de amostra por categoria; compra com laranjinhas (as coletadas menos as gastas) ----------
+const wallet=()=>Math.max(0,store.get('totalGems',0)-store.get('spent',0));
+const RAR={comum:['Comum','#9AA3B3'],raro:['Raro','#45D4FF'],epico:['Épico','#B777FF'],lend:['Lendário','#FFC531']};
+const SHOP=[['roupas','shirt','Roupas',[['Camiseta Listrada','#FF4F9A','comum',60],['Moletom de Capuz','#45D4FF','raro',150],['Jaqueta de Couro','#3A3048','epico',320],['Regata de Praia','#FFC531','comum',50],['Terno Chique','#2A2440','lend',600],['Macacão de Mecânico','#3D6BFF','raro',180]]],
+  ['fundos','image','Fundos e temas',[['Praia ao Pôr do Sol','linear-gradient(#FF9A5A,#FF5F8F 55%,#3A1C80)','raro',200],['Floresta Encantada','linear-gradient(#1F5E3A,#3DBE6C 60%,#C9F0A0)','raro',200],['Cidade Neon','linear-gradient(#0B0730,#4A1A8A 50%,#FF4FB0)','epico',350],['Aurora Boreal','linear-gradient(#0A1A3A,#2FA88A 45%,#B777FF)','lend',700],['Doce Chiclete','linear-gradient(#FFD1E8,#FF8FC8)','comum',90],['Deserto','linear-gradient(#FFE0A0,#E8A050 60%,#8A4A20)','comum',90]]],
+  ['cores','palette','Cores de pelo',[['Verde Musgo','#6E8B4A','comum',80],['Azul Royal','#3B5BD8','raro',160],['Roxo Uva','#7A3FA8','raro',160],['Dourado Brilhante','#F2C14E','epico',300],['Vermelho Fogo','#E23B2E','raro',160],['Prata','#BFC5CF','epico',300]]],
+  ['pelos','sparkle','Pelagens e texturas',[['Listras de Tigre','repeating-linear-gradient(60deg,#E8913A 0 10px,#2A1A12 10px 16px)','epico',380],['Pintinhas','radial-gradient(#5A3A20 22%,transparent 24%) 0 0/16px 16px,#D9A066','raro',200],['Estrelinhas','radial-gradient(#FFF4B0 18%,transparent 20%) 0 0/14px 14px,#3A1C80','raro',220],['Camuflagem','radial-gradient(circle at 30% 30%,#4E6B2E 30%,transparent 32%) 0 0/24px 24px,radial-gradient(circle at 70% 60%,#2E3A1E 25%,transparent 27%) 0 0/20px 20px,#8A9A5A','epico',340],['Pelúcia Macia','radial-gradient(circle,#FFE8D6,#E8B890)','comum',100],['Galáxia','radial-gradient(circle at 30% 30%,#FF8FC8,transparent 40%),radial-gradient(circle at 70% 70%,#45D4FF,transparent 40%),#1B1033','lend',800]]],
+  ['estilos','bolt','Estilos e efeitos',[['Contorno Neon','#45D4FF','raro',240],['Rastro de Arco-íris','linear-gradient(90deg,#FF4F4F,#FFC531,#6CF06A,#45D4FF,#B777FF)','epico',360],['Pegadas de Coração','#FF4F9A','comum',120],['Aura Dourada','#FFC531','lend',650],['Faíscas no Dash','#FFF066','raro',220],['Bolhas ao Andar','#C9F0FF','comum',110]]]];
+let shopTab='roupas';
+function renderShop(){$('shopBal').textContent=wallet();const owned=store.get('owned',[]);
+  $('shopTabs').innerHTML=SHOP.map(([k,ic,n])=>`<button class="m-tab${k===shopTab?' on':''}" data-st="${k}">${I(ic)}<span>${n}</span></button>`).join('');
+  $('shopTabs').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{shopTab=b.dataset.st;Sound.play('click');renderShop()});
+  const cat=SHOP.find(c=>c[0]===shopTab),bal=wallet();
+  $('shopGrid').innerHTML=cat[3].map(([n,v,r,price],i)=>{const id=shopTab+':'+i,has=owned.includes(id),[rn,rc]=RAR[r];
+    const pv=shopTab==='roupas'?`<span class="m-spv" style="background:radial-gradient(circle at 50% 40%,#5A34B0,#24104F)"><svg class="i" style="color:${v}"><use href="#i-shirt"/></svg></span>`
+      :shopTab==='cores'?`<span class="m-spv" style="background:radial-gradient(circle at 50% 40%,#5A34B0,#24104F)"><canvas width="112" height="112" data-cf="${v}"></canvas></span>`
+      :shopTab==='estilos'?`<span class="m-spv" style="background:radial-gradient(circle at 50% 40%,#3A1C80,#170A38)"><i class="m-sglow" style="background:${v}"></i></span>`
+      :`<span class="m-spv" style="background:${v}"></span>`;
+    return `<div class="m-sitem${has?' owned':''}" style="--rc:${rc}">${pv}<em>${rn}</em><b>${n}</b>${has?`<span class="m-sown">${I('check')}COMPRADO</span>`:`<button class="m-buy${bal<price?' poor':''}" data-buy="${id}" data-price="${price}">${I('orange')}${price}</button>`}</div>`}).join('');
+  $('shopGrid').querySelectorAll('canvas[data-cf]').forEach(cv=>drawPortrait(cv,{body:cv.dataset.cf,hat:myLook.hat},{bg:false}));
+  $('shopGrid').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>buy(b.dataset.buy,+b.dataset.price))}
+async function buy(id,price){if(wallet()<price){Sound.play('no');toast(`Faltam ${price-wallet()} laranjinhas. Jogue partidas para juntar mais!`,'bad');return}
+  if(!await confirmBox('Comprar item?',`Custa ${price} laranjinhas.`,'COMPRAR','CANCELAR'))return;
+  store.set('spent',store.get('spent',0)+price);const o=store.get('owned',[]);o.push(id);store.set('owned',o);Sound.play('level');celebrate(30);toast('Comprado! Ele vai poder ser equipado em breve.','good');renderShop();renderTop()}
+
+$('btnRandom').onclick=()=>{let h;do{h=pick(FURS)[0]}while(h===draftFur);vtab='cor';setFur(h);renderVis()};
 $('btnSaveLook').onclick=()=>{Sound.play('level');toast('Visual salvo: '+furName(myLook.body)+'!','good');celebrate(40);go('home')};
 
 // ---------- FUNDO do menu ----------
@@ -319,7 +361,7 @@ $('statKills').onclick=$('statGems').onclick=()=>toggleScore(true);$('btnCloseSc
 // ---------- Resultado + votação ----------
 let myVote=null;
 function onMatchEnd(){$('death').classList.add('hidden');$('pause').classList.add('hidden');$('scoreOv').classList.add('hidden');for(const k of KEYLIST)keys[k]=false;pushInputs(true);myVote=null;
-  const list=rank(),me=players[self],place=list.findIndex(p=>p.id===self)+1;$('totalGems').textContent=store.get('totalGems',0);
+  const list=rank(),me=players[self],place=list.findIndex(p=>p.id===self)+1;$('totalGems').textContent=wallet();
   const tw=teamWinner();$('teamWin').classList.toggle('hidden',tw===-1);
   if(tw>=0){$('teamWin').innerHTML=`<b style="--c:${TEAM[tw].c}">TIME ${TEAM[tw].n.toUpperCase()} VENCEU!</b><span>${ms.teamScore[0]} × ${ms.teamScore[1]}</span>`}else if(tw===-2){$('teamWin').innerHTML=`<b style="--c:#FFC531">EMPATE!</b><span>${ms.teamScore[0]} × ${ms.teamScore[1]}</span>`}
   const won=tw>=0?(me&&me.team===tw):place===1;bump('games');if(won)bump('wins');$('resTitle').textContent=won?'VITÓRIA CAPIVARA!':'FIM DE PARTIDA';
@@ -401,7 +443,7 @@ let applyJoy=()=>{};
 document.addEventListener('pointerenter',e=>{if(e.target.classList&&e.target.classList.contains('btn')&&!isTouch)Sound.play('hover')},true);
 
 // ---------- Início ----------
-$('totalGems').textContent=store.get('totalGems',0);$('nick').value=store.get('nick','');
+$('totalGems').textContent=wallet();$('nick').value=store.get('nick','');
 applyJoy();drawSpheres();go('home');requestAnimationFrame(frame);
 document.fonts&&document.fonts.ready.then(()=>{drawSpheres();if(view==='play')drawPlayArt()});
 if(location.hash==='#debug')window.__67={get players(){return players},get self(){return self},get ms(){return ms},endMatch,cfg,MODES,
