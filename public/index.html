@@ -1745,9 +1745,9 @@ const Sound=(()=>{
       noise(.04,s%4===2?.25:.08,s%4===2?2500:9000,t,musBus,s%4===2?.8:1);
       if(tempo>120&&s===6&&Math.random()<.5)tone(root*4,spb*.5,'sine',.08,1.5,t,musBus);
       nextT+=spb;step++}}
-  // ---------- Trilha sonora (public/music): "Início" nos menus e na abertura; na partida, Battle 1 ou 2 sorteada ----------
+  // ---------- Trilha sonora (public/music): Início oficial nos menus e na abertura; Final Fall na partida ----------
   // Os navegadores só deixam tocar som depois do primeiro clique/toque/tecla: se a abertura começar sem som, a música entra no primeiro toque.
-  const TRK={menu:['music/inicio.mp3'],battle:['music/battle1.mp3','music/battle2.mp3']};
+  const TRK={menu:['music/inicio.mp3?v=oficial'],battle:['music/finalfall.mp3?v=1']};
   let cur=null,curKind='',fadeT=0;const els=new Map();
   const tvol=()=>S.sound?Math.pow(S.master/100,1.2)*(S.music/100)*.7:0;
   function trkVol(){if(cur&&!cur._fading)cur.volume=Math.min(1,tvol())}
