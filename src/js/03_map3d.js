@@ -23,7 +23,7 @@ if(document.fonts)document.fonts.ready.then(()=>{fontsOk=true;if(cur&&cur.repain
 
 // ---------- Qualidade (segue Configurações > Gráficos) ----------
 function Q(){const q=S.quality;return{key:q,sh:q==='low'?0:q==='medium'?(isTouch?1024:2048):q==='high'?2048:4096,tex:q==='low'?1024:q==='medium'?(isTouch?1536:2048):q==='high'?3072:4096,
-  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low',pl:q==='low'?0:q==='medium'?2:4,aa:!isTouch&&q!=='low'}}
+  den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low',pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:!isTouch&&q!=='low'}}
 
 // ---------- Ruído e aleatório determinísticos ----------
 function hrand(x,y,z,s){return mulberry(Math.imul(x|0,73856093)^Math.imul(y|0,19349663)^Math.imul(z|0,83492791)^Math.imul(s|0,40503))}
@@ -584,7 +584,8 @@ let lastT=0;
 // ---------- Proteção de desempenho ----------
 // O 3D é desenhado num tamanho limitado de pixels (o navegador estica na tela) e, se o jogo ficar lento, a resolução
 // cai sozinha e as sombras passam a atualizar menos vezes (sem recompilar nada).
-const PXB={low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=1,frameN=0,skipNext=true;
+// no celular o 3D desenha bem menos pixels (o navegador estica) e as sombras atualizam a cada 2 quadros
+const PXB=isTouch?{low:.4e6,medium:.7e6,high:1e6,chaos:1.3e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?2:1,frameN=0,skipNext=true;
 document.addEventListener('visibilitychange',()=>{skipNext=true});
 function watch(rawDt){if(skipNext){skipNext=false;return}emaDt+=(Math.min(rawDt,250)-emaDt)*.08;
   if(emaDt>36){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;if(autoS>.45)autoS=Math.max(.45,autoS*.8);else shadowEvery=Math.min(4,shadowEvery+1)}}
@@ -596,7 +597,11 @@ addEventListener('pagehide',freeGPU);
 function render(M,camX,camY,VW,VH,t,lights,acts){if(!ensure(M))return false;const c=cur;const rawDt=lastT?t-lastT:16;const dt=clamp(rawDt/1000,0,.1);lastT=t;
   if(compiling){skipNext=true;return false}watch(rawDt);
   gameCv=gameCv||$('game');const W0=gameCv.width,H0=gameCv.height,sc=Math.min(1,Math.sqrt((PXB[c.q.key]||1.2e6)*autoS/(W0*H0))),w=Math.max(2,Math.round(W0*sc)),h=Math.max(2,Math.round(H0*sc));
-  if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false);bCv.width=w;bCv.height=h}
+  // modo "duas camadas" (paredes altas meio transparentes por cima dos textos 2D) só no PC em Alta/Caótica; no resto, uma camada só (bem mais leve)
+  const split=!isTouch&&(c.q.key==='high'||c.q.key==='chaos');document.body.classList.toggle('g3single',!split);const gm=gameCv;if(split?glCv.nextSibling===gm:glCv.nextSibling!==gm)gm.parentNode.insertBefore(glCv,split?gm.nextSibling:gm);
+  if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false);if(split){bCv.width=w;bCv.height=h}}
+  if(split&&bCv.width!==w){bCv.width=w;bCv.height=h}
+  sharedCapyMats();OU.uRes.value.set(w,h);OU.uOW.value=Math.max(1.2,h*.0026);
   const shOn=!!c.q.sh&&(++frameN%shadowEvery===0);
   document.body.classList.add('g3don');document.body.classList.remove('g3menu');
   R.info.reset();U.uTime.value=t/1000;c.uPx.value=w/VW;
@@ -618,9 +623,9 @@ function render(M,camX,camY,VW,VH,t,lights,acts){if(!ensure(M))return false;cons
   if(!bldG){bldG=new T.Group();bldG.name='construcoes'}if(bldG.parent!==c.scene)c.scene.add(bldG);syncBuilds();
   // 1) cena completa -> copiada para a camada de baixo
   camera.layers.set(0);U.uClipOn.value=0;R.setClearColor(c.bg,1);R.shadowMap.needsUpdate=shOn;R.render(c.scene,camera);
-  bctx.drawImage(glCv,0,0);
+  if(split){bctx.drawImage(glCv,0,0);
   // 2) só o que fica na frente de quem está atrás (camada de cima, levemente transparente)
-  camera.layers.set(1);U.uClipOn.value=1;R.setClearColor(0x000000,0);R.render(c.scene,camera);
+    camera.layers.set(1);U.uClipOn.value=1;R.setClearColor(0x000000,0);R.render(c.scene,camera)}
   // 3) silhueta de quem está escondido atrás de parede (estilo Brawl Stars): só onde a parede da frente cobre
   if(actG&&actG.parent&&c.q.key!=='low'){camera.layers.set(2);R.autoClear=false;R.render(c.scene,camera);R.autoClear=true}
   U.uClipOn.value=0;return true}
@@ -653,13 +658,16 @@ function readRT(rt,w,h){const px=new Uint8Array(w*h*4);R.readRenderTargetPixels(
 // CAPIVARAS 3D na arena (modelo em 03_capy3d.js) + paredes e caixas construídas pelos jogadores
 // =====================================================================
 const CAPY_H=62,FEET=8; // altura da capivara e quanto os pés ficam abaixo do centro da simulação (unidades do mundo)
-let actG=null,bldG=null,capyM=null;const actors=new Map(),xrayC={},blds=new Map();
+let actG=null,bldG=null,capyM=null;const OU={uOW:{value:2},uRes:{value:null}};const actors=new Map(),xrayC={},blds=new Map();
 function capyReady(){if(st!=='ready'||!R||lost)return false;if(CapyRig.state==='idle')CapyRig.load(T,'models/capivara.glb');return CapyRig.ready}
 const DEFBODY=new Map();
 function capyTint(L,bot){const c=new (T.Color)(bot?'#E2C48C':(L&&L.body)||'#B07A4A'),d=new T.Color('#B07A4A');return new T.Color(clamp(c.r/d.r,.3,1.8),clamp(c.g/d.g,.3,1.8),clamp(c.b/d.b,.3,1.8))}
-function sharedCapyMats(){if(capyM)return capyM;
+function sharedCapyMats(){if(capyM)return capyM;if(!OU.uRes.value)OU.uRes.value=new T.Vector2(1,1);
   const out=new T.MeshBasicMaterial({color:'#2A1A12',side:T.BackSide});
-  out.onBeforeCompile=s=>{s.vertexShader='attribute vec3 outN;\n'+s.vertexShader.replace('#include <skinning_vertex>','#include <skinning_vertex>\n{vec4 sn=bindMatrixInverse*(skinWeight.x*boneMatX+skinWeight.y*boneMatY+skinWeight.z*boneMatZ+skinWeight.w*boneMatW)*bindMatrix*vec4(outN,0.);transformed+=normalize(sn.xyz)*.016;}')};
+  // contorno de tinta com largura constante na tela (em pixels): não engrossa de perto, não some de longe e não "vaza" em partes finas
+  out.onBeforeCompile=s=>{s.uniforms.uOW=OU.uOW;s.uniforms.uRes=OU.uRes;
+    s.vertexShader='attribute vec3 outN;uniform float uOW;uniform vec2 uRes;\n'+s.vertexShader.replace('#include <skinning_vertex>','#include <skinning_vertex>\nvec3 sN=normalize((bindMatrixInverse*(skinWeight.x*boneMatX+skinWeight.y*boneMatY+skinWeight.z*boneMatZ+skinWeight.w*boneMatW)*bindMatrix*vec4(outN,0.)).xyz);')
+      .replace('#include <project_vertex>','#include <project_vertex>\n{vec3 vn=normalize(normalMatrix*sN);vec2 d=(projectionMatrix*vec4(vn,0.)).xy*uRes;float l=length(d);if(l>1e-6)gl_Position.xy+=d/l*uOW*2.*gl_Position.w/uRes;gl_Position.z+=.002*gl_Position.w;}')};
   out.customProgramCacheKey=()=>'capyOutline';
   const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(0,0,0,.55)');gr.addColorStop(.6,'rgba(0,0,0,.28)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);
   const bt=new T.CanvasTexture(cv);
@@ -801,13 +809,13 @@ function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!
     const done=()=>{compiling=false;loading(false);MN.warm=1};(R.compileAsync&&R.extensions.has('KHR_parallel_shader_compile')?R.compileAsync(MN.sc,MN.cam):new Promise(r=>setTimeout(()=>{R.compile(MN.sc,MN.cam);r()},30))).then(done,done)}
   if(MN.warm!==1)return false;
   const dt=clamp((t-(menuT||t))/1000,0,.1);menuT=t;
-  const dpr=Math.min(window.devicePixelRatio||1,1.5),bud=(S.quality==='low'?.9e6:2.2e6)*autoS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
-  if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false);bCv.width=w;bCv.height=h}
-  document.body.classList.add('g3don','g3menu');
+  const dpr=Math.min(window.devicePixelRatio||1,isTouch?1.25:1.5),bud=(isTouch?(S.quality==='low'?.4e6:.7e6):(S.quality==='low'?.9e6:2.2e6))*autoS;let w=innerWidth*dpr,h=innerHeight*dpr;const sc=Math.min(1,Math.sqrt(bud/(w*h)));w=Math.max(2,Math.round(w*sc));h=Math.max(2,Math.round(h*sc));
+  if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false)}
+  document.body.classList.add('g3don','g3menu');sharedCapyMats();OU.uRes.value.set(w,h);OU.uOW.value=Math.max(1.8,h*.0052);
   const V=MVIEW[o.view]||MVIEW.home,v=MN.v,k=Math.min(1,dt*5);for(const key of ['ty','d','el','off'])v[key]+=(V[key]-v[key])*k;
   const cam=MN.cam,asp=w/h;cam.aspect=asp;const nar=asp<1.1;cam.fov=nar?42:30;
   const D=v.d*(nar?1.25:1);cam.position.set(0,v.ty+Math.sin(v.el)*D,Math.cos(v.el)*D);cam.lookAt(0,v.ty,0);cam.updateMatrixWorld();
-  cam.filmOffset=nar?0:v.off*cam.getFilmWidth();cam.updateProjectionMatrix();
+  cam.filmOffset=nar?0:v.off*cam.getFilmWidth();if(nar&&o.view!=='home')cam.setViewOffset(w,h,0,h*.24,w,h);else cam.clearViewOffset();cam.updateProjectionMatrix();
   // capivara: parada, fofinha; arrastar gira, clique faz gracinha
   if(!o.drag)MN.spin*=Math.exp(-dt*1.6);
   // fundo
@@ -820,7 +828,7 @@ function menu(t,o){if(st==='idle')load();if(st!=='ready'||lost)return false;if(!
       m.setPosition(v.x+cs*2*CAPYS,v.y+1,v.z+sn*2*CAPYS);MN.gun.matrix.copy(m);MN.gun.matrixWorldNeedsUpdate=true}}
   const ts=t/1000;MN.water.material.uniforms.uT.value=ts;U.uTime.value=ts;U.uDark.value=0;U.uNL.value=0;U.uClipOn.value=0;
   const m4=new T.Matrix4();MN.spD.forEach((p,i)=>{const hh=(p.h+ts*12)%170;m4.makeScale(p.s*(.6+.4*Math.sin(ts*2+p.ph)),p.s,p.s).setPosition(p.x+Math.sin(ts*.5+p.ph)*20,hh,p.z);MN.sp.setMatrixAt(i,m4)});MN.sp.instanceMatrix.needsUpdate=true;
-  camera&&camera.layers.set(0);cam.layers.set(0);if(MN.clear)R.setClearColor(MN.clear,1);else R.setClearColor(0x000000,0);R.shadowMap.needsUpdate=true;R.render(MN.sc,cam);menuOk=true;return true}
+  camera&&camera.layers.set(0);cam.layers.set(0);if(MN.clear)R.setClearColor(MN.clear,1);else R.setClearColor(0x000000,0);R.shadowMap.needsUpdate=!isTouch||(++frameN%3===0);R.render(MN.sc,cam);menuOk=true;return true}
 function preload(M){try{return ensure(M)&&!compiling&&!!(cur&&cur.warm)&&(!capyReady()||capyWarm)}catch(e){return false}}
 function menuSpin(dx){if(MN)MN.spin+=dx*.012}
 function menuPoke(){if(MN&&MN.A)CapyRig.poke(MN.A)}
@@ -834,6 +842,7 @@ function capyIcon(hex,w,h,mode='head'){const key=hex+'|'+w+'x'+h+'|'+mode;if(cap
   const out=snap(ICN.sc,cam,w,h);if(out)capyIcons.set(key,out);return out}
 function snap(scene,cam,w,h){const S2=2,W2=w*S2,H2=h*S2;if(!iconRT||iconRT.width!==W2||iconRT.height!==H2){if(iconRT)iconRT.dispose();iconRT=new T.WebGLRenderTarget(W2,H2,{samples:4})}
   const keep=[U.uClipOn.value,U.uDark.value];U.uClipOn.value=0;U.uDark.value=0;const oc=new T.Color();R.getClearColor(oc);const oa=R.getClearAlpha(),ort=R.getRenderTarget();
+  if(OU.uRes.value){OU.uRes.value.set(W2,H2);OU.uOW.value=Math.max(2,H2*.012)}
   R.setRenderTarget(iconRT);R.setClearColor(0x000000,0);R.clear();R.render(scene,cam);const out=readRT(iconRT,W2,H2);R.setRenderTarget(ort);R.setClearColor(oc,oa);[U.uClipOn.value,U.uDark.value]=keep;
   const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(out,0,0,w,h);return cv}
 

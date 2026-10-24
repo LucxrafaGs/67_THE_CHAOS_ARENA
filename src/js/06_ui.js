@@ -44,6 +44,7 @@ function renderTop(){drawSpheres();const x=xpInfo();
 function renderHome(){const x=xpInfo(),d=daily();
   const sl=Math.floor((x.lv-1)/3);$('seaLv').textContent=x.lv;$('seaName').textContent=SEASON[Math.min(SEASON.length-1,sl)];$('seaFill').style.width=(((x.lv-1)%3)+x.cur/x.need)/3*100+'%';
   $('chalList').innerHTML=CHAL.map(([ic,n,k,goal,xp])=>{const v=Math.min(goal,d[k]||0),done=v>=goal;return `<div class="m-ch${done?' done':''}"><span class="m-chic">${I(done?'check':ic)}</span><div class="m-chtx"><b>${n}</b><div class="m-bar"><i style="width:${v/goal*100}%"></i></div></div><span class="m-chv">${v}/${goal}</span><span class="m-chxp">+${xp}<small>XP</small></span></div>`}).join('');
+  $('chalSum').textContent=CHAL.filter(c=>(d[c[2]]||0)>=c[3]).length+'/'+CHAL.length+' ▾';
   const now=new Date(),mid=new Date(now);mid.setHours(24,0,0,0);const hh=Math.floor((mid-now)/36e5),mm=Math.floor((mid-now)%36e5/6e4);$('chalReset').textContent=`renova em ${hh}h ${mm}min`;
   const md=modeById(cfg.mode),mp=mapById(cfg.map);$('mcMode').textContent=md.n;$('mcMap').textContent=mp.n+' • '+cfg.bots+' bots';drawMapThumb($('mcThumb'),mp)}
 function setupSub(){const md=modeById(cfg.mode),mp=mapById(cfg.map);$('setupSub').textContent=`${md.n} • ${mp.n}`}
@@ -466,3 +467,9 @@ let bootOn=true;
 (()=>{const b=$('boot');document.body.classList.add('bootact');const t0=performance.now();
   const tick=()=>{const el=performance.now()-t0,ok=Map3D.menuOk;$('bootFill').style.width=Math.min(100,(Math.min(1,el/4300)*.75+(ok?.25:0))*100)+'%';
     if((el>4300&&ok)||el>15000){b.classList.add('out');setTimeout(()=>{b.remove();bootOn=false;if($('mload').classList.contains('hidden'))document.body.classList.remove('bootact')},700);return}requestAnimationFrame(tick)};requestAnimationFrame(tick)})();
+
+// escala dos menus: em telas pequenas (celular) cartões e botões encolhem juntos para nada ficar um por cima do outro
+function menuScale(){const w=innerWidth,h=innerHeight,port=h>w&&w<820,ms=port?clamp(w/640,.5,1):clamp(Math.min(h/640,w/1180),.52,1);
+  document.documentElement.style.setProperty('--ms',ms.toFixed(3));document.body.classList.toggle('mport',port);document.body.classList.toggle('mshort',!port&&h<720)}
+$('chalBox').onclick=()=>{if(document.body.classList.contains('mshort')){$('chalBox').classList.toggle('open');Sound.play('click')}};
+addEventListener('resize',menuScale);menuScale();

@@ -125,7 +125,7 @@ function begin(){for(const P0 of protos.values())P0.n=0}
 function end(){for(const P0 of protos.values())for(const im of P0.im){im.count=P0.n;if(P0.n){im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true}}}
 
 // ---------- partículas ----------
-const parts=[];const cap=()=>S.particles==='low'?220:S.particles==='mid'?500:900;
+const parts=[];const cap=()=>(S.particles==='low'?220:S.particles==='mid'?500:900)*(isTouch?.5:1);
 const FIRE=['#FFF7C2','#FFD23A','#FF8A1F','#E8443A','#9A8CA8','#C9C0D6'].map(h=>[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255]);
 function part(o){if(parts.length>=cap())return null;const p=Object.assign({k:'star',x:0,y:0,h:12,vx:0,vy:0,vh:0,g:0,drag:2,life:.6,size:6,bounce:0,rx:Math.random()*6,ry:Math.random()*6,rz:0,vrx:0,vry:0,vrz:0,col:'#ffffff',grow:0},o);
   p.max=p.life;p.c=new (T||window.THREE).Color(p.col);parts.push(p);return p}

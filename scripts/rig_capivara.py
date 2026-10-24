@@ -27,14 +27,46 @@ def find_tail(P,I,ymax=.22,zmax=-.135):
   tail=np.zeros(nw,bool);tail[list(seen)]=True;ring=[q for q in seen if any(not tail[r] for r in adj[q])]
   return tail[wid],wpos[ring].mean(0)
 TAIL,TA=find_tail(P,IDX.reshape(-1,3))
-P[TAIL]=(TA+np.array([0,.01,.05])+(P[TAIL]-TA)*0.02).astype(np.float32)
+# o rabo sai de verdade: apaga os triângulos dele e tampa o buraco com um leque (antes ele era só "amassado" e o contorno de tinta vazava ali)
+F=IDX.reshape(-1,3);F=F[~TAIL[F].any(1)]
+key=np.round(P*3000).astype(np.int64);_,WID=np.unique(key,axis=0,return_inverse=True);WID=WID.reshape(-1)
+from collections import Counter
+ec=Counter();ed={}
+for f in F:
+  for a_,b_ in ((f[0],f[1]),(f[1],f[2]),(f[2],f[0])):
+    k=(min(WID[a_],WID[b_]),max(WID[a_],WID[b_]));ec[k]+=1;ed[k]=(a_,b_)
+bnd=[ed[k] for k,c in ec.items() if c==1 and np.linalg.norm(P[ed[k][0]]-TA)<.12]
+newP=[];newN=[];newUV=[];newF=[];n0=len(P)
+if bnd:
+  c=np.mean([P[a_] for a_,b_ in bnd],0);cn=np.mean([N[a_] for a_,b_ in bnd],0);cn/=np.linalg.norm(cn)+1e-9
+  near=min(bnd,key=lambda e:np.linalg.norm(P[e[0]]-c))[0]
+  newP.append(c+cn*.004);newN.append(cn);newUV.append(UV[near])
+  for a_,b_ in bnd:newF.append((b_,a_,n0))
+  P=np.vstack([P,np.array(newP,np.float32)]);N=np.vstack([N,np.array(newN,np.float32)]);UV=np.vstack([UV,np.array(newUV,np.float32)])
+  F=np.vstack([F,np.array(newF)]);TAIL=np.append(TAIL,False)
+IDX=F.reshape(-1).astype(np.uint32);print('buraco do rabo tampado com',len(bnd),'triângulos')
+# deixa a capivara "redondinha": suavização de Taubin (não encolhe) no corpo; o chapéu fica como está
+key=np.round(P*3000).astype(np.int64);_,WID=np.unique(key,axis=0,return_inverse=True);WID=WID.reshape(-1);nw=WID.max()+1
+Wp=np.zeros((nw,3));np.add.at(Wp,WID,P);Wp/=np.bincount(WID,minlength=nw)[:,None]
+T3=WID[F];E=np.concatenate([T3[:,[0,1]],T3[:,[1,2]],T3[:,[2,0]]]);E=np.concatenate([E,E[:,::-1]]);E=np.unique(E,axis=0)
+deg=np.bincount(E[:,0],minlength=nw)[:,None].astype(float)
+free=(Wp[:,1]<.845)[:,None]*1.0
+used=np.zeros(nw,bool);used[T3.reshape(-1)]=True;free*=used[:,None]
+for it in range(10):
+  for lam in (.5,-.53):
+    acc=np.zeros_like(Wp);np.add.at(acc,E[:,0],Wp[E[:,1]]);Wp=Wp+lam*free*(acc/np.maximum(deg,1)-Wp)
+P=Wp[WID].astype(np.float32)
+# normais lisas recalculadas (iguais em todas as cópias da mesma posição)
+a_,b_,c_=Wp[T3[:,0]],Wp[T3[:,1]],Wp[T3[:,2]];fn=np.cross(b_-a_,c_-a_);vn=np.zeros((nw,3))
+for k in range(3):np.add.at(vn,T3[:,k],fn)
+vn/=np.linalg.norm(vn,axis=1,keepdims=True)+1e-12;N=np.where((P[:,1]>.845)[:,None],N,vn[WID]).astype(np.float32)
 print('rabo removido:',int(TAIL.sum()),'vértices')
 x,y,z=P[:,0],P[:,1],P[:,2];ax=np.abs(x);sx=np.where(x>=0,1,-1)
 def ss(a,b,v):t=np.clip((v-a)/(b-a),0,1);return t*t*(3-2*t)
 # ---------- esqueleto (posições no espaço da malha; rotações identidade) ----------
 B=[('root',None,(0,0,0)),('hips','root',(0,.17,0)),('spine','hips',(0,.26,.01)),('chest','spine',(0,.37,.027)),('neck','chest',(0,.47,.04)),('head','neck',(0,.53,.06)),
- ('armL','chest',(.235,.39,.03)),('foreL','armL',(.283,.262,.03)),('handL','foreL',(.322,.238,.09)),
- ('armR','chest',(-.235,.39,.03)),('foreR','armR',(-.283,.262,.03)),('handR','foreR',(-.322,.238,.09)),
+ ('armL','chest',(.245,.47,.03)),('foreL','armL',(.305,.33,.04)),('handL','foreL',(.322,.215,.07)),
+ ('armR','chest',(-.245,.47,.03)),('foreR','armR',(-.305,.33,.04)),('handR','foreR',(-.322,.215,.07)),
  ('thighL','hips',(.098,.139,0)),('shinL','thighL',(.099,.078,.004)),('footL','shinL',(.099,.04,0)),
  ('thighR','hips',(-.098,.139,0)),('shinR','thighR',(-.099,.078,.004)),('footR','shinR',(-.099,.04,0))]
 names=[b[0] for b in B];bi={n:i for i,n in enumerate(names)};pos={b[0]:np.array(b[2]) for b in B}
@@ -44,9 +76,9 @@ def segd(p,a,b):
 sh=ss(.47,.55,y)
 arm=np.zeros(len(P))
 for s_,(A_,F_,H_) in [(1,('armL','foreL','handL')),(-1,('armR','foreR','handR'))]:
-  a_,f_,h_=pos[A_],pos[F_],pos[H_];e_=h_+np.array([s_*.01,-.06,.03])
+  a_,f_,h_=pos[A_],pos[F_],pos[H_];e_=h_+np.array([s_*.0,-.07,.045])
   d1,t1=segd(P,a_,f_);d2,t2=segd(P,f_,h_);d3,t3=segd(P,h_,e_);dm=np.minimum(np.minimum(d1,d2),d3)
-  am=ss(.085,.055,dm)*ss(.19,.235,ax)*(1-sh)*(sx==s_)*(1-TAIL)
+  am=ss(.1,.072,dm)*ss(.2,.25,ax)*(1-sh*.6)*(sx==s_)*(1-TAIL)
   par=np.where(d1<=np.minimum(d2,d3),t1,np.where(d2<=d3,1+t2,2+t3));wu=1-ss(.8,1.2,par);wh=ss(1.8,2.15,par);wf=1-wu-wh
   Wt[:,bi[A_]]+=am*wu;Wt[:,bi[F_]]+=am*wf;Wt[:,bi[H_]]+=am*wh;arm+=am
 leg=ss(.19,.125,y)*ss(.012,.045,ax)*(1-TAIL)
