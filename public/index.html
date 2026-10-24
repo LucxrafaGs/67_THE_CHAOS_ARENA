@@ -2763,7 +2763,7 @@ load();
 if(document.fonts)document.fonts.ready.then(()=>{fontsOk=true;if(cur&&cur.repaint)cur.repaint()});
 
 // ---------- Qualidade (segue Configurações > Gráficos) ----------
-function Q(){const q=S.quality;return{key:q,sh:q==='low'?0:q==='medium'?(isTouch?1024:2048):q==='high'?2048:4096,tex:q==='low'?1024:q==='medium'?(isTouch?1536:2048):q==='high'?3072:4096,
+function Q(){const q=S.quality;return{key:q,sh:q==='low'?0:q==='medium'?2048:q==='high'?2048:4096,tex:q==='low'?1024:q==='medium'?(isTouch?1536:2048):q==='high'?3072:4096,
   den:q==='low'?.35:q==='medium'?.7:q==='high'?1:1.3,lam:q==='low'||(isTouch&&q==='medium'),pl:q==='low'?0:q==='medium'?(isTouch?1:2):isTouch?2:4,aa:q!=='low'}} // MSAA também no celular: nas GPUs de celular (tile-based) ele custa pouco e tira o serrilhado
 
 // ---------- Ruído e aleatório determinísticos ----------
@@ -3327,9 +3327,20 @@ let lastT=0;
 // O 3D é desenhado num tamanho limitado de pixels (o navegador estica na tela) e, se o jogo ficar lento, a resolução
 // cai sozinha e as sombras passam a atualizar menos vezes (sem recompilar nada).
 // no celular o 3D desenha bem menos pixels (o navegador estica) e as sombras atualizam a cada 2 quadros
-const PXB=isTouch?{low:.7e6,medium:1.35e6,high:1.8e6,chaos:2.2e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=isTouch&&(navigator.deviceMemory||4)<=3?.75:1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?6:1,frameN=0,skipNext=true;
+const PXB=isTouch?{low:.7e6,medium:1.2e6,high:1.7e6,chaos:2.1e6}:{low:.6e6,medium:1.15e6,high:1.9e6,chaos:3e6};let autoS=isTouch&&(navigator.deviceMemory||4)<=3?.75:1,slowFor=0,fastFor=0,emaDt=16,shadowEvery=isTouch?6:1,frameN=0,skipNext=true;
 document.addEventListener('visibilitychange',()=>{skipNext=true});
-function watch(rawDt){if(skipNext){skipNext=false;return}emaDt+=(Math.min(rawDt,250)-emaDt)*.08;
+// celular: escada de qualidade. Se o aparelho esquenta e perde ritmo: 1) baixa um pouco a resolução (até 62%);
+// 2) se nem assim segura 60, trava em 30 fps ESTÁVEIS (bem mais liso que 40-50 tremendo) e devolve a resolução;
+// de tempos em tempos testa voltar para 60 (se não aguentar, volta para 30 e espera mais para tentar de novo).
+let fcap=60,fTrial=0,fWait=25000,fAt=0;
+function watchTouch(raw){const tgt=1000/fcap;emaDt+=(Math.min(raw,250)-emaDt)*.08;
+  if(emaDt>tgt*1.4){slowFor+=raw;fastFor=0;
+    if(fTrial&&slowFor>1200){fcap=30;fTrial=0;fWait=Math.min(120000,fWait*2);fAt=0;slowFor=0;emaDt=33;return}
+    if(slowFor>1500){slowFor=0;if(autoS>.62)autoS=Math.max(.62,autoS*.88);else if(fcap>30){fcap=30;autoS=Math.min(1,autoS*1.3);fAt=0;emaDt=33}}}
+  else{slowFor=Math.max(0,slowFor-raw*.5);if(emaDt<tgt*1.12){fastFor+=raw;if(fastFor>6000){fastFor=0;if(autoS<1)autoS=Math.min(1,autoS*1.08)}}}
+  if(fcap===30&&!fTrial){fAt+=raw;if(fAt>fWait&&autoS>=.95){fAt=0;fcap=60;fTrial=1;emaDt=17}}
+  if(fTrial){fTrial+=raw;if(fTrial>6000){fTrial=0;fWait=25000}}}
+function watch(rawDt){if(skipNext){skipNext=false;return}if(isTouch)return watchTouch(rawDt);emaDt+=(Math.min(rawDt,250)-emaDt)*.08;
   if(emaDt>(isTouch?26:36)){slowFor+=rawDt;fastFor=0;if(slowFor>1500){slowFor=0;const fl=isTouch?.62:.45;if(isTouch&&shadowEvery<16)shadowEvery=Math.min(16,shadowEvery*2);else if(autoS>fl)autoS=Math.max(fl,autoS*.85);else shadowEvery=Math.min(16,shadowEvery+1)}}
   else if(emaDt<20){fastFor+=rawDt;slowFor=Math.max(0,slowFor-rawDt);if(fastFor>6000){fastFor=0;if(autoS<1)autoS=Math.min(1,autoS*1.1);else if(shadowEvery>(isTouch?6:1))shadowEvery--}}else{slowFor=Math.max(0,slowFor-rawDt*.5)}}
 let failN=0;function fail(e){if(failN++<3)console.error('Erro no 3D:',e)}
@@ -3345,7 +3356,10 @@ function render(M,camX,camY,VW,VH,t,lights,acts){if(!ensure(M))return false;cons
   if(glCv.width!==w||glCv.height!==h){R.setSize(w,h,false);if(split){bCv.width=w;bCv.height=h}}
   if(split&&bCv.width!==w){bCv.width=w;bCv.height=h}
   sharedCapyMats();OU.uRes.value.set(w,h);OU.uOW.value=Math.max(1.2,h*.0026);
-  const shOn=!!c.q.sh&&(++frameN%shadowEvery===0);
+  // celular: sombra ESTÁTICA do mapa inteiro, desenhada uma vez (e de novo só quando aparece/some parede ou caixa) — nada que se mexe faz sombra 3D
+  //   (a capivara usa a sombrinha redonda embaixo dela, que acompanha todo quadro, sem "teleportar")
+  if(isTouch&&c.q.sh&&blds.size!==c.bN){c.bN=blds.size;c.shDirty=true;c.shAt=performance.now()+260}
+  const shOn=!!c.q.sh&&(isTouch?(c.shDirty&&performance.now()>=(c.shAt||0)?!(c.shDirty=false):false):(++frameN%shadowEvery===0));
   document.body.classList.add('g3don');document.body.classList.remove('g3menu');
   R.info.reset();U.uTime.value=t/1000;c.uPx.value=w/VW;
   // escuridão dos mapas noturnos (feita por pixel; os objetos 2D por cima são escurecidos pelo canvas)
@@ -3355,7 +3369,9 @@ function render(M,camX,camY,VW,VH,t,lights,acts){if(!ensure(M))return false;cons
     const big=vis.filter(l=>l[2]>=250);c.pls.forEach((l,i)=>{const b=big[i];if(b){l.position.set(b[0],46,b[1]);l.intensity=b[2]>=400?1300:800}else l.intensity=0})}
   else{U.uDark.value=0;U.uNL.value=0}
   // sol segue a câmera (sombras só onde importa)
-  const cx=camX+VW/2,cz=camY+VH/2;if(c.q.sh){const sz=Math.max(VW,VH)*.62+260;if(Math.abs(sz-c.shSize)>30){const sc=c.sun.shadow.camera;sc.left=-sz;sc.right=sz;sc.top=sz;sc.bottom=-sz;sc.updateProjectionMatrix();c.shSize=sz}
+  const cx=camX+VW/2,cz=camY+VH/2;if(c.q.sh&&isTouch){if(!c.shStatic){c.shStatic=true;c.shDirty=true;const sz=Math.max(W,H)*.5+120,sc=c.sun.shadow.camera;sc.left=-sz;sc.right=sz;sc.top=sz;sc.bottom=-sz;sc.updateProjectionMatrix();
+    c.sun.target.position.set(W/2,0,H/2);c.sun.position.set(W/2+c.dir.x*1600,c.dir.y*1600,H/2+c.dir.z*1600);c.sun.target.updateMatrixWorld();c.sun.shadow.radius=2}}
+  else if(c.q.sh){const sz=Math.max(VW,VH)*.62+260;if(Math.abs(sz-c.shSize)>30){const sc=c.sun.shadow.camera;sc.left=-sz;sc.right=sz;sc.top=sz;sc.bottom=-sz;sc.updateProjectionMatrix();c.shSize=sz}
     const tx=Math.round(cx/8)*8,tz=Math.round((cz+60)/8)*8;c.sun.target.position.set(tx,0,tz);c.sun.position.set(tx+c.dir.x*1600,c.dir.y*1600,tz+c.dir.z*1600);c.sun.target.updateMatrixWorld()}
   setCam(camera,cx,cz,VW,VH);
   // capivaras 3D e construções dos jogadores
@@ -3510,7 +3526,7 @@ vec3 capyStyle(vec3 c){vec3 p=vOP;float lum=dot(c,vec3(.3,.59,.11));
 let FLATC=null,depthOnly=null;
 function newActor(a){const m=sharedCapyMats(),body=capyBodyMat(a);
   const q=Q(),A=CapyRig.make(Object.assign({body,outline:q.key==='low'?null:m.out,xray:q.key==='low'?null:xray(a.xc),hat:hatMat(),shine:m.shine,lid:m.lid,blush:m.blush},eyeMats(body)),CAPY_H/CapyRig.MH);A.self=!!a.self;CapyRig.setEyes(A,a.self?EYE:a.bot?botEye(a.id):null);
-  A.body.castShadow=q.key==='high'||q.key==='chaos'||(!isTouch&&q.key==='medium'); A.bot=a.bot;A.lookKey=a.bot?'bot':(a.look&&a.look.body);A.xc=a.xc;A.mat=body; // no celular em Média a sombra 3D da capivara sai (fica a sombrinha redonda)
+  A.body.castShadow=q.key==='high'||q.key==='chaos'||(!isTouch&&q.key==='medium');if(isTouch){A.body.castShadow=false;for(const m of A.hat)m.castShadow=false} A.bot=a.bot;A.lookKey=a.bot?'bot':(a.look&&a.look.body);A.xc=a.xc;A.mat=body; // no celular em Média a sombra 3D da capivara sai (fica a sombrinha redonda)
   const blob=new T.Mesh(m.blobG||(m.blobG=new T.PlaneGeometry(52,40).rotateX(-PI/2)),m.blob);blob.position.y=.6;blob.renderOrder=3;A.g.add(blob);
   // anéis no chão: cor do time e o seu anel tracejado girando
   // anel do time (fino) e o SEU anel: círculo inteiro, translúcido, com brilho suave que pulsa — fica no chão, embaixo da capivara
@@ -3753,7 +3769,7 @@ function kit(){if(!T)T=window.THREE;if(!U)U={uTime:{value:0},uClipOn:{value:0},u
     glass:stdMat(q,{std:{roughness:.15,metalness:.1,transparent:true,opacity:.7}},{key:'gunG'})};gunMats.emit.userData.nocast=true;gunMats.glass.userData.nocast=true}return gunMats}}}
 function stats(){if(!R||!cur)return null;let tris=0,meshes=0;cur.scene.traverse(o=>{if(o.isMesh){meshes++;const g=o.geometry;tris+=(g.index?g.index.count:g.attributes.position.count)/3}});
   return{progs:(R.info.programs||[]).map(p=>p.name+':'+p.cacheKey.slice(0,40)),map:curKey,buildMs,meshes,tris:Math.round(tris),calls:R.info.render.calls,frameTris:R.info.render.triangles,textures:R.info.memory.textures,geometries:R.info.memory.geometries,dust:dust?dust.list.length:0,dustMax:dustMax}}
-return{capyShot,on,render,idle,stats,capysOn,fail,kit,gunIcon,prewarm,setAim,setStyle,setEyes,EYECOLS,menuExpr(k){if(MN&&MN.A)CapyRig.expr(MN.A,k,2.2)},getStyle:()=>STY,get fx(){return STY.fx},menu,menuSpin,menuPoke,capyIcon,preload,FUR0,MBG,get menuOk(){return menuOk},get perf(){return{autoS,shadowEvery,emaDt:Math.round(emaDt)}},get compiling(){return compiling},get ok(){return st==='ready'&&!lost},K,SQ:SQ3,FEET,NAMEOFF:K*CAPY_H+22}})();
+return{capyShot,on,render,idle,stats,capysOn,fail,kit,gunIcon,prewarm,setAim,setStyle,setEyes,EYECOLS,menuExpr(k){if(MN&&MN.A)CapyRig.expr(MN.A,k,2.2)},getStyle:()=>STY,get fx(){return STY.fx},menu,menuSpin,menuPoke,capyIcon,preload,FUR0,MBG,get menuOk(){return menuOk},get fpsCap(){return isTouch?fcap:999},get perf(){return{fcap,autoS,shadowEvery,emaDt:Math.round(emaDt)}},get compiling(){return compiling},get ok(){return st==='ready'&&!lost},K,SQ:SQ3,FEET,NAMEOFF:K*CAPY_H+22}})();
 
 // ===== Simulação (autoridade do anfitrião) e rede =====
 const MAX_PLAYERS=10,PEER_PREFIX='chaos67-',SWAP_CD=250;
@@ -4134,7 +4150,7 @@ let VW=960,VH=540,zoom=1,pr=1,resScale=1,SQ=Map3D.SQ,CAP3=false;
 const acts3=[];const cam={x:W/2-480,y:H/2-270};let shakeA=0;
 // Atrás dos menus a arena é só decoração: meia resolução e 30 fps (bem mais leve em telas retina)
 const menuBg=()=>document.body.classList.contains('menu')&&!started;
-function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:isTouch?1.5:1.25)*(menuBg()?.5:resScale);pr=Math.min(pr,Math.sqrt(4.2e6/(innerWidth*innerHeight)));if(isTouch)pr=Math.min(pr,S.quality==='low'?1:1.5); // celular: o canvas de cima só tem textos e efeitos 2D, não precisa de resolução alta // teto de pixels: telas retina grandes não sobrecarregam a placa
+function resize(){const q=S.quality,dpr=window.devicePixelRatio||1;pr=Math.min(dpr,q==='low'?.8:q==='high'?2:q==='chaos'?2.5:1.25)*(menuBg()?.5:resScale);pr=Math.min(pr,Math.sqrt(4.2e6/(innerWidth*innerHeight)));if(isTouch)pr=Math.min(pr,S.quality==='low'?1:1.25); // celular: o canvas de cima só tem textos e efeitos 2D, não precisa de resolução alta // teto de pixels: telas retina grandes não sobrecarregam a placa
   canvas.width=Math.round(innerWidth*pr);canvas.height=Math.round(innerHeight*pr);zoom=clamp(Math.min(innerWidth,innerHeight)/(isTouch?470:560),.6,1.4);VW=innerWidth/zoom;VH=innerHeight/zoom/SQ}
 addEventListener('resize',resize);resize();
 
@@ -4307,7 +4323,7 @@ function predictSelf(p){const t=time(),ht=hostNow(),dt=pred.on?clamp((t-pred.lt)
 let lastFrame=0,hudAt=0,mmAt=0,slowT=0,wasMenuBg=null,menuClr=false;
 function frame(t){requestAnimationFrame(frame);
   const mb=menuBg();if(mb!==wasMenuBg){wasMenuBg=mb;resize()}
-  const minDt=1000/(mb&&!Map3D.menuOk?Math.min(30,S.fps):S.fps)-1.5;if(t-lastFrame<minDt)return;let dt=Math.min(.05,(t-lastFrame)/1000);
+  const minDt=1000/(mb&&!Map3D.menuOk?Math.min(30,S.fps):mb?S.fps:Math.min(S.fps,Map3D.fpsCap))-1.5;if(t-lastFrame<minDt)return;let dt=Math.min(.05,(t-lastFrame)/1000);
   if(S.dynres&&!isTouch&&!mb&&view==='game'&&dt>.026){slowT+=dt;if(slowT>2&&resScale>.55){resScale*=.85;resize();slowT=0}}else slowT=Math.max(0,slowT-dt*.5);
   lastFrame=t;
   const active=demo||started;if(active)menuClr=false;
